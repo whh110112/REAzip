@@ -20,7 +20,7 @@ void attach(bit7z::BitAbstractArchiveHandler& handler,const Callbacks& cb) {
   throw Error(ErrorCode::CorruptArchive,std::string("Archive operation failed (")+e.code().category().name()+":"+std::to_string(e.code().value())+")");
 }
 std::string revision(const fs::path& p) {
-  const auto text=fs::weakly_canonical(p).u8string()+":"+std::to_string(fs::file_size(p))+":"+std::to_string(fs::last_write_time(p).time_since_epoch().count());
+  const auto text=fs::weakly_canonical(p).u8string()+":"+std::to_string(fs::file_size(p))+":"+std::to_string(static_cast<std::int64_t>(fs::last_write_time(p).time_since_epoch().count()));
   std::uint64_t value=14695981039346656037ull;
   for(unsigned char c:text){value^=c;value*=1099511628211ull;}
   std::ostringstream s;s<<std::hex<<value;return s.str();
