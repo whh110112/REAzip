@@ -42,6 +42,17 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
         run: npx electron-builder ${{ matrix.flag }} --publish always
 
+      - name: Package Windows portable ZIP
+        if: startsWith(github.ref, 'refs/tags/v') && runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path 'dist/win-unpacked/*' -DestinationPath "dist/REAzip-Portable-${{ github.ref_name }}-x64.zip" -CompressionLevel Optimal
+
+      - name: Upload Windows portable ZIP
+        if: startsWith(github.ref, 'refs/tags/v') && runner.os == 'Windows'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.ref_name }} dist/REAzip-Portable-${{ github.ref_name }}-x64.zip --clobber
+
       - name: Build (manual, no publish)
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         env:
