@@ -33,10 +33,16 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxkbcommon-x11-0 libxcb-shape0 libxcb-xfixes0 libxcb-randr0 libxcb-sync1 libxcb-xinput0 patchelf squashfs-tools
       - run: python -m pip install aqtinstall==3.3.0 cmake==3.31.6 ninja==1.11.1.4
       - uses: actions/cache@v4
+        id: qt-cache
         with:
           path: .native-build/Qt
           key: qt-6.8.3-${{ runner.os }}-${{ matrix.arch }}-base-declarative-tools-translations-icu-wayland-v2
       - run: python native/bootstrap/qt-sdk.py --arch ${{ matrix.arch }} --output .native-build/Qt
+      - uses: actions/cache/save@v4
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        with:
+          path: .native-build/Qt
+          key: qt-6.8.3-${{ runner.os }}-${{ matrix.arch }}-base-declarative-tools-translations-icu-wayland-v2
       - run: python native/bootstrap/dependencies.py --arch ${{ matrix.arch }}
       - name: Configure full native application
         shell: bash
@@ -62,6 +68,8 @@ jobs:
           "$app" --smoke native/tests/fixtures/sample.iso --screenshot .native-build/native-smoke.png
       - name: Build and isolate-test offline candidate packages
         run: python native/packaging/package.py --build .native-build/candidate --arch ${{ matrix.arch }} --qt-prefix "${{ env.QT_PREFIX }}" --output .native-build/artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
