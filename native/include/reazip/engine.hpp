@@ -14,6 +14,7 @@ class Engine {
   std::vector<fs::path> create(const CreateOptions&, const Callbacks& = {});
   void remove(const fs::path&, const std::vector<std::string>& entryIds, const std::string& password = {}, const Callbacks& = {});
   void rename(const fs::path&, const std::string& entryId, const std::string& newName, const std::string& password = {}, const Callbacks& = {});
+  void add(const fs::path&, const std::vector<fs::path>& inputs, const std::string& password = {}, const Callbacks& = {});
   std::string identity() const;
  private:
   struct Impl;

@@ -33,7 +33,7 @@ std::string formatName(const bit7z::BitInFormat& f) {
   if(f==BitFormat::Iso)return "iso";if(f==BitFormat::Wim)return "wim";
   return "format-"+std::to_string(f.value());
 }
-std::unique_ptr<bit7z::BitArchiveReader> openReader(bit7z::Bit7zLibrary& lib,const fs::path& p,const std::string& pw,const std::string& cp,const Callbacks& cb) {
+ReadSession openReader(bit7z::Bit7zLibrary& lib,const fs::path& p,const std::string& pw,const std::string& cp,const Callbacks& cb) {
   checkCancelled(cb);
   try {
     auto reader=std::make_unique<bit7z::BitArchiveReader>(lib,ns(fs::absolute(p)),bit7z::BitFormat::Auto,ns(pw));
@@ -42,7 +42,21 @@ std::unique_ptr<bit7z::BitArchiveReader> openReader(bit7z::Bit7zLibrary& lib,con
       if(reader->detectedFormat()==bit7z::BitFormat::Zip)reader->useFormatProperty(L"cp",static_cast<std::uint32_t>(std::stoul(cp)));
     }
     attach(*reader,cb);
-    return reader;
+    ReadSession session;
+    if(reader->detectedFormat()==bit7z::BitFormat::GZip && reader->itemsCount()==1) {
+      auto name=utf8(reader->itemAt(0).path());auto extension=p.extension().u8string();
+      std::transform(name.begin(),name.end(),name.begin(),[](unsigned char c){return std::tolower(c);});
+      std::transform(extension.begin(),extension.end(),extension.begin(),[](unsigned char c){return std::tolower(c);});
+      if(fs::u8path(name).extension()==".tar"||extension==".tgz") {
+        session.temporary=std::make_unique<TemporaryDirectory>(fs::temp_directory_path());
+        const auto inner=session.temporary->path/"contents.tar";
+        std::ofstream stream(inner,std::ios::binary);reader->extractTo(stream,0);stream.close();
+        if(!stream)throw Error(ErrorCode::IoError,"Could not spool nested TAR");
+        reader=std::make_unique<bit7z::BitArchiveReader>(lib,ns(inner),bit7z::BitFormat::Tar);
+        attach(*reader,cb);session.nestedTar=true;
+      }
+    }
+    session.reader=std::move(reader);return session;
   }catch(const bit7z::BitException& e){translate(e,pw,cb);}
 }
 Engine::Engine(const fs::path& p) {
@@ -63,7 +77,7 @@ std::string Engine::identity() const {
 }
 Listing Engine::list(const fs::path& p,const std::string& pw,const std::string& cp,const Callbacks& cb) {
   auto reader=openReader(impl->library,p,pw,cp,cb);
-  Listing result;result.revision=revision(p);result.format=formatName(reader->detectedFormat());result.physicalSize=fs::file_size(p);
+  Listing result;result.revision=revision(p);result.format=reader.nestedTar?"tgz":formatName(reader->detectedFormat());result.physicalSize=fs::file_size(p);
   for(const auto& item:*reader) {
     checkCancelled(cb);Entry e;e.index=item.index();e.id=result.revision+":"+std::to_string(e.index);
     e.path=utf8(item.path());std::replace(e.path.begin(),e.path.end(),'\\','/');

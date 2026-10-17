@@ -4,6 +4,7 @@
 #include <bit7z/bitarchivereader.hpp>
 #include <bit7z/bitarchiveitemoffset.hpp>
 #include <bit7z/biterror.hpp>
+#include "temporary.hpp"
 namespace reazip {
 inline bit7z::tstring ns(const fs::path& p) { return p.native(); }
 inline bit7z::tstring ns(const std::string& p) { return fs::u8path(p).native(); }
@@ -18,5 +19,12 @@ void attach(bit7z::BitAbstractArchiveHandler&, const Callbacks&);
 [[noreturn]] void translate(const bit7z::BitException&, const std::string& password, const Callbacks&);
 std::string revision(const fs::path&);
 std::string formatName(const bit7z::BitInFormat&);
-std::unique_ptr<bit7z::BitArchiveReader> openReader(bit7z::Bit7zLibrary&,const fs::path&,const std::string&,const std::string&,const Callbacks&);
+struct ReadSession {
+  std::unique_ptr<TemporaryDirectory> temporary;
+  std::unique_ptr<bit7z::BitArchiveReader> reader;
+  bool nestedTar{};
+  bit7z::BitArchiveReader* operator->() { return reader.get(); }
+  bit7z::BitArchiveReader& operator*() { return *reader; }
+};
+ReadSession openReader(bit7z::Bit7zLibrary&,const fs::path&,const std::string&,const std::string&,const Callbacks&);
 }

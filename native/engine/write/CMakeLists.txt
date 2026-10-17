@@ -1,0 +1,8 @@
+target_sources(reazip-engine PRIVATE write.cpp)
+add_executable(reazip-write-test "${PROJECT_SOURCE_DIR}/tests/engine-write/write.cpp")
+target_link_libraries(reazip-write-test PRIVATE reazip-engine)
+if(MSVC)
+  target_compile_options(reazip-write-test PRIVATE /utf-8)
+endif()
+add_test(NAME native-write COMMAND reazip-write-test "${REAZIP_ENGINE_DIR}/${REAZIP_ENGINE_FILE}" "${CMAKE_BINARY_DIR}/write-test-data" "${PROJECT_SOURCE_DIR}/tests/fixtures")
+set_tests_properties(native-write PROPERTIES TIMEOUT 120)
