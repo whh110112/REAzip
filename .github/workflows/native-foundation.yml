@@ -1,0 +1,46 @@
+name: Native foundation
+on:
+  push:
+    branches: [native-migration]
+    paths: ['native/**', '.github/workflows/native-foundation.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  engine:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-2022, arch: x64}
+          - {os: windows-11-arm, arch: arm64}
+          - {os: ubuntu-24.04, arch: x64}
+          - {os: ubuntu-24.04-arm, arch: arm64}
+          - {os: macos-15-intel, arch: x64}
+          - {os: macos-15, arch: arm64}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify pinned dependencies and engine
+        run: python native/bootstrap/dependencies.py --arch ${{ matrix.arch }}
+      - name: Configure native engine probe
+        shell: bash
+        run: |
+          args=()
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            if [[ '${{ matrix.arch }}' == arm64 ]]; then args+=(-A ARM64); else args+=(-A x64); fi
+          fi
+          cmake -S native -B .native-build/ci -DREAZIP_BUILD_GUI=OFF -DREAZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/${{ matrix.arch }}" "${args[@]}"
+      - run: cmake --build .native-build/ci --config Release --parallel 2
+      - name: Execute archive operations on native runner
+        run: ctest --test-dir .native-build/ci -C Release --output-on-failure
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: foundation-${{ matrix.os }}-${{ matrix.arch }}
+          path: .native-build/ci/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore

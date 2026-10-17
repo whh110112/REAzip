@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "qt": {"version":"6.8.3","linkage":"dynamic","modules":["Core","Gui","Qml","Quick","QuickControls2","Test"]},
+  "bit7z": {"version":"4.1.0","repository":"https://github.com/rikyoz/bit7z.git","commit":"c81c6c1cbf44e148cd4b06f4bb69d7ea1e299742","license":"MPL-2.0"},
+  "sevenZip": {"version":"26.04","baseUrl":"https://github.com/ip7z/7zip/releases/download/26.04/","artifacts":{
+    "source":{"name":"7z2604-src.tar.xz","sha256":"9691944c0fe0d01bb49373a704fb983fd33bc98b1738695179dfbf99ac1734f6"},
+    "x64":{"name":"7z2604-x64.exe","sha256":"d54bf805f9f3704d1e8db2fa3498ae7ef2df0312b40b558e7c71c734430a665d"},
+    "arm64":{"name":"7z2604-arm64.exe","sha256":"d4117b95495b0e925334ae7b5bddf2853513274603de15dee6acf03999fbc09c"}
+  }},
+  "tools":{"aqtinstall":"3.3.0","cmake":"3.31.6","ninja":"1.11.1.4","localWindowsCompiler":"Qt MinGW 13.1.0"}
+}

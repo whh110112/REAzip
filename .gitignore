@@ -15,3 +15,5 @@ _files.json
 /.native-build/
 /native/.deps/
 /native/build/
+!/native/tools/
+!/native/tools/**
