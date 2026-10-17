@@ -42,6 +42,12 @@ def main():
     system=platform.system();osname={'Windows':'windows','Darwin':'macos','Linux':'linux'}[system];version=(ROOT/'VERSION.txt').read_text().strip();name=f'REAzip-{version}-{osname}-{a.arch}'
     stage=build/('package-'+uuid.uuid4().hex);stage.mkdir();tools=build/'packaging-tools';tools.mkdir(exist_ok=True)
     run('cmake','--install',build,'--config','Release','--component','Runtime','--prefix',stage)
+    if system=='Windows' and a.arch=='arm64':
+        host=pathlib.Path(os.environ.get('QT_HOST_PATH',str(qt.parent/'msvc2022_64')))
+        qtpaths=next((qt/'bin'/name for name in ['qtpaths.bat','qtpaths6.bat','qtpaths6.exe','qtpaths.exe'] if (qt/'bin'/name).exists()),None)
+        if qtpaths is None:raise RuntimeError('ARM64 target qtpaths wrapper missing')
+        run(host/'bin/windeployqt.exe','--qtpaths',qtpaths,'--release','--no-compiler-runtime','--qmldir',ROOT/'ui','--dir',stage,stage/'reazip.exe')
+        (stage/'qt.conf').write_text('[Paths]\nPrefix=.\nPlugins=plugins\nQmlImports=qml\n')
     bundle=stage/'reazip.app' if system=='Darwin' else stage
     platform_plugins=bundle/'Contents/PlugIns/platforms' if system=='Darwin' else stage/'plugins/platforms'
     platform_plugins.mkdir(parents=True,exist_ok=True)

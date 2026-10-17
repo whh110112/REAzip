@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
   QElapsedTimer smokeElapsed;smokeElapsed.start();QTimer smokeTimer;
   if(app.arguments().contains("--smoke")){smokeTimer.setInterval(100);QObject::connect(&smokeTimer,&QTimer::timeout,&app,[&]{
     if(smokeElapsed.elapsed()<700)return;
+    if(arguments.contains("--performance")&&startup.elapsed()<qMax<qint64>(firstFrame,archiveReady)+2000)return;
     if(!arguments.contains("--design-preview")&&(controller.busy()||(!launchPaths.isEmpty()&&controller.archiveFormat().isEmpty()))){if(smokeElapsed.elapsed()<15000)return;app.exit(4);return;}
     smokeTimer.stop();if(engine.rootObjects().isEmpty()){app.exit(1);return;}
     const auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first());

@@ -19,4 +19,8 @@ qt_generate_deploy_qml_app_script(TARGET reazip OUTPUT_SCRIPT deployment)
 if(WIN32)
   install(CODE "set(QT_DEPLOY_BIN_DIR .)" COMPONENT Runtime)
 endif()
-install(SCRIPT "${deployment}" COMPONENT Runtime)
+if(NOT (WIN32 AND CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64"))
+  install(SCRIPT "${deployment}" COMPONENT Runtime)
+endif()
+# Qt 6.8's ARM64 SDK has x64 host deployment tools. package.py explicitly
+# passes the target qtpaths.bat instead of accidentally copying host DLLs.
