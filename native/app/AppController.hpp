@@ -33,6 +33,7 @@ class AppController : public QObject {
   Q_PROPERTY(bool rtl READ rtl NOTIFY changed)
   Q_PROPERTY(bool restoreTabs READ restoreTabs NOTIFY changed)
   Q_PROPERTY(int revision READ revision NOTIFY changed)
+  Q_PROPERTY(bool dragPrepared READ dragPrepared NOTIFY changed)
  public:
   AppController(QString worker,QString engine,QObject* parent=nullptr);
   QObject* entries(){return &model;} QVariantList tabs()const;QString activeTab()const{return current;}
@@ -60,16 +61,20 @@ class AppController : public QObject {
   Q_INVOKABLE void setPreference(QString key,QVariant value);
   Q_INVOKABLE void openThemeDirectory();Q_INVOKABLE void rescanThemes();Q_INVOKABLE void applyAssociations();
   Q_INVOKABLE void openExternal(QString path);
+  Q_INVOKABLE void handleLaunch(QJsonObject request);
+  Q_INVOKABLE void prepareDrag();Q_INVOKABLE void beginPreparedDrag();bool dragPrepared()const{return !dragUrls.isEmpty();}
  signals:
   void changed();void jobChanged();void message(QString text,bool error);
   void challenge(QString jobId,QString challengeId,QString kind,QJsonObject details);
   void executableRequested(QString path);
+  void createRequested(QVariantList paths);void extractRequested();
   void operationCompleted(QString operation,QJsonObject result);void operationFailed(QString code,QString text);
  private:
   struct Tab {QString id,path,format,revision,folder;QJsonArray entries;quint64 physical{};};
-  struct Context {QString tabId,path,openEntry;bool openAfter{},temporary{};};
+  struct Context {QString tabId,path,openEntry;bool openAfter{},temporary{},drag{};};
   JobController jobs;EntryModel model;QVector<Tab> documents;QHash<QString,Context> contexts;QString current,identity;
   QJsonObject preferences,translations;QJsonArray skins;int epoch{};
+  QList<QUrl> dragUrls;QHash<QString,QString> launchActions;
   std::vector<std::unique_ptr<QTemporaryDir>> temporary;
   const Tab* tab()const;Tab* find(QString id);void showTab();
   QString submit(QJsonObject request,Context context);void refresh(QString id);

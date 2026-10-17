@@ -88,6 +88,10 @@ ApplicationWindow {
             ToolButton { text:"↑";enabled:window.hasArchive;onClicked:if(window.api)window.api.parentFolder();Accessible.name:"Parent folder" }
             Label { text:window.hasArchive?(window.api?window.api.breadcrumb:"demo.zip"):"";color:window.ink;elide:Text.ElideMiddle;Layout.fillWidth:true;font.bold:true }
             Action { text:window.t("rename","重命名");visible:window.api?window.api.hasSelection&&window.api.canModify:false;onClicked:renameDialog.open() }
+            Action { text:window.t("prepareDrag","准备拖出");visible:window.api?window.api.hasSelection&&!window.api.dragPrepared:false;enabled:window.api?!window.api.busy:false;onClicked:window.api.prepareDrag() }
+            Action { text:window.t("dragSelected","拖出选中项");visible:window.api?window.api.dragPrepared:false
+                MouseArea { anchors.fill:parent;property real startX;property real startY;onPressed:function(mouse){startX=mouse.x;startY=mouse.y};onPositionChanged:function(mouse){if(pressed&&Math.abs(mouse.x-startX)+Math.abs(mouse.y-startY)>10)window.api.beginPreparedDrag()} }
+            }
         }
         RowLayout { Layout.fillWidth:true;Layout.fillHeight:true;Layout.leftMargin:14;Layout.rightMargin:14;Layout.bottomMargin:14;spacing:14
             Rectangle { Layout.fillWidth:true;Layout.minimumWidth:400;Layout.fillHeight:true;color:window.paper;border.color:window.edge;radius:10;clip:true
@@ -215,11 +219,16 @@ ApplicationWindow {
     Connections { target:window.api;ignoreUnknownSignals:true
         function onMessage(text,error){window.toastText=text;toast.open();toastTimer.restart()}
         function onExecutableRequested(path){window.executablePath=path;executableDialog.open()}
+        function onCreateRequested(paths){window.inputs=paths;createDialog.open()}
+        function onExtractRequested(){extractDialog.open()}
         function onChallenge(jobId,challengeId,kind,details){window.currentChallenge=details;window.currentChallenge.jobId=jobId;window.currentChallenge.challengeId=challengeId;progressDialog.close();if(kind==="passwordRequired")passwordDialog.open();else conflictDialog.open()}
         function onJobChanged(){if(window.api.busy&&window.api.jobState!=="AwaitingPassword"&&window.api.jobState!=="AwaitingOverwrite")progressDialog.open();else progressDialog.close()}
     }
     Shortcut { sequence:StandardKey.Open;onActivated:openDialog.open() }
     Shortcut { sequence:StandardKey.New;enabled:!!window.api;onActivated:createDialog.open() }
-    Shortcut { sequence:"Ctrl+E";enabled:window.hasArchive;onActivated:extractDialog.open() }
+    Shortcut { sequence:Qt.platform.os==="osx"?"Meta+E":"Ctrl+E";enabled:window.hasArchive;onActivated:extractDialog.open() }
     Shortcut { sequence:StandardKey.Preferences;onActivated:settingsDialog.open() }
+    Repeater { model:Qt.platform.os==="osx"?[]:[{edges:Qt.LeftEdge|Qt.TopEdge,x:0,y:0,w:6,h:6},{edges:Qt.RightEdge|Qt.TopEdge,x:window.width-6,y:0,w:6,h:6},{edges:Qt.LeftEdge|Qt.BottomEdge,x:0,y:window.height-6,w:6,h:6},{edges:Qt.RightEdge|Qt.BottomEdge,x:window.width-6,y:window.height-6,w:6,h:6},{edges:Qt.LeftEdge,x:0,y:6,w:4,h:window.height-12},{edges:Qt.RightEdge,x:window.width-4,y:6,w:4,h:window.height-12},{edges:Qt.TopEdge,x:6,y:0,w:window.width-12,h:4},{edges:Qt.BottomEdge,x:6,y:window.height-4,w:window.width-12,h:4}]
+        delegate:MouseArea { required property var modelData;x:modelData.x;y:modelData.y;width:modelData.w;height:modelData.h;z:1000;onPressed:window.startSystemResize(modelData.edges) }
+    }
 }

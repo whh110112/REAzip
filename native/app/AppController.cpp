@@ -9,6 +9,10 @@
 #include <QColor>
 #include <QLocale>
 #include <QUrl>
+#include <QCoreApplication>
+#include <QDrag>
+#include <QMimeData>
+#include "../platform/Platform.hpp"
 namespace {
 QJsonDocument json(QString path){QFile file(path);if(!file.open(QIODevice::ReadOnly))return {};return QJsonDocument::fromJson(file.readAll());}
 bool executable(QString name){static const QStringList extensions={"exe","com","bat","cmd","ps1","sh","bash","zsh","app","desktop","msi","scr","vbs","js","jse","wsf","hta","py","pl","rb","jar","lnk","url"};return extensions.contains(QFileInfo(name).suffix().toLower())||QFileInfo(name).isExecutable();}
@@ -16,7 +20,7 @@ bool executable(QString name){static const QStringList extensions={"exe","com","
 AppController::AppController(QString worker,QString engine,QObject* parent):QObject(parent),jobs(worker,engine,this),model(this){
   preferences={{"skin","light"},{"language","zh-CN"},{"restoreTabs",true}};
   skins=json(":/data/themes/builtin.json").array();translations=json(":/data/i18n/zh-CN.json").object();
-  connect(&model,&EntryModel::changed,this,[this]{if(auto t=find(current))t->folder=model.folder();emit changed();});
+  connect(&model,&EntryModel::changed,this,[this]{dragUrls.clear();if(auto t=find(current))t->folder=model.folder();emit changed();});
   connect(&jobs,&JobController::changed,this,&AppController::jobChanged);
   connect(&jobs,&JobController::changed,this,&AppController::changed);
   connect(&jobs,&JobController::challenge,this,&AppController::challenge);
@@ -81,10 +85,10 @@ void AppController::activateEntry(QString id){if(model.enter(id)||!tab())return;
 void AppController::completed(QString id,QString op,QJsonObject payload){
   const auto context=contexts.take(id);
   if(op=="identity")identity=payload["identity"].toString();
-  else if(op=="list"){if(auto t=find(context.tabId)){t->format=payload["format"].toString();t->revision=payload["revision"].toString();t->entries=payload["entries"].toArray();t->physical=payload["physicalSize"].toString().toULongLong();if(current==t->id)showTab();}}
+  else if(op=="list"){if(auto t=find(context.tabId)){t->format=payload["format"].toString();t->revision=payload["revision"].toString();t->entries=payload["entries"].toArray();t->physical=payload["physicalSize"].toString().toULongLong();if(current==t->id)showTab();const auto action=launchActions.take(t->path);if(action=="extract_here")submit({{"operation","extract"},{"archive",t->path},{"destination",QFileInfo(t->path).absolutePath()},{"overwrite","ask"},{"codepage",codepage()}},{t->id,t->path});else if(action=="extract_to")emit extractRequested();}}
   else if(op=="create"){const auto outputs=payload["outputs"].toArray();if(!outputs.isEmpty())openUrls({QUrl::fromLocalFile(outputs.first().toString())});emit message(translate("success",QString::fromUtf8("压缩完成并已校验")),false);}
   else if(op=="extract"){
-    const auto destination=payload["destination"].toString();if(context.temporary){const auto file=QDir(destination).filePath(context.openEntry);if(executable(file))emit executableRequested(file);else openExternal(file);}else if(context.openAfter)openExternal(destination);
+    const auto destination=payload["destination"].toString();if(context.drag){dragUrls.clear();for(const auto& name:QDir(destination).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot))if(!name.startsWith(".reazip-"))dragUrls.append(QUrl::fromLocalFile(QDir(destination).filePath(name)));}else if(context.temporary){const auto file=QDir(destination).filePath(context.openEntry);if(executable(file))emit executableRequested(file);else openExternal(file);}else if(context.openAfter)openExternal(destination);
     emit message(translate("success",QString::fromUtf8("解压完成")),false);
   }else if(op=="test")emit message(translate("testOk",QString::fromUtf8("完整性测试通过")),false);
   else refresh(context.tabId);
@@ -93,6 +97,13 @@ void AppController::completed(QString id,QString op,QJsonObject payload){
 void AppController::failed(QString id,QString code,QString text){contexts.remove(id);emit message(code+": "+text,true);emit operationFailed(code,text);emit changed();}
 void AppController::setPreference(QString key,QVariant value){preferences[key]=QJsonValue::fromVariant(value);if(key=="language"){translations=json(":/data/i18n/"+value.toString()+".json").object();}++epoch;emit changed();if(key=="codepage"&&tab())refresh(current);}
 void AppController::openExternal(QString path){if(!QDesktopServices::openUrl(QUrl::fromLocalFile(path)))emit message(QString::fromUtf8("无法打开：")+path,true);}
-void AppController::openThemeDirectory(){emit message(QString::fromUtf8("主题目录将在 T08 设置服务接入"),false);}
+void AppController::openThemeDirectory(){const auto folder=platform::dataDirectory()+"/themes";if(QDir().mkpath(folder))openExternal(folder);else emit message(QString::fromUtf8("主题目录不可写：")+folder,true);}
 void AppController::rescanThemes(){emit changed();}
-void AppController::applyAssociations(){emit message(QString::fromUtf8("系统关联将在 T07 平台服务接入"),false);}
+void AppController::applyAssociations(){const auto error=platform::registerApplication(QCoreApplication::applicationFilePath());if(!error.isEmpty())emit message(error,true);else {
+#ifdef Q_OS_WIN
+  QDesktopServices::openUrl(QUrl("ms-settings:defaultapps"));
+#endif
+  emit message(QString::fromUtf8("已注册 REAzip，请在系统中选择默认应用"),false);}}
+void AppController::handleLaunch(QJsonObject request){if(!platform::Instance::valid(request))return;QVariantList urls;for(const auto& v:request["paths"].toArray())urls.append(QUrl::fromLocalFile(v.toString()));const auto action=request["action"].toString();if(action=="add"){emit createRequested(urls);return;}for(const auto& v:request["paths"].toArray())if(action!="open")launchActions[QFileInfo(v.toString()).canonicalFilePath()]=action;openUrls(urls);}
+void AppController::prepareDrag(){if(!tab()||!hasSelection()||busy())return;auto temp=std::make_unique<QTemporaryDir>(QDir::tempPath()+"/reazip-drag-XXXXXX");if(!temp->isValid())return;const auto path=temp->path();temporary.push_back(std::move(temp));submit({{"operation","extract"},{"archive",tab()->path},{"destination",path},{"entryIds",QJsonArray::fromStringList(model.selection())},{"overwrite","ask"},{"codepage",codepage()}},{current,tab()->path,{},false,false,true});}
+void AppController::beginPreparedDrag(){if(dragUrls.isEmpty())return;QDrag drag(this);auto mime=new QMimeData;mime->setUrls(dragUrls);drag.setMimeData(mime);drag.exec(Qt::CopyAction,Qt::CopyAction);}

@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include "../platform/Platform.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <iostream>
@@ -57,6 +58,7 @@ class Session {
       cb.commitState=[&](bool value){send("progress",{{"phase",value?"committing":"running"}});};
       cb.overwrite=[&](const fs::path& p){auto a=ask("overwriteRequired",{{"path",qs(p.u8string())}});if(a["choice"].toString()=="cancel"){cancel();throw Error(ErrorCode::Cancelled,"Task cancelled");}return policy(a["choice"].toString());};
       cb.trash=[](const fs::path& p){return QFile::moveToTrash(qs(p.u8string()));};
+      cb.outputFileBeforeCommit=[&](const fs::path& p){QString error;if(!platform::propagateOrigin(request["archive"].toString(),qs(p.u8string()),&error))throw Error(ErrorCode::IoError,error.toStdString());};
       const auto operation=text(request["operation"]);std::string password=request["password"].toString().toUtf8().toStdString();
       std::unique_ptr<QLockFile> archiveLock;
       if(operation!="identity"){

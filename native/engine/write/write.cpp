@@ -135,6 +135,7 @@ void Engine::extract(const fs::path& source,const ExtractOptions& options,const 
       const auto temp=staging.path/std::to_string(index);
       std::ofstream stream(temp,std::ios::binary);if(!stream)throw Error(ErrorCode::IoError,"Could not create temporary output");
       reader->extractTo(stream,index);stream.close();if(!stream)throw Error(ErrorCode::IoError,"Extracted file could not be written");
+      if(cb.outputFileBeforeCommit)cb.outputFileBeforeCommit(temp);
       checkCancelled(cb);verifyParents(root,fs::relative(target,root));{CommitGuard commit(cb);replaceFile(temp,target);}
     }
   }catch(const bit7z::BitException& e){translate(e,options.password,cb);}
