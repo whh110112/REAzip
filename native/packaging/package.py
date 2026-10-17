@@ -43,6 +43,10 @@ def main():
     stage=build/('package-'+uuid.uuid4().hex);stage.mkdir();tools=build/'packaging-tools';tools.mkdir(exist_ok=True)
     run('cmake','--install',build,'--config','Release','--component','Runtime','--prefix',stage)
     bundle=stage/'reazip.app' if system=='Darwin' else stage
+    platform_plugins=bundle/'Contents/PlugIns/platforms' if system=='Darwin' else stage/'plugins/platforms'
+    platform_plugins.mkdir(parents=True,exist_ok=True)
+    for plugin in (qt/'plugins/platforms').glob('*qoffscreen.*'):
+        if plugin.suffix in ['.dll','.so','.dylib']:shutil.copy2(plugin,platform_plugins/plugin.name)
     resources=bundle/'Contents/Resources' if system=='Darwin' else stage
     resources.mkdir(parents=True,exist_ok=True);licenses=resources/'LICENSES';licenses.mkdir(exist_ok=True)
     shutil.copy2(REPO/'LICENSE',licenses/'REAzip-MIT.txt');shutil.copy2(ROOT/'.deps/bit7z/LICENSE',licenses/'bit7z-MPL-2.0.txt')
@@ -82,7 +86,7 @@ def main():
         relative=file.relative_to(stage).as_posix();detected=architecture(file)
         if detected and detected!=a.arch:raise RuntimeError(f'Wrong architecture {relative}: {detected}, expected {a.arch}')
         if detected:binaries.append({'path':relative,'architecture':detected})
-        if any(word in file.name.lower() for word in ['webengine','electron','chromium']) or file.name.lower() in ['7z.exe','7zz','node.exe']:raise RuntimeError('Forbidden runtime payload: '+relative)
+        if detected and (any(word in file.name.lower() for word in ['webengine','electron','chromium']) or file.name.lower() in ['7z.exe','7zz','node','node.exe']):raise RuntimeError('Forbidden runtime payload: '+relative)
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
     manifest={'schemaVersion':1,'version':version,'sourceCommit':commit,'os':osname,'architecture':a.arch,'qt':'6.8.3','bit7z':'4.1.0','sevenZip':'26.04','binaries':binaries,'signing':'ad-hoc, not notarized' if system=='Darwin' else 'unsigned','publicReleaseAuthorized':False}
     (resources/'artifact-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
@@ -96,7 +100,7 @@ def main():
     env=dict(os.environ)
     for key in ['QT_PLUGIN_PATH','QML_IMPORT_PATH','QML2_IMPORT_PATH','LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','QT_QPA_PLATFORM_PLUGIN_PATH']:env.pop(key,None)
     env['PATH']=os.path.join(os.environ.get('SystemRoot','C:/Windows'),'System32') if system=='Windows' else '/usr/bin:/bin'
-    env['QT_QPA_PLATFORM']='offscreen';env['QT_QUICK_BACKEND']='software'
+    env['QT_QPA_PLATFORM']='offscreen';env['QT_QUICK_BACKEND']='software';env['QT_FORCE_STDERR_LOGGING']='1'
     result=subprocess.run([str(executable),'--smoke',str(ROOT/'tests/fixtures/sample.iso'),'--screenshot',str(output/(name+'-smoke.png'))],cwd=stage,env=env,capture_output=True,timeout=30)
     (output/(name+'-smoke.log')).write_bytes(result.stdout+result.stderr)
     if result.returncode:raise RuntimeError(f'Isolated packaged application/worker smoke failed ({result.returncode}): '+result.stderr.decode(errors='replace'))

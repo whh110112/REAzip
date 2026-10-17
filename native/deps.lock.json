@@ -7,5 +7,5 @@
     "x64":{"name":"7z2604-x64.exe","sha256":"d54bf805f9f3704d1e8db2fa3498ae7ef2df0312b40b558e7c71c734430a665d"},
     "arm64":{"name":"7z2604-arm64.exe","sha256":"d4117b95495b0e925334ae7b5bddf2853513274603de15dee6acf03999fbc09c"}
   }},
-  "tools":{"aqtinstall":"3.3.0","cmake":"3.31.6","ninja":"1.11.1.4","localWindowsCompiler":"Qt MinGW 13.1.0"}
+  "tools":{"aqtinstall":"3.3.0","cmake":"3.31.6","cmakeWindowsArm64":"4.2.3","ninja":"1.11.1.4","localWindowsCompiler":"Qt MinGW 13.1.0","windowsArm64Compiler":"Visual Studio 18 2026"}
 }
