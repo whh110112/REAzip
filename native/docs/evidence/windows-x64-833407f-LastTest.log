@@ -1,0 +1,241 @@
+Start testing: Oct 18 00:46 中国标准时间
+----------------------------------------------------------
+1/14 Testing: native-foundation
+1/14 Test: native-foundation
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/bin/reazip-probe.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/test-data" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/fixtures/sample.iso"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local
+"native-foundation" start time: Oct 18 00:46 中国标准时间
+Output:
+----------------------------------------------------------
+zip: create/list/test/extract PASS
+7z: create/list/test/extract PASS
+ISO: full native engine format PASS
+Engine 26.04; bit7z 4.1.0; native pointer bits 64; library D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"native-foundation" end time: Oct 18 00:46 中国标准时间
+"native-foundation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/14 Testing: native-read
+2/14 Test: native-read
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-read-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/read-test-data" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/fixtures"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/engine/read
+"native-read" start time: Oct 18 00:46 中国标准时间
+Output:
+----------------------------------------------------------
+7-Zip 26.04 / bit7z 4.1.0 / x64 / \\?\D:\Workbuddy\2026-10-13-14-25-42\reazip\native\.deps\engine\x64\7z.dll
+Native read regressions PASS
+<end of output>
+Test time =   1.13 sec
+----------------------------------------------------------
+Test Passed.
+"native-read" end time: Oct 18 00:46 中国标准时间
+"native-read" time elapsed: 00:00:01
+----------------------------------------------------------
+
+3/14 Testing: native-write
+3/14 Test: native-write
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-write-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/write-test-data" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/fixtures"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/engine/write
+"native-write" start time: Oct 18 00:46 中国标准时间
+Output:
+----------------------------------------------------------
+Native write regressions PASS
+<end of output>
+Test time =   1.26 sec
+----------------------------------------------------------
+Test Passed.
+"native-write" end time: Oct 18 00:46 中国标准时间
+"native-write" time elapsed: 00:00:01
+----------------------------------------------------------
+
+4/14 Testing: native-output-security
+4/14 Test: native-output-security
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-security-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/security-test-data"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/engine/write
+"native-output-security" start time: Oct 18 00:46 中国标准时间
+Output:
+----------------------------------------------------------
+anchored directory handles, concurrent parent replacement, links/junctions, late collision PASS
+<end of output>
+Test time =   0.73 sec
+----------------------------------------------------------
+Test Passed.
+"native-output-security" end time: Oct 18 00:46 中国标准时间
+"native-output-security" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/14 Testing: native-disk-errors
+5/14 Test: native-disk-errors
+Command: "D:/Codex/toolchains/reazip-tools/Scripts/python.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/engine-write/disk.py" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-disk-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/disk-test-data"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/engine/write
+"native-disk-errors" start time: Oct 18 00:46 中国标准时间
+Output:
+----------------------------------------------------------
+actual OS write/commit refusal preserves original archive, destination and sources PASS
+Windows denied replacement / POSIX file-size-limit refusal PASS; real ENOSPC covered by Linux CI
+<end of output>
+Test time =   0.86 sec
+----------------------------------------------------------
+Test Passed.
+"native-disk-errors" end time: Oct 18 00:46 中国标准时间
+"native-disk-errors" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/14 Testing: native-journal
+6/14 Test: native-journal
+Command: "D:/Codex/toolchains/reazip-tools/Scripts/python.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/engine-write/journal.py" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-journal-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/journal-test-data"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/engine/write
+"native-journal" start time: Oct 18 00:46 中国标准时间
+Output:
+----------------------------------------------------------
+crash before/after commit, partial volumes, ordinary rollback, external modification protection PASS
+<end of output>
+Test time =   5.53 sec
+----------------------------------------------------------
+Test Passed.
+"native-journal" end time: Oct 18 00:46 中国标准时间
+"native-journal" time elapsed: 00:00:05
+----------------------------------------------------------
+
+7/14 Testing: native-zip64
+7/14 Test: native-zip64
+Command: "D:/Codex/toolchains/reazip-tools/Scripts/python.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/engine-write/large.py" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-large-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/large-test-data"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/engine/write
+"native-zip64" start time: Oct 18 00:46 中国标准时间
+Output:
+----------------------------------------------------------
+ZIP64 >4GiB native create/list/verify PASS
+Independent Python ZIP64 decoder verified all >4GiB payload bytes and CRC, bounded sparse storage PASS
+<end of output>
+Test time =  30.25 sec
+----------------------------------------------------------
+Test Passed.
+"native-zip64" end time: Oct 18 00:47 中国标准时间
+"native-zip64" time elapsed: 00:00:30
+----------------------------------------------------------
+
+8/14 Testing: native-controller
+8/14 Test: native-controller
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-jobs-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/bin/reazip-worker.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/fixtures/sample.iso" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/read-test-data/header.7z"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/jobs
+"native-controller" start time: Oct 18 00:47 中国标准时间
+Output:
+----------------------------------------------------------
+controller queue/challenge/cancel PASS
+<end of output>
+Test time =   0.87 sec
+----------------------------------------------------------
+Test Passed.
+"native-controller" end time: Oct 18 00:47 中国标准时间
+"native-controller" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/14 Testing: native-worker
+9/14 Test: native-worker
+Command: "D:/Codex/toolchains/reazip-tools/Scripts/python.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/tests/jobs/protocol.py" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/bin/reazip-worker.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/read-test-data/header.7z"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/jobs
+"native-worker" start time: Oct 18 00:47 中国标准时间
+Output:
+----------------------------------------------------------
+worker: password retry/cancel/protocol failures PASS
+worker: fragmented frames, stale job/challenge, EOF, oversized frame, unique terminal PASS
+<end of output>
+Test time =   1.62 sec
+----------------------------------------------------------
+Test Passed.
+"native-worker" end time: Oct 18 00:47 中国标准时间
+"native-worker" time elapsed: 00:00:01
+----------------------------------------------------------
+
+10/14 Testing: native-platform
+10/14 Test: native-platform
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-platform-test.exe"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/platform
+"native-platform" start time: Oct 18 00:47 中国标准时间
+Output:
+----------------------------------------------------------
+same-user launch forwarding, path validation, portable paths, owned registration and origin metadata PASS
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"native-platform" end time: Oct 18 00:47 中国标准时间
+"native-platform" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/14 Testing: native-settings
+11/14 Test: native-settings
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-settings-test.exe"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/settings
+"native-settings" start time: Oct 18 00:47 中国标准时间
+Output:
+----------------------------------------------------------
+validated atomic settings, secret whitelist, migration idempotence, damaged/future schema, CSS/token conversion PASS
+<end of output>
+Test time =   4.45 sec
+----------------------------------------------------------
+Test Passed.
+"native-settings" end time: Oct 18 00:47 中国标准时间
+"native-settings" time elapsed: 00:00:04
+----------------------------------------------------------
+
+12/14 Testing: native-app-integration
+12/14 Test: native-app-integration
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-integration-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/bin/reazip-worker.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/read-test-data/header.7z"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/models
+"native-app-integration" start time: Oct 18 00:47 中国标准时间
+Output:
+----------------------------------------------------------
+AppController/model/worker/native password, selected conflicts, cancellation, create/edit/test PASS
+<end of output>
+Test time =   1.67 sec
+----------------------------------------------------------
+Test Passed.
+"native-app-integration" end time: Oct 18 00:47 中国标准时间
+"native-app-integration" time elapsed: 00:00:01
+----------------------------------------------------------
+
+13/14 Testing: native-model
+13/14 Test: native-model
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-model-test.exe"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/models
+"native-model" start time: Oct 18 00:47 中国标准时间
+Output:
+----------------------------------------------------------
+100000 entries directory/filter/64-bit-size/selection reset PASS 299ms
+<end of output>
+Test time =   1.32 sec
+----------------------------------------------------------
+Test Passed.
+"native-model" end time: Oct 18 00:47 中国标准时间
+"native-model" time elapsed: 00:00:01
+----------------------------------------------------------
+
+14/14 Testing: native-gui-flow
+14/14 Test: native-gui-flow
+Command: "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/reazip-gui-test.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/bin/reazip-worker.exe" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/.deps/engine/x64/7z.dll" "D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/read-test-data/header.7z" "D:/Workbuddy/2026-10-13-14-25-42/reazip/native/ui/Main.qml"
+Directory: D:/Workbuddy/2026-10-13-14-25-42/reazip/.native-build/local/models
+"native-gui-flow" start time: Oct 18 00:47 中国标准时间
+Output:
+----------------------------------------------------------
+********* Start testing of GuiFlow *********
+Config: Using QtTest library 6.8.3, Qt 6.8.3 (x86_64-little_endian-llp64 shared (dynamic) release build; by GCC 13.1.0), windows 11
+PASS   : GuiFlow::initTestCase()
+PASS   : GuiFlow::passwordAndSelectedConflicts()
+PASS   : GuiFlow::destructionDuringPasswordChallenge()
+PASS   : GuiFlow::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 1731ms
+********* Finished testing of GuiFlow *********
+<end of output>
+Test time =   1.91 sec
+----------------------------------------------------------
+Test Passed.
+"native-gui-flow" end time: Oct 18 00:47 中国标准时间
+"native-gui-flow" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 18 00:47 中国标准时间

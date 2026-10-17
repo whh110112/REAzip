@@ -1,117 +1,61 @@
 # REAzip
 
-现代化开源归档管理器 —— 基于 Bandizip 7.47 逆向分析重构的界面与交互（MIT 许可，独立实现，不含任何 Bandizip 代码或资源）。
+参考 Bandizip 行为、使用完整 7-Zip 原生库的跨平台归档管理器。界面沿用本项目原有设计，核心与程序独立实现；不包含 Bandizip 程序、代码或专有资源，不声称已还原其内核。
 
-**技术栈**：Electron 44 + 官方 7-Zip 26.04 全功能引擎 ｜ **平台**：Windows / macOS / Linux
+当前开发分支 `native-migration`：**C++17 + Qt Quick 6.8.3 + bit7z 4.1.0 + 7-Zip 26.04**。QML 是 Qt 原生界面描述，发行包不包含 Electron、WebEngine、Node 或 7z 命令行运行依赖。根目录旧 JS/HTML 仍保留作 v0.2.1 基线，新实现位于 `native/`。
 
----
+原生版本 **0.3.0-dev 是候选版本**。公开 v0.2.1 仍是旧 Electron 版；当前没有公开原生 Release。候选只由 CI 上传，具体执行 SHA、验收范围和未验证项目见 [验收报告](native/docs/acceptance-report.md)。
 
-## 功能
+## 原生功能
 
-| 模块 | 能力 |
-|---|---|
-| 打开 / 浏览 | 拖放或对话框打开，多标签、面包屑、目录双击进入、包内搜索 |
-| 解压 | 整包或**选中条目**解压、智能解压、冲突策略（询问/覆盖/跳过/重命名）、密码、完成后打开目录 |
-| 压缩 | ZIP / 7Z / TAR / TAR.GZ，级别 0-9、分卷、密码、压缩后删源 |
-| 包内编辑 | 添加文件、**删除选中条目** |
-| 完整性 | 7z 测试 |
-| 旧包兼容 | **文件名编码切换**（自动 / GBK / Big5 / Shift-JIS / UTF-8） |
-| 外观 | 6 套内置皮肤 + 自定义皮肤接口 |
-| 语言 | 18 种界面语言 |
-| 系统集成 | 关联格式选择、一键设为默认压缩软件（Win 提权 / mac duti / Linux xdg-mime） |
-| 其他 | 进度与取消、密码错误重试、快捷键（Ctrl+O/N/E/K/,、Delete、Esc） |
+- 多标签、目录导航、全包搜索、自然排序、虚拟文件列表。
+- ZIP / 7Z / TAR / TAR.GZ 创建、列表、测试与解压；选中条目解压；询问、覆盖、跳过、重命名冲突策略。
+- ZIP AES / 旧 ZipCrypto 读取、7z 文件头加密、密码挑战与重试、分卷、ZIP64。
+- 添加、删除和重命名；条目ID随归档元数据变化，拒绝过期选择。
+- RAR / RAR5 / ISO / WIM 等只读浏览和解压；写入能力按真实格式限制。
+- GBK / Big5 / Shift-JIS 显式编码；六套主题、18种语言和 RTL；旧设置及颜色 token 的保守迁移。
+- 原生 worker 隔离、任务排队与取消、安全解压、提交日志和中断恢复。
+- Windows 每用户关联与经典菜单、macOS bundle 文件类型、Linux desktop MIME；系统默认应用由用户选择。
 
-**可读格式**（7-Zip 26.04）：7Z / ZIP / ZIPX / RAR / RAR5 / ISO / UDF / WIM / MSI / NSIS / CAB / TAR / GZ / BZ2 / XZ / LZMA / 001 等 20+。
-**可写格式**：ZIP / 7Z / TAR / TAR.GZ。
+完整支持边界见 [已知限制](native/docs/known-limitations.md) 和 [功能对照](native/docs/feature-parity.md)。Win11现代菜单、Finder/Nautilus扩展、SFX、密码恢复、复杂损坏修复、密码管理器和自动更新客户端未实现。
 
-## 皮肤
+## 获取候选
 
-内置：亮色轻氧、睡眠模式、macOS 风格、macOS 深色、毛玻璃（Windows 11 亚克力）、Material Design。
+[Native candidate 构建记录](https://github.com/whh110112/REAzip/actions/workflows/native-candidate.yml) 的成功运行提供六种目标：
 
-### 自定义皮肤接口
+| 系统 | CPU | 产物 |
+|---|---|---|
+| Windows | x64、ARM64 | 安装 EXE、便携 ZIP |
+| macOS | x64、ARM64 | DMG、ZIP |
+| Linux | x64、ARM64 | AppImage、tar.gz、deb |
 
-设置 → 外观皮肤 → 打开目录，放入任意 `*.json`：
+GitHub artifacts 下载需要登录，属于限期候选附件。每包附版本、源码 SHA、CPU、SHA256、签名状态、许可证和对应源码。Windows 未签名；macOS ad-hoc 签名、未公证。安装和旧设置迁移见 [安装指南](native/docs/installation-guide.md)。
 
-```json
-{
-  "id": "my-skin",
-  "name": "我的皮肤",
-  "base": "light",
-  "author": "your-name",
-  "vars": {
-    "--bg": "#ffffff",
-    "--surface": "#f2f2f7",
-    "--card": "#ffffff",
-    "--border": "#d9d9de",
-    "--text": "#1d1d1f",
-    "--muted": "#6e6e73",
-    "--accent": "#0a84ff",
-    "--accent-strong": "#0051d5",
-    "--accent-soft": "#e8f2ff"
-  },
-  "css": "/* 可选：追加 CSS */"
-}
+## 原生构建
+
+先安装 Python 3.12、平台 C++17 工具链、CMake 和 Ninja。Windows ARM runner 使用 VS2026/CMake4.2；Windows x64 使用 VS2022；macOS 使用 Xcode，Linux 使用 GCC。依赖版本与摘要锁在 `native/deps.lock.json`，完整复现以 CI workflow 为准。
+
+```sh
+python -m pip install aqtinstall==3.3.0 ninja==1.11.1.4 cmake==3.31.6
+python native/bootstrap/dependencies.py --arch x64
+python native/bootstrap/qt-sdk.py --arch x64 --output .native-build/Qt
 ```
 
-可用变量：`--bg --surface --surface-2 --card --border --border-strong --text --muted --hint --accent --accent-strong --accent-soft --accent-border --ok --danger --overlay --shadow`。
-`base: dark` 时标题栏与深色基础样式会自动跟随。皮肤保存后点「重新扫描」即可出现在列表。
+将生成的 Qt SDK 加入 PATH/CMAKE_PREFIX_PATH，指定当前目标实际引擎目录后配置：
 
-## 语言
-
-简体中文、繁體中文、English、日本語、한국어、Français、Deutsch、Español、Português (Brasil)、Русский、Italiano、Polski、Türkçe、Tiếng Việt、ไทย、Bahasa Indonesia、العربية、हिन्दी。
-
-语言包位于 `renderer/locales-*.js`，欢迎在 GitHub 提交修正。
-
-## 运行
-
-```bash
-npm install
-npm start
+```sh
+cmake -S native -B .native-build/release -DREAZIP_ENGINE_DIR=/absolute/path/to/native/.deps/engine/x64 -DREAZIP_HEAVY_TESTS=ON
+cmake --build .native-build/release --config Release --parallel 3
+ctest --test-dir .native-build/release -C Release --output-on-failure
+python native/packaging/package.py --build .native-build/release --arch x64 --qt-prefix /absolute/path/to/Qt/6.8.3/target-kit --output .native-build/artifacts
 ```
 
-> 若 shell 设置了 `ELECTRON_RUN_AS_NODE=1`（部分沙箱/CI 注入），先执行 `$env:ELECTRON_RUN_AS_NODE=$null`。
+ARM64 将架构参数改为 `arm64`，使用对应原生 runner 和 Qt SDK；Windows ARM 还需 target Qt 的 QT_HOST_PATH。首次下载和完整7-Zip编译需要网络，发行包离线运行无需安装这些开发依赖。大文件测试会读取4GiB可压缩稀疏数据。磁盘满测试仅在Linux CI临时挂载2MiB tmpfs。
 
-## 构建
+旧 Electron 基线可用 `npm ci`、`npm start` 运行，不用于原生打包。不要通过推送标签触发原生公开发布；当前候选 workflow 没有发布权限。
 
-```bash
-npm run dist:win     # NSIS 安装包 (x64/arm64) + 便携版 (x64)
-npm run dist:mac     # DMG + ZIP (x64/arm64)
-npm run dist:linux   # AppImage (x64/arm64) + deb + tar.gz
-```
+## 资料与许可
 
-推送 `v*` 标签会触发 GitHub Actions 三平台矩阵构建，并自动发布 Release（资产命名：`REAzip-Setup-<ver>-<arch>.exe`、`REAzip-<ver>-mac-<arch>.dmg`、`REAzip-<ver>-linux-<arch>.AppImage` 等）。
+[任务进度](native/docs/task-status.md)、[发布说明草稿](native/docs/release-notes.md)、[体积与性能原始测量](native/docs/size-and-performance.md)、[T00–T10交接](native/docs/handoffs/)。
 
-```bash
-git tag v0.2.0 && git push origin v0.2.0
-```
-
-## 目录
-
-```
-reazip/
-├── main.js               # 主进程：窗口、IPC、设置
-├── preload.js            # 安全桥接
-├── lib/archive.js        # 7-Zip 引擎封装（列表/解压/压缩/删除/测试）
-├── lib/assoc.js          # 文件关联与默认应用（Win/mac/Linux）
-├── renderer/
-│   ├── index.html        # 主窗口 + 弹窗
-│   ├── styles.css        # 设计令牌 + 皮肤增强
-│   ├── skins.js          # 皮肤接口
-│   ├── i18n.js           # 国际化
-│   ├── locales-*.js      # 18 种语言包
-│   └── app.js            # 界面逻辑
-├── resources/engine/     # 官方 7-Zip 26.04 二进制（win-x64 / linux-x64 / mac）
-└── .github/workflows/    # 多平台构建发布
-```
-
-## 已知限制
-
-- SFX 自解压创建未实现（设置中标注 v0.3）
-- 右键菜单尚未注册（当前通过「设为默认」+ 文件关联生效）
-- 密码管理器、压缩包修复、图片预览未实现
-- Windows 10/11 限制程序自动修改默认应用，会打开「默认应用」页由用户确认
-- macOS 需安装 `duti` 才能静默设置默认应用
-
-## 许可
-
-MIT。第三方组件声明见 `LICENSE`。Bandizip 为其权利人商标，本项目与其无关联。
+本项目自有代码采用 MIT；发行包包含 Qt LGPL、bit7z MPL、7-Zip LGPL/unRAR限制等第三方许可，**整个发行包不能简写成“全部MIT”**。第三方声明、许可文本及对应源码随候选提供，见 [打包声明](native/packaging/NOTICE.md)。Bandizip 为其权利人商标，本项目与其无关联。

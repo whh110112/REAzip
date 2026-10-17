@@ -1,0 +1,41 @@
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	﻿2026-10-17T16:53:21.5091241Z ##[group]Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5092027Z [36;1mctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure[0m
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5155144Z shell: /usr/bin/bash -e {0}
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5155421Z env:
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5155711Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5156190Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5156668Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5157315Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5157747Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5158165Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5158523Z ##[endgroup]
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5544808Z Internal ctest changing into directory: /home/runner/work/REAzip/REAzip/.native-build/diagnostics
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5614871Z Test project /home/runner/work/REAzip/REAzip/.native-build/diagnostics
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:21.5676717Z     Start 5: native-disk-errors
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4342228Z 1/1 Test #5: native-disk-errors ...............***Failed    0.87 sec
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4342833Z disk-test: creating archive into constrained filesystem
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4343290Z disk-test: refused: Archive operation failed (HRESULT:-2013265892)
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4343700Z disk-test: validating preserved archive
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4344060Z disk-test: preparing unconstrained extraction source
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4344476Z disk-test: extracting into constrained filesystem
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4344923Z Python Exception <class 'ModuleNotFoundError'>: No module named 'math'
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4345375Z [Thread debugging using libthread_db enabled]
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4345813Z Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4346264Z Archive operation failed (HRESULT:-2013265892)
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4346800Z [Inferior 1 (process 4319) exited with code 01]
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4347143Z Traceback (most recent call last):
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4353643Z   File "/home/runner/work/REAzip/REAzip/native/tests/engine-write/disk.py", line 13, in <module>
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4354250Z     result.check_returncode()
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4354834Z   File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/subprocess.py", line 502, in check_returncode
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4355680Z     raise CalledProcessError(self.returncode, self.args, self.stdout,
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4357558Z subprocess.CalledProcessError: Command '['/home/runner/work/REAzip/REAzip/.native-build/diagnostics/engine/write/reazip-disk-test', '/home/runner/work/REAzip/REAzip/native/.deps/engine/x64/7z.so', '/home/runner/work/REAzip/REAzip/.native-build/diagnostics/disk-test-data/disk-yjku8i13/source', '/home/runner/work/REAzip/REAzip/.native-build/diagnostics/disk-test-data/disk-yjku8i13/output', 'full']' died with <Signals.SIGSEGV: 11>.
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4359224Z
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4363234Z
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4363503Z 0% tests passed, 1 tests failed out of 1
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4363871Z
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4364049Z Total Test time (real) =   0.87 sec
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4364259Z
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4364360Z The following tests FAILED:
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4367712Z 	  5 - native-disk-errors (Failed)
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4368562Z Errors while running CTest
+disk	Run ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure	2026-10-17T16:53:22.4419941Z ##[error]Process completed with exit code 8.
