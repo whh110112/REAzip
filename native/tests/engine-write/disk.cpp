@@ -20,15 +20,15 @@ int main(int argc,char** argv){try{
 #else
   struct rlimit saved{};if(mode=="limit"){getrlimit(RLIMIT_FSIZE,&saved);auto limited=saved;limited.rlim_cur=2*1024*1024;std::signal(SIGXFSZ,SIG_IGN);require(setrlimit(RLIMIT_FSIZE,&limited)==0,"cannot set file size limit");}
 #endif
-  bool refused=false;try{engine.create(options,cb);}catch(const std::exception&){refused=true;}
+  std::cerr<<"disk-test: creating archive into constrained filesystem\n";bool refused=false;try{engine.create(options,cb);}catch(const std::exception& e){std::cerr<<"disk-test: refused: "<<e.what()<<'\n';refused=true;}
 #ifdef _WIN32
   CloseHandle(lock);
 #else
   if(mode=="limit")require(setrlimit(RLIMIT_FSIZE,&saved)==0,"cannot restore file size limit");
 #endif
-  require(refused&&bytes(archive)==original&&fs::file_size(random)==4*1024*1024,"I/O failure damaged existing archive or source");engine.test(archive);
+  std::cerr<<"disk-test: validating preserved archive\n";require(refused&&bytes(archive)==original&&fs::file_size(random)==4*1024*1024,"I/O failure damaged existing archive or source");engine.test(archive);
   if(mode=="full"){
-    reazip::CreateOptions large;large.inputs={random};large.output=work/"large.zip";large.level=0;engine.create(large);reazip::ExtractOptions extract;extract.destination=output/"extract";extract.overwrite=reazip::Overwrite::Overwrite;fs::create_directory(extract.destination);const auto keep=extract.destination/random.filename();std::ofstream(keep)<<"keep";refused=false;try{engine.extract(large.output,extract);}catch(const std::exception&){refused=true;}require(refused&&bytes(keep)=="keep","full extraction filesystem destroyed existing target");
+    std::cerr<<"disk-test: preparing unconstrained extraction source\n";reazip::CreateOptions large;large.inputs={random};large.output=work/"large.zip";large.level=0;engine.create(large);reazip::ExtractOptions extract;extract.destination=output/"extract";extract.overwrite=reazip::Overwrite::Overwrite;fs::create_directory(extract.destination);const auto keep=extract.destination/random.filename();std::ofstream(keep)<<"keep";std::cerr<<"disk-test: extracting into constrained filesystem\n";refused=false;try{engine.extract(large.output,extract);}catch(const std::exception& e){std::cerr<<"disk-test: extraction refused: "<<e.what()<<'\n';refused=true;}require(refused&&bytes(keep)=="keep","full extraction filesystem destroyed existing target");
   }
   std::cout<<"actual OS write/commit refusal preserves original archive, destination and sources PASS\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
