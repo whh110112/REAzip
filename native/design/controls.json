@@ -1,0 +1,306 @@
+[
+  {
+    "element": "div",
+    "id": "win-title"
+  },
+  {
+    "element": "div",
+    "id": "tabs"
+  },
+  {
+    "element": "button",
+    "id": "tab-add"
+  },
+  {
+    "element": "button",
+    "id": "btn-new"
+  },
+  {
+    "element": "button",
+    "id": "btn-extract"
+  },
+  {
+    "element": "button",
+    "id": "btn-test"
+  },
+  {
+    "element": "button",
+    "id": "btn-add"
+  },
+  {
+    "element": "button",
+    "id": "btn-del"
+  },
+  {
+    "element": "input",
+    "id": "search"
+  },
+  {
+    "element": "button",
+    "id": "btn-settings"
+  },
+  {
+    "element": "div",
+    "id": "crumbs"
+  },
+  {
+    "element": "div",
+    "id": "table"
+  },
+  {
+    "element": "div",
+    "id": "empty"
+  },
+  {
+    "element": "div",
+    "id": "dropzone"
+  },
+  {
+    "element": "button",
+    "id": "btn-open-empty"
+  },
+  {
+    "element": "div",
+    "id": "modal-compress"
+  },
+  {
+    "element": "input",
+    "id": "c-name"
+  },
+  {
+    "element": "input",
+    "id": "c-dest"
+  },
+  {
+    "element": "button",
+    "id": "c-browse"
+  },
+  {
+    "element": "div",
+    "id": "c-format"
+  },
+  {
+    "element": "input",
+    "id": "c-level"
+  },
+  {
+    "element": "div",
+    "id": "c-volume"
+  },
+  {
+    "element": "input",
+    "id": "c-volume-custom"
+  },
+  {
+    "element": "input",
+    "id": "c-password"
+  },
+  {
+    "element": "div",
+    "id": "c-files"
+  },
+  {
+    "element": "button",
+    "id": "c-add-files"
+  },
+  {
+    "element": "button",
+    "id": "c-add-folder"
+  },
+  {
+    "element": "button",
+    "id": "c-clear"
+  },
+  {
+    "element": "input",
+    "id": "c-del"
+  },
+  {
+    "element": "button",
+    "id": "c-start"
+  },
+  {
+    "element": "div",
+    "id": "modal-extract"
+  },
+  {
+    "element": "input",
+    "id": "x-dest"
+  },
+  {
+    "element": "button",
+    "id": "x-browse"
+  },
+  {
+    "element": "input",
+    "id": "x-smart"
+  },
+  {
+    "element": "div",
+    "id": "x-overwrite"
+  },
+  {
+    "element": "input",
+    "id": "x-password"
+  },
+  {
+    "element": "input",
+    "id": "x-open"
+  },
+  {
+    "element": "div",
+    "id": "x-hint"
+  },
+  {
+    "element": "button",
+    "id": "x-start"
+  },
+  {
+    "element": "div",
+    "id": "modal-progress"
+  },
+  {
+    "element": "div",
+    "id": "p-pct"
+  },
+  {
+    "element": "div",
+    "id": "p-fill"
+  },
+  {
+    "element": "button",
+    "id": "p-cancel"
+  },
+  {
+    "element": "div",
+    "id": "modal-settings"
+  },
+  {
+    "element": "div",
+    "id": "s-nav"
+  },
+  {
+    "element": "div",
+    "id": "s-extract-desc"
+  },
+  {
+    "element": "button",
+    "id": "s-extract-btn"
+  },
+  {
+    "element": "div",
+    "id": "s-archive-desc"
+  },
+  {
+    "element": "button",
+    "id": "s-archive-btn"
+  },
+  {
+    "element": "input",
+    "id": "s-restore"
+  },
+  {
+    "element": "select",
+    "id": "s-codepage"
+  },
+  {
+    "element": "div",
+    "id": "skin-grid"
+  },
+  {
+    "element": "button",
+    "id": "s-open-skins"
+  },
+  {
+    "element": "button",
+    "id": "s-rescan-skins"
+  },
+  {
+    "element": "div",
+    "id": "assoc-grid"
+  },
+  {
+    "element": "div",
+    "id": "s-default-desc"
+  },
+  {
+    "element": "button",
+    "id": "s-default-btn"
+  },
+  {
+    "element": "div",
+    "id": "s-assoc-hint"
+  },
+  {
+    "element": "select",
+    "id": "s-language"
+  },
+  {
+    "element": "div",
+    "id": "s-about"
+  },
+  {
+    "element": "div",
+    "id": "s-engine"
+  },
+  {
+    "element": "div",
+    "id": "modal-conflict"
+  },
+  {
+    "element": "div",
+    "id": "cf-text"
+  },
+  {
+    "element": "button",
+    "id": "cf-skip"
+  },
+  {
+    "element": "button",
+    "id": "cf-rename"
+  },
+  {
+    "element": "button",
+    "id": "cf-overwrite"
+  },
+  {
+    "element": "div",
+    "id": "modal-confirm"
+  },
+  {
+    "element": "div",
+    "id": "cf-msg"
+  },
+  {
+    "element": "button",
+    "id": "cf-no"
+  },
+  {
+    "element": "button",
+    "id": "cf-yes"
+  },
+  {
+    "element": "div",
+    "id": "modal-password"
+  },
+  {
+    "element": "div",
+    "id": "pw-text"
+  },
+  {
+    "element": "input",
+    "id": "pw-input"
+  },
+  {
+    "element": "input",
+    "id": "pw-remember"
+  },
+  {
+    "element": "button",
+    "id": "pw-ok"
+  },
+  {
+    "element": "div",
+    "id": "toast"
+  }
+]

@@ -12,3 +12,6 @@ Thumbs.db
 
 dist2/
 _files.json
+/.native-build/
+/native/.deps/
+/native/build/
