@@ -1,7 +1,7 @@
 {
   "name": "reazip",
   "productName": "REAzip",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Modern open-source archive manager (Bandizip-inspired)",
   "main": "main.js",
   "author": "whh110112",
@@ -64,6 +64,7 @@
     "linux": {
       "category": "Utility",
       "synopsis": "Modern open-source archive manager",
+      "maintainer": "whh110112",
       "target": [
         { "target": "AppImage", "arch": ["x64", "arm64"] },
         { "target": "deb", "arch": ["x64"] },
