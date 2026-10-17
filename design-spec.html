@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REAzip 界面设计规范 · 亮色轻氧 + 睡眠模式</title>
+<style>
+:root{
+  --bg:#FFFFFF; --surface:#F1EFE8; --surface-2:#E8E6DE; --card:#FFFFFF;
+  --border:#D3D1C7; --border-strong:#B4B2A9;
+  --text:#2C2C2A; --muted:#5F5E5A; --hint:#888780;
+  --accent:#378ADD; --accent-strong:#185FA5; --accent-soft:#E6F1FB; --accent-border:#85B7EB;
+  --ok:#1D9E75; --warn:#BA7517; --danger:#E24B4A;
+  --radius:14px; --radius-sm:10px; --pill:999px;
+  --page:#FAF9F6;
+}
+body.sleep{
+  --bg:#232220; --surface:#2C2C2A; --surface-2:#383835; --card:#2C2C2A;
+  --border:#444441; --border-strong:#5F5E5A;
+  --text:#F1EFE8; --muted:#B4B2A9; --hint:#888780;
+  --accent:#85B7EB; --accent-strong:#B5D4F4; --accent-soft:#0C447C; --accent-border:#185FA5;
+  --ok:#5DCAA5; --warn:#EF9F27; --danger:#F09595;
+  --page:#1B1A18;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--page); color:var(--text); line-height:1.6; padding:32px 24px 64px;
+  transition:background .25s,color .25s;
+}
+.wrap{max-width:980px;margin:0 auto;}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+h1{font-size:22px;font-weight:500;letter-spacing:.2px;}
+.sub{font-size:13px;color:var(--muted);margin-top:4px;}
+.toggle{
+  display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:.5px solid var(--border);
+  border-radius:var(--pill);padding:6px;cursor:pointer;user-select:none;
+}
+.toggle span{font-size:13px;padding:5px 14px;border-radius:var(--pill);color:var(--muted);transition:all .2s;}
+body:not(.sleep) .toggle span[data-mode="light"],
+body.sleep .toggle span[data-mode="sleep"]{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08);border:.5px solid var(--border);}
+h2{font-size:15px;font-weight:500;margin:36px 0 6px;}
+h2 .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px;margin-right:8px;}
+.lead{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.card{background:var(--card);border:.5px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:8px;}
+.mock{background:var(--bg);border:.5px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:13px;color:var(--text);}
+.titlebar{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:var(--surface);border-bottom:.5px solid var(--border);}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--border-strong);}
+.titlebar .t{flex:1;text-align:center;font-size:12px;color:var(--muted);}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--border);flex-wrap:wrap;}
+.btn{font-size:12px;padding:6px 14px;border-radius:var(--pill);border:.5px solid var(--border);color:var(--muted);background:transparent;white-space:nowrap;}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500;}
+body.sleep .btn.primary{color:#0C2A45;}
+.btn.ghost{border-color:var(--accent-border);color:var(--accent-strong);}
+.btn.small{padding:4px 10px;font-size:12px;}
+.spacer{flex:1;}
+.search{display:flex;align-items:center;gap:6px;border:.5px solid var(--border);border-radius:var(--pill);padding:5px 12px;font-size:12px;color:var(--hint);min-width:150px;}
+.crumbs{padding:10px 14px 0;font-size:12px;color:var(--hint);}
+.crumbs b{color:var(--text);font-weight:500;}
+.body{display:flex;gap:0;border-top:.5px solid transparent;}
+.table{flex:1;margin:10px 14px;border:.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.tr{display:flex;align-items:center;font-size:12px;padding:8px 12px;border-bottom:.5px solid var(--border);}
+.tr:last-child{border-bottom:none;}
+.tr.head{background:var(--surface);color:var(--hint);font-size:11px;}
+.tr.active{background:var(--accent-soft);}
+.tr.active .name{font-weight:500;color:var(--text);}
+.name{flex:2;}
+.col-r{flex:1;text-align:right;color:var(--muted);}
+.col-r.hl{color:var(--accent-strong);}
+.side{width:190px;border-left:.5px solid var(--border);padding:14px;margin:10px 0;}
+.side h4{font-size:11px;color:var(--hint);font-weight:400;margin-bottom:8px;letter-spacing:.3px;}
+.kv{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--muted);}
+.kv b{color:var(--text);font-weight:500;}
+.statusbar{display:flex;align-items:center;gap:16px;height:30px;padding:0 14px;background:var(--surface);border-top:.5px solid var(--border);font-size:11px;color:var(--hint);}
+.statusbar .ok{color:var(--ok);}
+.tabs{display:flex;align-items:center;gap:2px;padding:0 10px;background:var(--surface);border-bottom:.5px solid var(--border);height:30px;}
+.tab{font-size:12px;padding:4px 12px;border-radius:8px 8px 0 0;color:var(--muted);}
+.tab.on{background:var(--bg);color:var(--text);border:.5px solid var(--border);border-bottom-color:var(--bg);}
+.modal{width:100%;max-width:520px;margin:0 auto;}
+.modal .mhead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:.5px solid var(--border);}
+.modal .mhead b{font-size:14px;font-weight:500;}
+.modal .mbody{padding:16px 18px;}
+.modal .mfoot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:.5px solid var(--border);background:var(--surface);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+.input{width:100%;border:.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;background:var(--card);color:var(--text);}
+.input.with-btn{display:flex;gap:8px;}
+.input.with-btn .input{flex:1;}
+.seg{display:inline-flex;background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-sm);padding:2px;gap:2px;flex-wrap:wrap;}
+.seg span{font-size:12px;padding:5px 12px;border-radius:7px;color:var(--muted);}
+.seg span.on{background:var(--card);color:var(--text);font-weight:500;border:.5px solid var(--border);}
+.seg.tight span{padding:4px 10px;font-size:11px;}
+.slider{position:relative;height:4px;background:var(--surface-2);border-radius:2px;margin:14px 4px 8px;}
+.slider .fill{position:absolute;left:0;top:0;height:4px;width:55%;background:var(--accent);border-radius:2px;}
+.slider .thumb{position:absolute;left:55%;top:-5px;width:14px;height:14px;border-radius:50%;background:var(--card);border:2px solid var(--accent);transform:translateX(-50%);}
+.slider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--hint);padding:0 2px;}
+.check{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:8px 0;}
+.box{width:15px;height:15px;border-radius:4px;border:.5px solid var(--border-strong);display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fff;}
+.box.on{background:var(--accent);border-color:var(--accent);}
+body.sleep .box.on{color:#0C2A45;}
+.progress-wrap{padding:6px 0 2px;}
+.pbar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
+.pfill{height:100%;width:62%;background:var(--accent);border-radius:4px;}
+.pmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--hint);margin-top:6px;}
+.bigpct{font-size:26px;font-weight:500;letter-spacing:.5px;margin:2px 0 4px;}
+.taskline{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:7px 0;border-bottom:.5px solid var(--border);}
+.taskline:last-child{border-bottom:none;}
+.settings{display:flex;min-height:300px;}
+.snav{width:170px;background:var(--surface);border-right:.5px solid var(--border);padding:10px 8px;}
+.snav div{font-size:13px;color:var(--muted);padding:8px 12px;border-radius:9px;margin-bottom:2px;}
+.snav div.on{background:var(--accent-soft);color:var(--accent-strong);font-weight:500;}
+.spanel{flex:1;padding:16px 18px;}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border);}
+.row:last-child{border-bottom:none;}
+.row .lab{font-size:13px;}
+.row .desc{font-size:11px;color:var(--hint);margin-top:1px;}
+.switch{width:34px;height:19px;border-radius:10px;background:var(--accent);position:relative;flex:none;}
+.switch::after{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;right:2px;}
+.switch.off{background:var(--surface-2);border:.5px solid var(--border);}
+.switch.off::after{right:auto;left:2px;background:var(--border-strong);}
+.lock{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.lock svg{width:20px;height:20px;stroke:var(--accent-strong);fill:none;stroke-width:2;}
+.hintline{font-size:11px;color:var(--hint);margin-top:6px;}
+.tokens{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;}
+.sw{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted);}
+.chip{width:26px;height:26px;border-radius:8px;border:.5px solid var(--border);flex:none;}
+.note{font-size:12.5px;color:var(--muted);}
+.note ul{margin:8px 0 0 18px;}
+.note li{margin:4px 0;}
+code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:5px;color:var(--text);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+.caption{font-size:12px;color:var(--hint);margin:6px 0 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>REAzip 界面设计规范 <span style="font-size:13px;color:var(--hint);font-weight:400;">v1.0</span></h1>
+    <div class="sub">风格：亮色轻氧 + 睡眠模式 ｜ 6 个核心界面 ｜ 依据 Bandizip 7.47 逆向分析（50 对话框 / 10 设置页 / 980 条 UI 文案）重构</div>
+  </div>
+  <div class="toggle" onclick="document.body.classList.toggle('sleep')">
+    <span data-mode="light">亮色轻氧</span><span data-mode="sleep">睡眠模式</span>
+  </div>
+</header>
+
+<h2><span class="num">01</span>设计令牌</h2>
+<div class="lead">同一套结构与间距，仅切换色板。以下色块随右上角开关实时变化。</div>
+<div class="card">
+  <div class="tokens">
+    <div class="sw"><span class="chip" style="background:var(--accent)"></span>主色 --accent</div>
+    <div class="sw"><span class="chip" style="background:var(--accent-soft)"></span>主色浅底 --accent-soft</div>
+    <div class="sw"><span class="chip" style="background:var(--bg)"></span>窗口底 --bg</div>
+    <div class="sw"><span class="chip" style="background:var(--surface)"></span>面板 --surface</div>
+    <div class="sw"><span class="chip" style="background:var(--border)"></span>描边 --border 0.5px</div>
+    <div class="sw"><span class="chip" style="background:var(--text)"></span>正文 --text</div>
+    <div class="sw"><span class="chip" style="background:var(--muted)"></span>次级 --muted</div>
+    <div class="sw"><span class="chip" style="background:var(--ok)"></span>成功 --ok</div>
+  </div>
+  <div class="note" style="margin-top:14px;">
+    圆角：窗口 14px / 卡片 10px / 胶囊按钮 999px ｜ 字号：11 / 12 / 13 / 15 / 22 ｜ 字体：系统 UI 栈（Segoe UI · 微软雅黑 · PingFang）｜ 分割线统一 0.5px
+  </div>
+</div>
+
+<h2><span class="num">02</span>主窗口 · 归档查看器</h2>
+<div class="lead">在 Bandizip 双栏列表基础上：加多标签、面包屑、右侧归档摘要、顶栏搜索。工具栏从 9 个大图标收敛为 4 个胶囊按钮 + 搜索。</div>
+<div class="card">
+<div class="mock">
+  <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">sample.zip — REAzip</span></div>
+  <div class="tabs"><span class="tab on">sample.zip ×</span><span class="tab">backup-2026.7z ×</span><span class="tab" style="color:var(--hint)">+ 新标签</span></div>
+  <div class="toolbar">
+    <span class="btn primary">新建压缩</span>
+    <span class="btn ghost">解压到</span>
+    <span class="btn">测试</span>
+    <span class="btn">添加</span>
+    <span class="spacer"></span>
+    <span class="search">搜索压缩包内文件</span>
+  </div>
+  <div class="crumbs">主页 / 下载 / <b>sample.zip</b></div>
+  <div class="body">
+    <div class="table">
+      <div class="tr head"><span class="name">名称</span><span class="col-r">大小</span><span class="col-r">压缩后</span><span class="col-r">类型</span></div>
+      <div class="tr active"><span class="name">sample.txt</span><span class="col-r">61 B</span><span class="col-r hl">63 B</span><span class="col-r">文本文档</span></div>
+      <div class="tr"><span class="name">assets</span><span class="col-r">—</span><span class="col-r">—</span><span class="col-r">文件夹</span></div>
+      <div class="tr"><span class="name">readme.md</span><span class="col-r">4.0 KB</span><span class="col-r hl">1.2 KB</span><span class="col-r">Markdown</span></div>
+    </div>
+    <div class="side">
+      <h4>归档信息</h4>
+      <div class="kv"><span>格式</span><b>ZIP</b></div>
+      <div class="kv"><span>原始大小</span><b>4.1 KB</b></div>
+      <div class="kv"><span>压缩后</span><b>181 B</b></div>
+      <div class="kv"><span>压缩率</span><b>96%</b></div>
+      <div class="kv"><span>加密</span><b>AES-256</b></div>
+      <div class="kv"><span>文件</span><b>3 / 1 文件夹</b></div>
+      <div style="margin-top:12px;"><span class="btn small" style="border-color:var(--accent-border);color:var(--accent-strong)">测试完整性</span></div>
+    </div>
+  </div>
+  <div class="statusbar"><span>文件 3</span><span>文件夹 1</span><span style="color:var(--accent-strong)">压缩包 181 B</span><span class="spacer" style="flex:1"></span><span class="ok">就绪</span></div>
+</div>
+<div class="caption">差异化：多标签 / 面包屑 / 摘要侧栏 / 顶栏搜索；文件行悬停与选中态用 --accent-soft。</div>
+</div>
+
+<div class="grid2">
+<div>
+<h2><span class="num">03</span>新建压缩</h2>
+<div class="lead">Bandizip 的 IDD_ARCHIVE 有 22 个控件；此处收敛为「常用 6 项 + 高级折叠」。</div>
+<div class="card" style="padding:12px;">
+  <div class="mock modal">
+    <div class="mhead"><b>新建压缩</b><span style="color:var(--hint)">×</span></div>
+    <div class="mbody">
+      <div class="field"><label>文件名</label><div class="input">sample.zip</div></div>
+      <div class="field"><label>保存到</label><div class="input with-btn"><div class="input">D:\下载</div><span class="btn">浏览</span></div></div>
+      <div class="field"><label>格式</label>
+        <div class="seg"><span class="on">ZIP</span><span>7Z</span><span>TAR.GZ</span><span>其他</span></div>
+      </div>
+      <div class="field"><label>压缩级别</label>
+        <div class="slider"><div class="fill"></div><div class="thumb"></div></div>
+        <div class="slider-labels"><span>存储</span><span>快速</span><span style="color:var(--accent-strong);font-weight:500">标准</span><span>极限</span></div>
+      </div>
+      <div class="field"><label>分卷大小</label><div class="seg tight"><span class="on">不分卷</span><span>100 MB</span><span>500 MB</span><span>自定义</span></div></div>
+      <div class="check"><span class="box"></span>压缩后删除源文件</div>
+      <div class="check"><span class="box"></span>创建自解压程序（SFX）</div>
+      <div style="font-size:12px;color:var(--accent-strong);margin-top:8px;">高级选项 ▾</div>
+    </div>
+    <div class="mfoot"><span class="btn">取消</span><span class="btn primary">开始压缩</span></div>
+  </div>
+</div>
+</div>
+
+<div>
+<h2><span class="num">04</span>解压</h2>
+<div class="lead">智能解压默认开启（自动建子目录），覆盖策略改为分段选择，比 Bandizip 的重复文件弹窗少一层打断。</div>
+<div class="card" style="padding:12px;">
+  <div class="mock modal">
+    <div class="mhead"><b>解压 sample.zip</b><span style="color:var(--hint)">×</span></div>
+    <div class="mbody">
+      <div class="field"><label>解压到</label><div class="input with-btn"><div class="input">D:\下载\sample</div><span class="btn">浏览</span></div></div>
+      <div class="row" style="border-bottom:none;padding:6px 0;"><div><div class="lab">智能解压</div><div class="desc">自动创建与压缩包同名的子文件夹</div></div><span class="switch"></span></div>
+      <div class="field" style="margin-top:4px;"><label>同名文件冲突</label>
+        <div class="seg tight"><span class="on">询问</span><span>覆盖</span><span>跳过</span><span>重命名</span></div>
+      </div>
+      <div class="check"><span class="box on">✓</span>解压完成后打开文件夹</div>
+      <div class="check"><span class="box on">✓</span>保留目录结构</div>
+      <div class="hintline">共 3 个文件 · 4.1 KB · ZIP</div>
+    </div>
+    <div class="mfoot"><span class="btn">取消</span><span class="btn primary">开始解压</span></div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="grid2">
+<div>
+<h2><span class="num">05</span>进度</h2>
+<div class="lead">单任务大进度 + 队列列表；速度与剩余时间常驻，可后台运行不阻塞主窗。</div>
+<div class="card" style="padding:12px;">
+  <div class="mock modal" style="max-width:440px">
+    <div class="mhead"><b>正在解压</b><span style="color:var(--hint)">×</span></div>
+    <div class="mbody">
+      <div class="bigpct">62%</div>
+      <div class="progress-wrap">
+        <div class="pbar"><div class="pfill"></div></div>
+        <div class="pmeta"><span>20 / 32 文件</span><span>24.6 MB/s · 剩余 3 秒</span></div>
+      </div>
+      <div class="hintline" style="margin:10px 0 6px;">当前：assets/icon-256.png</div>
+      <div class="taskline"><span>sample.zip</span><span style="color:var(--accent-strong)">进行中 62%</span></div>
+      <div class="taskline"><span>backup-2026.7z</span><span>等待中</span></div>
+    </div>
+    <div class="mfoot"><span class="btn">后台运行</span><span class="btn">取消任务</span></div>
+  </div>
+</div>
+</div>
+
+<div>
+<h2><span class="num">06</span>设置中心</h2>
+<div class="lead">Bandizip 的 10 个设置页合并为 7 个导航项；常规页直接暴露「亮色 / 睡眠 / 跟随系统」。</div>
+<div class="card" style="padding:12px;">
+  <div class="mock modal" style="max-width:560px">
+    <div class="mhead"><b>设置</b><span style="color:var(--hint)">×</span></div>
+    <div class="settings">
+      <div class="snav">
+        <div class="on">常规</div><div>文件关联</div><div>右键菜单</div><div>解压</div><div>压缩</div><div>安全</div><div>语言</div>
+      </div>
+      <div class="spanel">
+        <div class="row"><div><div class="lab">主题</div><div class="desc">睡眠模式夜间柔和不刺眼</div></div>
+          <div class="seg tight"><span>亮色</span><span class="on">睡眠</span><span>跟随系统</span></div>
+        </div>
+        <div class="row"><div><div class="lab">界面语言</div></div><span class="btn small" style="border:0">简体中文 ▾</span></div>
+        <div class="row"><div><div class="lab">默认解压位置</div><div class="desc">D:\下载</div></div><span class="btn small">更改</span></div>
+        <div class="row"><div><div class="lab">启动时恢复上次标签</div></div><span class="switch"></span></div>
+        <div class="row"><div><div class="lab">自动检查更新</div></div><span class="switch off"></span></div>
+      </div>
+    </div>
+    <div class="mfoot"><span class="btn primary">完成</span></div>
+  </div>
+</div>
+</div>
+</div>
+
+<h2><span class="num">0７</span>密码输入</h2>
+<div class="lead">Bandizip 的专业版密码管理器能力保留为可选：记住密码走本地加密存储，不联网。</div>
+<div class="card" style="padding:12px;max-width:420px;">
+  <div class="mock modal" style="max-width:380px">
+    <div class="mbody" style="padding:20px;">
+      <div class="lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:2px;">需要密码</div>
+      <div style="font-size:12px;color:var(--hint);margin-bottom:12px;">sample.zip 使用 AES-256 加密</div>
+      <div class="input with-btn"><div class="input">••••••••••</div><span class="btn small">显示</span></div>
+      <div class="check" style="margin-top:10px;"><span class="box"></span>记住密码（本地加密存储）</div>
+    </div>
+    <div class="mfoot"><span class="btn">取消</span><span class="btn primary">解锁</span></div>
+  </div>
+</div>
+
+<h2><span class="num">08</span>实现说明</h2>
+<div class="card note">
+  <b style="font-weight:500;color:var(--text);">主题切换</b>
+  <ul>
+    <li>所有颜色走 CSS 变量：<code>--bg --surface --card --border --text --accent …</code>，睡眠模式只覆盖变量，组件零改动。</li>
+    <li>Electron 侧：<code>body[data-theme="sleep"]</code> + 系统偏好 <code>prefers-color-scheme</code>；设置项写回本地配置。</li>
+    <li>本页右上角开关即真实交互原型——点一下就能看两种模式的所有界面。</li>
+  </ul>
+  <b style="font-weight:500;color:var(--text);display:block;margin-top:12px;">相对 Bandizip 的改进点</b>
+  <ul>
+    <li>多标签归档浏览（Bandizip 无）｜ 顶栏搜索替代查找对话框 ｜ 面包屑替代左侧树</li>
+    <li>睡眠模式（Bandizip 仅有弱皮肤系统）｜ 工具栏从 9 图标收敛到 4 按钮</li>
+    <li>无广告组件、无授权管理、无 WebView2 依赖（纯本地 UI）</li>
+    <li>设置页 10 → 7；压缩对话框 22 控件 → 6 + 高级折叠</li>
+  </ul>
+  <b style="font-weight:500;color:var(--text);display:block;margin-top:12px;">下一步</b>
+  <ul>
+    <li>按此规范搭 Electron 骨架：路由 + 双主题 tokens + 主窗口/压缩/解压三页</li>
+    <li>接压缩引擎：<code>7zip-bin</code> + <code>node-7z</code>（格式覆盖最广），后续可换 <code>archiver</code> 纯 JS 方案</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>
