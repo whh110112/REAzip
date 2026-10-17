@@ -30,7 +30,7 @@ def architecture(path):
         if header[:2]==b'MZ':
             offset=struct.unpack_from('<I',header,60)[0];f.seek(offset);pe=f.read(6)
             if pe[:4]!=b'PE\0\0':return None
-            return {0x8664:'x64',0xaa64:'arm64',0x14c:'x86'}.get(struct.unpack_from('<H',pe,4)[0],'unknown')
+            return {0x8664:'x64',0xaa64:'arm64',0xa64e:'arm64',0xa641:'arm64ec',0x14c:'x86'}.get(struct.unpack_from('<H',pe,4)[0],'unknown')
         if header[:4]==b'\x7fELF':return {62:'x64',183:'arm64'}.get(struct.unpack_from('<H',header,18)[0],'unknown')
         if header[:4] in [b'\xcf\xfa\xed\xfe',b'\xce\xfa\xed\xfe']:
             return {0x1000007:'x64',0x100000c:'arm64'}.get(struct.unpack_from('<I',header,4)[0],'unknown')
@@ -76,7 +76,8 @@ def main():
             for base in [os.environ.get('ProgramFiles','C:/Program Files'),os.environ.get('ProgramFiles(x86)','C:/Program Files (x86)')]:
                 candidates+=list(pathlib.Path(base).glob(f'Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/{a.arch}/Microsoft.VC*.CRT'))
             if not candidates:raise RuntimeError('Matching app-local MSVC CRT not found')
-            for file in sorted(candidates)[-1].glob('*.dll'):shutil.copy2(file,stage/file.name)
+            for file in sorted(candidates)[-1].glob('*.dll'):
+                if architecture(file)==a.arch:shutil.copy2(file,stage/file.name)
         for file in stage.glob('vc_redist*.exe'):file.unlink()
     elif system=='Darwin':
         # Rebase the additional worker, then reduce Qt's universal SDK binaries to this package architecture.
