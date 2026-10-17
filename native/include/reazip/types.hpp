@@ -28,6 +28,7 @@ struct Callbacks {
   std::function<std::string(bool)> password;
   std::function<Overwrite(const fs::path&)> overwrite;
   std::function<bool(const fs::path&)> trash;
+  std::function<void(bool)> commitState;
 };
 struct ExtractOptions { fs::path destination; std::vector<std::string> entryIds; Overwrite overwrite{Overwrite::Ask}; std::string password,codepage; };
 struct CreateOptions { fs::path output; std::vector<fs::path> inputs; std::string format{"zip"},password; int level{5}; bool aes{true},encryptHeaders{},deleteSources{}; std::uint64_t volumeSize{}; };

@@ -13,6 +13,7 @@
 #endif
 namespace reazip {
 namespace {
+struct CommitGuard { const Callbacks& cb; explicit CommitGuard(const Callbacks& c):cb(c){if(cb.commitState)cb.commitState(true);} ~CommitGuard(){if(cb.commitState)cb.commitState(false);} };
 fs::path safeRelative(std::string text) {
   std::replace(text.begin(),text.end(),'\\','/');
   const auto p=fs::u8path(text);
@@ -112,6 +113,7 @@ void configureCreator(bit7z::BitAbstractArchiveCreator& creator,const CreateOpti
 void Engine::extract(const fs::path& source,const ExtractOptions& options,const Callbacks& cb) {
   try{
     const auto listing=list(source,options.password,options.codepage,cb);
+    if(options.password.empty()&&std::any_of(listing.entries.begin(),listing.entries.end(),[](const auto& e){return e.encrypted;}))throw Error(ErrorCode::PasswordRequired,"Archive password required");
     auto reader=openReader(impl->library,source,options.password,options.codepage,cb);
     const auto dest=fs::absolute(options.destination);
     fs::create_directories(dest);const auto root=fs::canonical(dest);
@@ -133,7 +135,7 @@ void Engine::extract(const fs::path& source,const ExtractOptions& options,const 
       const auto temp=staging.path/std::to_string(index);
       std::ofstream stream(temp,std::ios::binary);if(!stream)throw Error(ErrorCode::IoError,"Could not create temporary output");
       reader->extractTo(stream,index);stream.close();if(!stream)throw Error(ErrorCode::IoError,"Extracted file could not be written");
-      checkCancelled(cb);verifyParents(root,fs::relative(target,root));replaceFile(temp,target);
+      checkCancelled(cb);verifyParents(root,fs::relative(target,root));{CommitGuard commit(cb);replaceFile(temp,target);}
     }
   }catch(const bit7z::BitException& e){translate(e,options.password,cb);}
 }
@@ -168,6 +170,7 @@ std::vector<fs::path> Engine::create(const CreateOptions& options,const Callback
     std::vector<fs::path> outputs;
     for(const auto& file:files){auto target=chooseTarget(output.parent_path()/file.filename(),Overwrite::Ask,cb);if(target.empty())throw Error(ErrorCode::Cancelled,"Output skipped");outputs.push_back(target);}
     std::vector<fs::path> backups(outputs.size());std::size_t committed=0;
+    CommitGuard commit(cb);
     try{
       for(std::size_t i=0;i<outputs.size();++i){checkCancelled(cb);if(fs::exists(outputs[i])){backups[i]=staging.path/("backup-"+std::to_string(i));fs::copy_file(outputs[i],backups[i]);}replaceFile(files[i],outputs[i]);++committed;}
     }catch(...){
@@ -191,7 +194,7 @@ template<class F> void editArchive(Engine& engine,bit7z::Bit7zLibrary& lib,const
       edit(editor,listing);editor.applyChanges();}
     engine.test(copy,password,cb);checkCancelled(cb);
     if(revision(file)!=listing.revision)throw Error(ErrorCode::IoError,"Archive changed during update");
-    replaceFile(copy,file);
+    {CommitGuard commit(cb);replaceFile(copy,file);}
   }catch(const bit7z::BitException& e){translate(e,password,cb);}
 }
 }

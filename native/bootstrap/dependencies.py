@@ -43,10 +43,19 @@ def main():
         extractor = args.extractor or str(ROOT.parent / 'resources/engine/win-x64/7z.exe')
         run(extractor,'x','-y',f'-o{engine}',installer,'7z.dll','License.txt')
     else:
+        conversion = zsrc / 'CPP/Common/StringConvert.cpp'
+        original = conversion.read_text(encoding='utf-8-sig')
+        if 'REAZIP_POSIX_CODEPAGE_V1' not in original:
+            patch = (ROOT / 'bootstrap/posix-codepage.inc').read_text(encoding='utf-8')
+            needle = '  if (codePage == CP_UTF8 || g_ForceToUTF8)'
+            if needle not in original:
+                raise RuntimeError('Codepage patch context mismatch')
+            original = '#ifndef _WIN32\n#include <iconv.h>\n#endif\n' + original.replace(needle, patch + needle, 1)
+            conversion.write_text(original, encoding='utf-8')
         bundle = zsrc / 'CPP/7zip/Bundles/Format7zF'
         command = ['make','-f','makefile.gcc','-j2']
         if platform.system() == 'Darwin':
-            command += ['CC=clang','CXX=clang++']
+            command += ['CC=clang','CXX=clang++','LIB2=-liconv']
         run(*command,cwd=bundle)
         shutil.copy2(bundle / '_o/7z.so',engine / '7z.so')
         shutil.copy2(zsrc / 'DOC/License.txt',engine / 'License.txt')

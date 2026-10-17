@@ -1,0 +1,5 @@
+if(TARGET Qt6::Core)
+  add_executable(reazip-worker main.cpp)
+  target_link_libraries(reazip-worker PRIVATE reazip-engine Qt6::Core)
+  set_target_properties(reazip-worker PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+endif()
