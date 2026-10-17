@@ -1,4 +1,5 @@
 #include "internal.hpp"
+#include "../write/journal.hpp"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -60,8 +61,8 @@ ReadSession openReader(bit7z::Bit7zLibrary& lib,const fs::path& p,const std::str
   }catch(const bit7z::BitException& e){translate(e,pw,cb);}
 }
 Engine::Engine(const fs::path& p) {
-  if(!p.is_absolute()||!fs::is_regular_file(p))throw Error(ErrorCode::EngineMissing,"Engine must be an existing absolute library path");
-  try{impl=std::make_unique<Impl>(p);}catch(const std::exception&){throw Error(ErrorCode::EngineArchitectureMismatch,"Native engine could not load; check architecture and runtime dependencies");}
+  if(!p.is_absolute()||!fs::is_regular_file(nativePath(p)))throw Error(ErrorCode::EngineMissing,"Engine must be an existing absolute library path");
+  try{impl=std::make_unique<Impl>(nativePath(p));}catch(const std::exception&){throw Error(ErrorCode::EngineArchitectureMismatch,"Native engine could not load; check architecture and runtime dependencies");}
 }
 Engine::~Engine()=default;
 std::string Engine::identity() const {
@@ -75,13 +76,17 @@ std::string Engine::identity() const {
 #endif
   return "7-Zip 26.04 / bit7z 4.1.0 / "+arch+" / "+impl->path.u8string();
 }
-Listing Engine::list(const fs::path& p,const std::string& pw,const std::string& cp,const Callbacks& cb) {
+Listing Engine::list(const fs::path& input,const std::string& pw,const std::string& cp,const Callbacks& cb) {
+  const auto p=nativePath(input);
+  recoverTransactions(p,cb);
   auto reader=openReader(impl->library,p,pw,cp,cb);
-  Listing result;result.revision=revision(p);result.format=reader.nestedTar?"tgz":formatName(reader->detectedFormat());result.physicalSize=fs::file_size(p);
+  Listing result;result.sourceRevision=revision(p);result.format=reader.nestedTar?"tgz":formatName(reader->detectedFormat());result.physicalSize=fs::file_size(p);std::uint64_t metadata=14695981039346656037ull;
+  auto feed=[&](const std::string& text){for(unsigned char c:text){metadata^=c;metadata*=1099511628211ull;}metadata^=0xff;metadata*=1099511628211ull;};
   for(const auto& item:*reader) {
-    checkCancelled(cb);Entry e;e.index=item.index();e.id=result.revision+":"+std::to_string(e.index);
+    checkCancelled(cb);Entry e;e.index=item.index();
     e.path=utf8(item.path());std::replace(e.path.begin(),e.path.end(),'\\','/');
     e.directory=item.isDir();e.encrypted=item.isEncrypted();e.link=item.isSymLink();e.size=item.size();
+    if(e.directory)while(!e.path.empty()&&e.path.back()=='/')e.path.pop_back();
     const auto packed=item.itemProperty(bit7z::BitProperty::PackSize);
     if(packed.isUInt64())e.packed=packed.getUInt64();
     const auto time=item.itemProperty(bit7z::BitProperty::MTime);
@@ -94,12 +99,16 @@ Listing Engine::list(const fs::path& p,const std::string& pw,const std::string& 
       if(text.find("AES")!=std::string::npos)e.encryption="AES";
       else if(text.find("ZipCrypto")!=std::string::npos)e.encryption="ZipCrypto";
     }
+    const auto crc=item.itemProperty(bit7z::BitProperty::CRC);feed(e.path);feed(std::to_string(e.index));feed(std::to_string(e.size));feed(e.directory?"dir":"file");feed(e.encryption);feed(crc.isUInt32()?std::to_string(crc.getUInt32()):"unknown");
     result.entries.push_back(std::move(e));
   }
-  if(revision(p)!=result.revision)throw Error(ErrorCode::IoError,"Archive changed while reading");
+  if(revision(p)!=result.sourceRevision)throw Error(ErrorCode::IoError,"Archive changed while reading");
+  result.revision=result.sourceRevision+"-"+std::to_string(metadata);for(auto& entry:result.entries)entry.id=result.revision+":"+std::to_string(entry.index);
   return result;
 }
-void Engine::test(const fs::path& p,const std::string& pw,const Callbacks& cb) {
+void Engine::test(const fs::path& input,const std::string& pw,const Callbacks& cb) {
+  const auto p=nativePath(input);
+  recoverTransactions(p,cb);
   try{auto reader=openReader(impl->library,p,pw,{},cb);reader->test();}catch(const bit7z::BitException& e){translate(e,pw,cb);}
 }
 }

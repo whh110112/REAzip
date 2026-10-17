@@ -27,6 +27,9 @@ class GuiFlow : public QObject {
     auto opened=[&](const char* name){auto p=object(name);return p&&p->property("opened").toBool();};
     auto click=[&](const char* name){auto item=qobject_cast<QQuickItem*>(object(name));if(!item||!item->isVisible()||!item->isEnabled())return false;QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,item->mapToScene(item->boundingRect().center()).toPoint());return true;};
     auto password=[&](QByteArray value){if(!wait([&]{return opened("passwordDialog")&&api.jobState()=="AwaitingPassword";}))return false;auto field=qobject_cast<QQuickItem*>(object("passwordField"));if(!field)return false;field->forceActiveFocus();for(char c:value)QTest::keyClick(window,c);QTest::keyClick(window,Qt::Key_Return);return true;};
+#ifdef Q_OS_WIN
+    {QFile origin(archive+":Zone.Identifier");QVERIFY(origin.open(QIODevice::WriteOnly));origin.write("[ZoneTransfer]\r\nZoneId=3\r\n");}
+#endif
     api.openUrls({QUrl::fromLocalFile(archive)});QVERIFY(password("incorrect"));QVERIFY(wait([&]{return opened("passwordDialog")&&api.jobState()=="AwaitingPassword"&&object("passwordField")->property("text").toString().isEmpty();}));
     QVERIFY(password("test-only"));QVERIFY(wait([&]{return api.archiveFormat()=="7z"&&!api.busy();}));
     QVERIFY(!window->grabWindow().isNull());auto files=qobject_cast<QQuickItem*>(object("filesList"));QVERIFY(files);QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,files->mapToScene(QPointF(100,20)).toPoint());QVERIFY(api.hasSelection());
@@ -36,6 +39,9 @@ class GuiFlow : public QObject {
     {QFile file(target);QVERIFY(file.open(QIODevice::ReadOnly));QCOMPARE(file.readAll(),QByteArray("keep"));}
     QVERIFY(startExtract());QVERIFY(password("test-only"));QVERIFY(wait([&]{return opened("conflictDialog");}));QVERIFY(click("conflict-rename"));QVERIFY(wait([&]{return !api.busy();}));QCOMPARE(QDir(output).entryList(QDir::Files).size(),2);
     {QFile file(target);QVERIFY(file.open(QIODevice::ReadOnly));QCOMPARE(file.readAll(),QByteArray("keep"));}
+#ifdef Q_OS_WIN
+    {const auto files=QDir(output).entryList(QDir::Files);const auto other=files[0]==QFileInfo(target).fileName()?files[1]:files[0];QFile origin(output+'/'+other+":Zone.Identifier");QVERIFY(origin.open(QIODevice::ReadOnly));QVERIFY(origin.readAll().contains("ZoneId=3"));}
+#endif
     // Escape is a real GUI cancel path, followed by a fresh operation in the same window.
     QVERIFY(startExtract());QVERIFY(wait([&]{return opened("passwordDialog");}));QTest::keyClick(window,Qt::Key_Escape);QVERIFY(wait([&]{return !api.busy();}));api.testArchive();QVERIFY(password("test-only"));QVERIFY(wait([&]{return !api.busy();}));
     bool tested=false;for(const auto& result:results)if(result[0].toString()=="test")tested=true;QVERIFY(tested);

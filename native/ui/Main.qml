@@ -15,9 +15,12 @@ ApplicationWindow {
     property var currentChallenge: ({})
     property string folderTarget: "extract"
     property string toastText: ""
+    property string errorText: ""
+    property string fatalStartup: typeof startupFailure !== "undefined" ? startupFailure : ""
     property string executablePath: ""
     function t(key, fallback) { if (api) { let epoch = api.revision; return api.translate(key, fallback) } return fallback }
     function token(key, fallback) { return colors[key] || fallback }
+    Component.onCompleted:if(fatalStartup){errorText=fatalStartup;errorDialog.open()}
     function openDesignScene(scene) {
         if(scene==="create")createDialog.open();else if(scene==="extract")extractDialog.open();else if(scene==="settings")settingsDialog.open();else if(scene==="appearance"){settingsPages.currentIndex=1;settingsDialog.open()}else if(scene==="password")passwordDialog.open();else if(scene==="conflict"){window.currentChallenge={path:"example.txt"};conflictDialog.open()}else if(scene==="progress")progressDialog.open()
     }
@@ -31,12 +34,13 @@ ApplicationWindow {
     color: paper; font.pixelSize: 13
     LayoutMirroring.enabled: api ? api.rtl : false
     LayoutMirroring.childrenInherit: true
+    component SafeLabel: Label { textFormat: Text.PlainText }
     component Action: Pill { accent: window.accent; ink: window.muted; paper: window.card; edge: window.edge }
     component Field: TextField {
         color: window.ink; selectByMouse: true; implicitHeight: 36; font.pixelSize: 13
         background: Rectangle { radius: 8; color: window.card; border.color: window.edge }
     }
-    component Caption: Label { color: window.muted; font.pixelSize: 13 }
+    component Caption: SafeLabel { color: window.muted; font.pixelSize: 13 }
     ListModel { id: previewEntries
         ListElement { entryId: "demo:dir:assets"; name: "assets"; directory: true; displaySize: "—"; displayPacked: "—"; kind: "DIR"; modified: "—"; selected: false }
         ListElement { entryId: "demo:dir:docs"; name: "docs"; directory: true; displaySize: "—"; displayPacked: "—"; kind: "DIR"; modified: "—"; selected: false }
@@ -49,9 +53,9 @@ ApplicationWindow {
             MouseArea { anchors.fill: parent; onPressed: window.startSystemMove(); onDoubleClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized() }
             Row { anchors.left: parent.left; anchors.leftMargin: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7
                 Rectangle { width: 14; height: 14; radius: 4; color: window.accent; Rectangle { x: 8; y: 8; width: 8; height: 8; radius: 2; border.color: window.accent; color: window.card } }
-                Label { text: "REAzip"; color: window.ink; font.pixelSize: 12 }
+                SafeLabel { text: "REAzip"; color: window.ink; font.pixelSize: 12 }
             }
-            Label { anchors.centerIn: parent; text: window.hasArchive ? (window.api ? window.api.archiveName : "demo.zip · design preview") : "REAzip"; color: window.muted; font.pixelSize: 12 }
+            SafeLabel { anchors.centerIn: parent; text: window.hasArchive ? (window.api ? window.api.archiveName : "demo.zip · design preview") : "REAzip"; color: window.muted; font.pixelSize: 12 }
             Row { anchors.right: parent.right; height: parent.height
                 ToolButton { width: 46; height: parent.height; text: "−"; onClicked: window.showMinimized(); Accessible.name: "Minimize" }
                 ToolButton { width: 46; height: parent.height; text: "□"; onClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized(); Accessible.name: "Maximize" }
@@ -64,7 +68,7 @@ ApplicationWindow {
                     model: window.api ? window.api.tabs : (window.preview ? [{id:"demo",name:"demo.zip"}] : [])
                     delegate: Rectangle { required property var modelData; width: Math.min(220, tabName.implicitWidth + 52); height: 30; y: 6; radius: 9; color: window.api && window.api.activeTab !== modelData.id ? window.surface : window.paper; border.color: window.edge
                         RowLayout { anchors.fill: parent; anchors.leftMargin: 10
-                            Label { id: tabName; text: modelData.name; color: window.ink; elide: Text.ElideRight; Layout.fillWidth: true }
+                            SafeLabel { id: tabName; text: modelData.name; color: window.ink; elide: Text.ElideRight; Layout.fillWidth: true }
                             ToolButton { text:"×"; implicitWidth:24; onClicked:if(window.api)window.api.closeTab(modelData.id); Accessible.name:"Close archive" }
                         }
                         TapHandler { onTapped: if(window.api)window.api.activateTab(modelData.id) }
@@ -89,7 +93,7 @@ ApplicationWindow {
         }
         RowLayout { Layout.fillWidth:true;Layout.preferredHeight:36;Layout.leftMargin:14;Layout.rightMargin:14
             ToolButton { text:"↑";enabled:window.hasArchive;onClicked:if(window.api)window.api.parentFolder();Accessible.name:"Parent folder" }
-            Label { text:window.hasArchive?(window.api?window.api.breadcrumb:"demo.zip"):"";color:window.ink;elide:Text.ElideMiddle;Layout.fillWidth:true;font.bold:true }
+            SafeLabel { text:window.hasArchive?(window.api?window.api.breadcrumb:"demo.zip"):"";color:window.ink;elide:Text.ElideMiddle;Layout.fillWidth:true;font.bold:true }
             Action { text:window.t("rename","重命名");visible:window.api?window.api.hasSelection&&window.api.canModify:false;onClicked:renameDialog.open() }
             Action { text:window.t("prepareDrag","准备拖出");visible:window.api?window.api.hasSelection&&!window.api.dragPrepared:false;enabled:window.api?!window.api.busy:false;onClicked:window.api.prepareDrag() }
             Action { text:window.t("dragSelected","拖出选中项");visible:window.api?window.api.dragPrepared:false
@@ -103,7 +107,7 @@ ApplicationWindow {
                         Row { anchors.fill:parent;anchors.leftMargin:14
                             Repeater { model:[window.t("name","名称"),window.t("size","大小"),window.t("packed","压缩后"),window.t("type","类型"),window.t("modified","修改时间")]
                                 delegate:Item { required property int index;required property string modelData;width:(parent.width-14)*[0.40,0.14,0.14,0.13,0.19][index];height:32
-                                    Label { anchors.verticalCenter:parent.verticalCenter;text:modelData;color:window.muted }
+                                    SafeLabel { anchors.verticalCenter:parent.verticalCenter;text:modelData;color:window.muted }
                                     TapHandler { onTapped:if(window.api)window.api.sortBy(index) }
                                 }
                             }
@@ -116,12 +120,12 @@ ApplicationWindow {
                             Row { anchors.fill:parent;anchors.leftMargin:14
                                 RowLayout { width:(parent.width-14)*0.40;height:40;spacing:8
                                     Rectangle { implicitWidth:24;implicitHeight:24;radius:7;color:directory?window.token("--accent-soft","#E6F1FB"):window.surface;Text { anchors.centerIn:parent;text:kind;font.pixelSize:8;color:directory?window.accent:window.muted } }
-                                    Label { text:name;color:window.ink;elide:Text.ElideRight;Layout.fillWidth:true }
+                                    SafeLabel { text:name;color:window.ink;elide:Text.ElideRight;Layout.fillWidth:true }
                                 }
-                                Label { width:(parent.width-14)*0.14;height:40;verticalAlignment:Text.AlignVCenter;text:displaySize;color:window.muted }
-                                Label { width:(parent.width-14)*0.14;height:40;verticalAlignment:Text.AlignVCenter;text:displayPacked;color:window.accent }
-                                Label { width:(parent.width-14)*0.13;height:40;verticalAlignment:Text.AlignVCenter;text:directory?"DIR":"FILE";color:window.muted }
-                                Label { width:(parent.width-14)*0.19;height:40;verticalAlignment:Text.AlignVCenter;text:modified;color:window.muted;elide:Text.ElideRight }
+                                SafeLabel { width:(parent.width-14)*0.14;height:40;verticalAlignment:Text.AlignVCenter;text:displaySize;color:window.muted }
+                                SafeLabel { width:(parent.width-14)*0.14;height:40;verticalAlignment:Text.AlignVCenter;text:displayPacked;color:window.accent }
+                                SafeLabel { width:(parent.width-14)*0.13;height:40;verticalAlignment:Text.AlignVCenter;text:directory?"DIR":"FILE";color:window.muted }
+                                SafeLabel { width:(parent.width-14)*0.19;height:40;verticalAlignment:Text.AlignVCenter;text:modified;color:window.muted;elide:Text.ElideRight }
                             }
                             Rectangle { anchors.bottom:parent.bottom;width:parent.width;height:1;color:window.edge;opacity:0.55 }
                             MouseArea { anchors.fill:parent;onClicked:function(mouse){if(window.api)window.api.selectEntry(entryId,!!(mouse.modifiers&(Qt.ControlModifier|Qt.MetaModifier)))};onDoubleClicked:if(window.api)window.api.activateEntry(entryId) }
@@ -129,9 +133,9 @@ ApplicationWindow {
                     }
                 }
                 ColumnLayout { anchors.centerIn:parent;spacing:16;visible:!window.hasArchive
-                    Label { text:"⇣";font.pixelSize:48;color:window.accent;Layout.alignment:Qt.AlignHCenter }
-                    Label { text:window.t("dropTitle","拖入压缩包，或点击打开");font.pixelSize:19;color:window.ink;Layout.alignment:Qt.AlignHCenter }
-                    Label { text:"ZIP · 7Z · RAR · ISO · TAR · GZ · WIM";color:window.muted;Layout.alignment:Qt.AlignHCenter }
+                    SafeLabel { text:"⇣";font.pixelSize:48;color:window.accent;Layout.alignment:Qt.AlignHCenter }
+                    SafeLabel { text:window.t("dropTitle","拖入压缩包，或点击打开");font.pixelSize:19;color:window.ink;Layout.alignment:Qt.AlignHCenter }
+                    SafeLabel { text:"ZIP · 7Z · RAR · ISO · TAR · GZ · WIM";color:window.muted;Layout.alignment:Qt.AlignHCenter }
                     Action { text:window.t("openArchive","打开压缩包");primary:true;Layout.alignment:Qt.AlignHCenter;onClicked:openDialog.open() }
                 }
                 DropArea { anchors.fill:parent;onDropped:function(drop){if(window.api&&drop.hasUrls)window.api.openUrls(drop.urls)} }
@@ -139,7 +143,7 @@ ApplicationWindow {
             ColumnLayout { Layout.preferredWidth:186;Layout.minimumWidth:186;Layout.maximumWidth:186;Layout.fillHeight:true;spacing:12;visible:window.hasArchive
                 Caption { text:window.api?window.api.archiveFormat.toUpperCase():"ZIP";Layout.topMargin:16 }
                 Repeater { model:window.api?window.api.details:[{label:"大小",value:"1.9 KB"},{label:"压缩后",value:"1.2 KB"},{label:"文件",value:"5"},{label:"文件夹",value:"2"},{label:"加密",value:"none"}]
-                    delegate:RowLayout { required property var modelData;Layout.fillWidth:true;Caption { text:modelData.label;Layout.fillWidth:true } Label { text:modelData.value;color:window.ink } }
+                    delegate:RowLayout { required property var modelData;Layout.fillWidth:true;Caption { text:modelData.label;Layout.fillWidth:true } SafeLabel { text:modelData.value;color:window.ink } }
                 }
                 Action { text:window.t("test","测试完整性");Layout.fillWidth:true;enabled:!!window.api;onClicked:window.api.testArchive() }
                 Item { Layout.fillHeight:true }
@@ -149,7 +153,7 @@ ApplicationWindow {
             RowLayout { anchors.fill:parent;anchors.leftMargin:14;anchors.rightMargin:14
                 Caption { text:window.api?window.api.statusSummary:(window.preview?"5 文件    2 文件夹    1.2 KB":"");font.pixelSize:12 }
                 Item { Layout.fillWidth:true }
-                Label { text:window.api?window.api.status:window.t("ready","就绪");color:window.token("--ok","#1D9E75");font.pixelSize:12 }
+                SafeLabel { text:window.api?window.api.status:window.t("ready","就绪");color:window.token("--ok","#1D9E75");font.pixelSize:12 }
             }
         }
     }
@@ -201,10 +205,15 @@ ApplicationWindow {
     }
     Sheet { id:progressDialog;title:window.t("loading","处理中");paper:window.card;ink:window.ink;edge:window.edge;closePolicy:Popup.NoAutoClose
         onRejected:if(window.api)window.api.cancelTask()
-        ColumnLayout { width:parent.width;Label { text:Math.round(window.api?window.api.progress:0)+"%";color:window.ink;font.pixelSize:32;Layout.alignment:Qt.AlignHCenter } ProgressBar { Layout.fillWidth:true;value:window.api?window.api.progress/100:0 } Caption { text:window.api?window.t("state"+window.api.jobState,window.api.jobState):"" } }
+        ColumnLayout { width:parent.width;SafeLabel { text:Math.round(window.api?window.api.progress:0)+"%";color:window.ink;font.pixelSize:32;Layout.alignment:Qt.AlignHCenter } ProgressBar { Layout.fillWidth:true;value:window.api?window.api.progress/100:0 } Caption { text:window.api?window.t("state"+window.api.jobState,window.api.jobState):"" } }
         footer:Action { text:window.t("cancelTask","取消任务");onClicked:if(window.api)window.api.cancelTask() }
     }
     Sheet { id:deleteDialog;title:window.t("delete","删除");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Caption { text:window.t("deleteConfirm","确认删除所选归档条目？") } onAccepted:if(window.api)window.api.deleteSelected() }
+    Sheet { id:errorDialog;title:window.t("failed","操作失败");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok
+        ScrollView { width:parent.width;implicitHeight:Math.min(260,errorContent.implicitHeight);clip:true;TextArea { id:errorContent;width:errorDialog.availableWidth;readOnly:true;text:window.errorText;wrapMode:TextEdit.WrapAnywhere;textFormat:TextEdit.PlainText;color:window.ink;background:Item {} } }
+        onAccepted:if(window.fatalStartup)Qt.quit()
+        onRejected:if(window.fatalStartup)Qt.quit()
+    }
     Sheet { id:renameDialog;title:window.t("rename","重命名");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Field { id:renameText;width:parent.width;text:window.api?window.api.selectedName:"" } onAccepted:if(window.api)window.api.renameSelected(renameText.text) }
     Sheet { id:settingsDialog;title:window.t("settings","设置");width:Math.min(780,window.width-40);paper:window.card;ink:window.ink;edge:window.edge
         RowLayout { width:parent.width;spacing:18
@@ -214,14 +223,14 @@ ApplicationWindow {
                 ColumnLayout { GridLayout { columns:2;Repeater { model:window.api?window.api.themeList:[];delegate:Action { required property var modelData;text:modelData.name;Layout.fillWidth:true;onClicked:if(window.api)window.api.setPreference("skin",modelData.id) } } } Action { text:window.t("openSkinDir","打开皮肤目录");onClicked:if(window.api)window.api.openThemeDirectory() } Action { text:window.t("rescan","重新扫描");onClicked:if(window.api)window.api.rescanThemes() } Caption { text:window.t("themeCompatibility","JSON 颜色变量兼容；追加 CSS 不执行");wrapMode:Text.Wrap;Layout.fillWidth:true } Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:"ZIP · 7Z · RAR · TAR · GZ · ISO" } Caption { text:window.t("platformIntegration","系统集成状态以平台实现为准");wrapMode:Text.Wrap;Layout.fillWidth:true } Action { text:window.t("applyDefault","注册关联并打开默认应用设置");enabled:!!window.api;onClicked:window.api.applyAssociations() } Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:window.t("uiLanguage","界面语言") } ComboBox { model:window.api?window.api.languages:[];textRole:"name";onActivated:if(window.api)window.api.setPreference("language",model[currentIndex].code) } Caption { text:window.t("langHint","支持18种语言") } Item { Layout.fillHeight:true } }
-                ColumnLayout { Label { text:"REAzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/REAzip" } Item { Layout.fillHeight:true } }
+                ColumnLayout { SafeLabel { text:"REAzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/REAzip" } Item { Layout.fillHeight:true } }
             }
         }
         footer:Action { text:window.t("done","完成");onClicked:settingsDialog.close() }
     }
     Popup { id:toast;anchors.centerIn:parent;width:Math.min(600,window.width-40);background:Rectangle{color:window.ink;radius:10} Label{width:parent.width;text:window.toastText;color:window.paper;wrapMode:Text.Wrap} Timer{id:toastTimer;interval:4000;onTriggered:toast.close()} }
     Connections { target:window.api;ignoreUnknownSignals:true
-        function onMessage(text,error){window.toastText=text;toast.open();toastTimer.restart()}
+        function onMessage(text,error){if(error){window.errorText=text;errorDialog.open()}else{window.toastText=text;toast.open();toastTimer.restart()}}
         function onExecutableRequested(path){window.executablePath=path;executableDialog.open()}
         function onCreateRequested(paths){window.inputs=paths;createDialog.open()}
         function onExtractRequested(){extractDialog.open()}

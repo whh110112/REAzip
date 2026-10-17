@@ -18,7 +18,7 @@ class Instance : public QObject {
   int start(QJsonObject request);QString error()const{return diagnostic;}
   static bool valid(const QJsonObject& request);
  signals:void request(QJsonObject data);
- private:QLocalServer server;QString name,diagnostic;std::unique_ptr<QLockFile> lock;
+ private:QLocalServer server;QString name,diagnostic,storage;std::unique_ptr<QLockFile> lock;
 };
 class OpenEvents : public QObject {
   Q_OBJECT

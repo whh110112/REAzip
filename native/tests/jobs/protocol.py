@@ -1,4 +1,4 @@
-import json,subprocess,sys,threading,queue
+import json,subprocess,sys,threading,queue,time
 worker,engine,archive=sys.argv[1:]
 class Client:
     def __init__(self):
@@ -13,7 +13,8 @@ class Client:
         msg.setdefault('protocolVersion',1);msg.setdefault('jobId','test-job')
         self.p.stdin.write(json.dumps(msg,ensure_ascii=False)+'\n');self.p.stdin.flush()
     def close(self):
-        self.p.stdin.close()
+        try:self.p.stdin.close()
+        except BrokenPipeError:pass
         try:assert self.p.wait(timeout=5)==0
         finally:
             if self.p.poll() is None:self.p.kill()
@@ -38,3 +39,22 @@ assert c.get()['code']=='ProtocolVersionMismatch';c.close()
 c=Client();c.p.stdin.write('{not json}\n');c.p.stdin.flush()
 assert c.get()['code']=='ProtocolError';c.close()
 print('worker: password retry/cancel/protocol failures PASS')
+c=Client();frame=json.dumps(dict(protocolVersion=1,jobId='test-job',type='submit',operation='list',archive=archive))+'\n'
+for part in [frame[:4],frame[4:23],frame[23:-1],frame[-1:]]:
+    c.p.stdin.write(part);c.p.stdin.flush();time.sleep(.01)
+assert c.get()['type']=='started';challenge=c.get();assert challenge['type']=='passwordRequired'
+c.send(type='cancel',jobId='old-job');c.send(type='respondChallenge',challengeId='old-challenge',password='incorrect')
+try:c.q.get(timeout=.2);raise AssertionError('stale controls changed the active task')
+except queue.Empty:pass
+c.send(type='respondChallenge',challengeId=challenge['challengeId'],password='test-only')
+while True:
+    message=c.get()
+    if message['type'] in ['completed','failed','cancelled']:
+        assert message['type']=='completed';break
+c.close();assert not any(f['type'] in ['completed','failed','cancelled'] for f in list(c.q.queue))
+c=Client();c.send(type='submit',operation='list',archive=archive);assert c.get()['type']=='started';assert c.get()['type']=='passwordRequired';c.p.stdin.close();assert c.get()['type']=='cancelled';c.close()
+c=Client()
+try:c.p.stdin.write('x'*(16*1024*1024+1)+'\n');c.p.stdin.flush()
+except BrokenPipeError:pass
+assert c.get()['code']=='ProtocolError';c.close()
+print('worker: fragmented frames, stale job/challenge, EOF, oversized frame, unique terminal PASS')

@@ -2,9 +2,13 @@
 #include <fstream>
 #include <iostream>
 #include <chrono>
-namespace fs=std::filesystem;
+namespace fs=reazip::fs;
 void require(bool v,const char* m){if(!v)throw std::runtime_error(m);}
-std::string bytes(const fs::path& p){std::ifstream s(p,std::ios::binary);return {(std::istreambuf_iterator<char>(s)),{}};}
+std::string bytes(fs::path p){
+#ifdef _WIN32
+  auto native=fs::absolute(p).make_preferred().native();if(native.compare(0,4,L"\\\\?\\")!=0)p=fs::path(L"\\\\?\\"+native);
+#endif
+  std::ifstream s(p,std::ios::binary);return {(std::istreambuf_iterator<char>(s)),{}};}
 int main(int argc,char** argv){try{
   require(argc==4,"expected library/work/fixtures");reazip::Engine engine(fs::absolute(fs::u8path(argv[1])));
   const auto fixtures=fs::absolute(fs::u8path(argv[3]));
@@ -48,5 +52,7 @@ int main(int argc,char** argv){try{
   require(cancelled&&!trashCalled&&fs::exists(bulk)&&!fs::exists(encrypted.output),"mid-operation cancellation must preserve sources");
   reazip::CreateOptions split;split.output=work/"volumes.7z";split.inputs={bulk};split.format="7z";split.level=0;split.volumeSize=1024*1024;
   const auto volumes=engine.create(split,cb);require(volumes.size()>1,"split archive outputs");engine.test(volumes.front());
+  auto longRoot=work;for(int i=0;i<10;++i)longRoot/="long-route-abcdefghijklmnopqrstuvwxyz";reazip::CreateOptions longOptions;longOptions.inputs={source};longOptions.output=longRoot/"archive.zip";engine.create(longOptions,cb);require(engine.list(longOptions.output).entries.size()==1,"long path archive list");reazip::ExtractOptions longExtract;longExtract.destination=longRoot/"extracted";longExtract.overwrite=reazip::Overwrite::Overwrite;engine.extract(longOptions.output,longExtract);require(bytes(longExtract.destination/source.filename())=="original contents","long path extraction content");longOptions.inputs={longExtract.destination/source.filename()};longOptions.output=work/"from-long-input.zip";engine.create(longOptions,cb);engine.test(longOptions.output);
+  const auto deletion=work/"trash-source.txt",recycle=work/"recovered-source.txt";std::ofstream(deletion)<<"recoverable";reazip::CreateOptions del;del.inputs={deletion};del.output=work/"trash-verified.zip";del.deleteSources=true;bool trashed=false;reazip::Callbacks trash;trash.trash=[&](const auto& path){engine.test(del.output);fs::rename(path,recycle);trashed=true;return true;};engine.create(del,trash);require(trashed&&!fs::exists(deletion)&&bytes(recycle)=="recoverable","source trash must happen after archive verification");
   std::cout<<"Native write regressions PASS\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

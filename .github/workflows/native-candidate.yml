@@ -61,7 +61,7 @@ jobs:
             args+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0)
           fi
           if [[ -n "${QT_HOST_PATH:-}" ]]; then args+=(-DQT_HOST_PATH="$QT_HOST_PATH"); fi
-          cmake -S native -B .native-build/candidate -DCMAKE_BUILD_TYPE=Release -DREAZIP_BUILD_GUI=ON -DREAZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/${{ matrix.arch }}" "${args[@]}"
+          cmake -S native -B .native-build/candidate -DCMAKE_BUILD_TYPE=Release -DREAZIP_BUILD_GUI=ON -DREAZIP_HEAVY_TESTS=ON -DREAZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/${{ matrix.arch }}" "${args[@]}"
       - run: cmake --build .native-build/candidate --config Release --parallel 3
       - run: python native/tools/prepare-translations.py
       - run: ctest --test-dir .native-build/candidate -C Release --output-on-failure

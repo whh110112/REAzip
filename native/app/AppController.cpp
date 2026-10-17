@@ -56,9 +56,9 @@ bool AppController::canModify()const{return tab()&&!busy()&&(tab()->format=="zip
 QString AppController::defaultArchiveDir()const{const auto path=preferences["archiveDir"].toString();return QFileInfo(path).isDir()?path:QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);}
 QString AppController::defaultExtractDir()const{const auto path=preferences["extractDir"].toString();return QFileInfo(path).isDir()?path:defaultArchiveDir();}
 QString AppController::status()const{return busy()?translate("state"+jobs.state(),jobs.state()):translate("ready",QString::fromUtf8("就绪"));}
-QString AppController::statusSummary()const{if(!tab())return {};return QString::number(tab()->entries.size())+" "+translate("files",QString::fromUtf8("条目"))+" · "+EntryModel::bytes(tab()->physical);}
+QString AppController::statusSummary()const{if(!tab()||tab()->format.isEmpty())return {};return QString::number(tab()->entries.size())+" "+translate("files",QString::fromUtf8("条目"))+" · "+EntryModel::bytes(tab()->physical);}
 QVariantList AppController::details()const{
-  if(!tab())return {};quint64 bytes{};int files{},dirs{},encrypted{};QSet<QString> methods;
+  if(!tab()||tab()->format.isEmpty())return {};quint64 bytes{};int files{},dirs{},encrypted{};QSet<QString> methods;
   for(const auto& v:tab()->entries){auto e=v.toObject();bytes+=e["size"].toString().toULongLong();e["directory"].toBool()?++dirs:++files;if(e["encrypted"].toBool()){++encrypted;methods.insert(e["encryption"].toString("unknown"));}}
   QVariantList result;auto add=[&](QString label,QString value){result.append(QVariantMap{{"label",label},{"value",value}});};
   add(translate("size",QString::fromUtf8("大小")),EntryModel::bytes(bytes));add(translate("packed",QString::fromUtf8("压缩后")),EntryModel::bytes(tab()->physical));add(translate("files",QString::fromUtf8("文件")),QString::number(files));add(translate("folders",QString::fromUtf8("文件夹")),QString::number(dirs));add(translate("encryption",QString::fromUtf8("加密")),encrypted?QStringList(methods.values()).join(", "):"none");return result;
@@ -112,7 +112,7 @@ void AppController::completed(QString id,QString op,QJsonObject payload){
   else refresh(context.tabId);
   emit changed();emit operationCompleted(op,payload);
 }
-void AppController::failed(QString id,QString code,QString text){contexts.remove(id);emit message(translate("error"+code,translate("failed","Operation failed"))+" ("+code+")",true);emit operationFailed(code,text);emit changed();}
+void AppController::failed(QString id,QString code,QString text){contexts.remove(id);emit message(translate("error"+code,translate("failed","Operation failed"))+" ("+code+")"+(code=="Cancelled"?QString():"\n"+text),code!="Cancelled");emit operationFailed(code,text);emit changed();}
 void AppController::setPreference(QString key,QVariant value){if((key=="extractDir"||key=="archiveDir")&&!QFileInfo(value.toString()).isDir()){emit message(translate("invalidDirectory","Directory does not exist"),true);return;}if(key=="skin"){bool found=false;for(const auto& v:skins)if(v.toObject()["id"]==value.toString())found=true;if(!found)return;}if(!settings.set(key,QJsonValue::fromVariant(value))){emit message(translate("settingsWriteFailed","Cannot save settings")+": "+settings.directory(),true);return;}preferences=settings.values();if(key=="language")translations=json(":/data/i18n/"+value.toString()+".json").object();++epoch;emit changed();if(key=="codepage"&&tab())refresh(current);}
 void AppController::openExternal(QString path){if(!QDesktopServices::openUrl(QUrl::fromLocalFile(path)))emit message(translate("openFailed","Cannot open")+": "+path,true);}
 void AppController::openThemeDirectory(){const auto folder=settings.directory()+"/themes";if(QDir().mkpath(folder))openExternal(folder);else emit message(translate("settingsWriteFailed","Directory is not writable")+": "+folder,true);}

@@ -1,5 +1,7 @@
 #include "../read/internal.hpp"
 #include "../read/temporary.hpp"
+#include "secure-output.hpp"
+#include "journal.hpp"
 #include <bit7z/bitfilecompressor.hpp>
 #include <bit7z/bitarchiveeditor.hpp>
 #include <fstream>
@@ -42,10 +44,12 @@ void replaceFile(const fs::path& source,const fs::path& target) {
   fs::rename(source,target);
 #endif
 }
-fs::path chooseTarget(fs::path target,Overwrite policy,const Callbacks& cb) {
+fs::path chooseTarget(fs::path target,Overwrite policy,const Callbacks& cb,bool* replaceAllowed=nullptr) {
+  if(replaceAllowed)*replaceAllowed=policy==Overwrite::Overwrite;
   if(!fs::exists(target))return target;
   if(fs::is_directory(target))throw Error(ErrorCode::IoError,"Destination is a directory");
   if(policy==Overwrite::Ask){if(!cb.overwrite)throw Error(ErrorCode::UnsupportedOperation,"Overwrite decision required");policy=cb.overwrite(target);}
+  if(replaceAllowed)*replaceAllowed=policy==Overwrite::Overwrite;
   checkCancelled(cb);
   if(policy==Overwrite::Ask)throw Error(ErrorCode::Cancelled,"Overwrite dialog cancelled");
   if(policy==Overwrite::Skip)return {};
@@ -78,7 +82,8 @@ std::uint64_t fingerprint(const fs::path& p) {
   if(!in.eof())throw Error(ErrorCode::IoError,"Input read failed");return hash;
 }
 using Aliases=std::vector<std::pair<bit7z::tstring,bit7z::tstring>>;
-Aliases gather(const std::vector<fs::path>& inputs,const fs::path& output) {
+Aliases gather(const std::vector<fs::path>& inputs,const fs::path& rawOutput) {
+  const auto output=nativePath(rawOutput);
   Aliases aliases;std::set<std::string> names;
   auto add=[&](const fs::path& file,const fs::path& alias){
     if(fs::is_symlink(fs::symlink_status(file)))throw Error(ErrorCode::UnsafeEntry,"Symbolic-link inputs are not supported");
@@ -87,7 +92,7 @@ Aliases gather(const std::vector<fs::path>& inputs,const fs::path& output) {
     aliases.emplace_back(ns(fs::absolute(file)),ns(alias));
   };
   for(const auto& raw:inputs){
-    const auto p=fs::absolute(raw);if(!fs::exists(p))throw Error(ErrorCode::IoError,"Input does not exist");
+    const auto p=nativePath(raw);if(!fs::exists(p))throw Error(ErrorCode::IoError,"Input does not exist");
     if(fs::is_directory(p)){
       if(fs::is_symlink(fs::symlink_status(p)))throw Error(ErrorCode::UnsafeEntry,"Linked input directory");
       bool any=false;
@@ -110,37 +115,28 @@ void configureCreator(bit7z::BitAbstractArchiveCreator& creator,const CreateOpti
   creator.setVolumeSize(options.volumeSize);attach(creator,cb);
 }
 }
-void Engine::extract(const fs::path& source,const ExtractOptions& options,const Callbacks& cb) {
+void Engine::extract(const fs::path& input,const ExtractOptions& options,const Callbacks& cb) {
+  const auto source=nativePath(input);
   try{
     const auto listing=list(source,options.password,options.codepage,cb);
     if(options.password.empty()&&std::any_of(listing.entries.begin(),listing.entries.end(),[](const auto& e){return e.encrypted;}))throw Error(ErrorCode::PasswordRequired,"Archive password required");
     auto reader=openReader(impl->library,source,options.password,options.codepage,cb);
-    const auto dest=fs::absolute(options.destination);
-    fs::create_directories(dest);const auto root=fs::canonical(dest);
-    TemporaryDirectory staging(root);
-    if(listing.format=="gzip" && listing.entries.size()==1 && fs::u8path(listing.entries.front().path).extension()==".tar") {
-      if(!options.entryIds.empty())throw Error(ErrorCode::UnsupportedOperation,"Select files after opening the nested TAR");
-      const auto tar=staging.path/"nested.tar";std::ofstream stream(tar,std::ios::binary);reader->extractTo(stream,0);stream.close();
-      if(!stream)throw Error(ErrorCode::IoError,"Could not spool nested TAR");
-      auto nested=options;nested.entryIds.clear();extract(tar,nested,cb);return;
-    }
+    const auto root=fs::weakly_canonical(nativePath(options.destination));SecureOutput secure(root);
     for(auto index:selected(listing,options.entryIds)){
       checkCancelled(cb);const auto& entry=listing.entries.at(index);
       if(entry.link)throw Error(ErrorCode::UnsafeEntry,"Links inside archives are not extracted");
       const auto relative=safeRelative(entry.path);verifyParents(root,relative);
       auto target=root/relative;
-      if(entry.directory){fs::create_directories(target);continue;}
-      target=chooseTarget(target,options.overwrite,cb);if(target.empty())continue;
-      fs::create_directories(target.parent_path());verifyParents(root,fs::relative(target,root));
-      const auto temp=staging.path/std::to_string(index);
-      std::ofstream stream(temp,std::ios::binary);if(!stream)throw Error(ErrorCode::IoError,"Could not create temporary output");
-      reader->extractTo(stream,index);stream.close();if(!stream)throw Error(ErrorCode::IoError,"Extracted file could not be written");
-      if(cb.outputFileBeforeCommit)cb.outputFileBeforeCommit(temp);
-      checkCancelled(cb);verifyParents(root,fs::relative(target,root));{CommitGuard commit(cb);replaceFile(temp,target);}
+      if(entry.directory){secure.directory(relative);continue;}
+      bool allowReplace=false;target=chooseTarget(target,options.overwrite,cb,&allowReplace);if(target.empty())continue;
+      const auto finalRelative=target.lexically_relative(root);safeRelative(finalRelative.generic_u8string());
+      secure.file(finalRelative,allowReplace,[&](std::ostream& stream){reader->extractTo(stream,index);},cb);
     }
   }catch(const bit7z::BitException& e){translate(e,options.password,cb);}
 }
-std::vector<fs::path> Engine::create(const CreateOptions& options,const Callbacks& cb) {
+std::vector<fs::path> Engine::create(const CreateOptions& requested,const Callbacks& cb) {
+  auto options=requested;options.output=nativePath(requested.output);for(auto& input:options.inputs)input=nativePath(input);
+  recoverTransactions(options.output,cb);
   checkCancelled(cb);
   if(options.inputs.empty())throw Error(ErrorCode::IoError,"Select input files");
   if((options.format=="tar"||options.format=="tgz")&&(!options.password.empty()||options.encryptHeaders))throw Error(ErrorCode::UnsupportedOperation,"TAR/TGZ does not support encryption");
@@ -168,22 +164,17 @@ std::vector<fs::path> Engine::create(const CreateOptions& options,const Callback
     std::sort(files.begin(),files.end());if(files.empty())throw Error(ErrorCode::IoError,"No archive output generated");
     test(files.front(),options.password,cb);
     for(const auto& pair:original)if(fingerprint(pair.first)!=pair.second)throw Error(ErrorCode::IoError,"Source changed; source files retained");
-    std::vector<fs::path> outputs;
-    for(const auto& file:files){auto target=chooseTarget(output.parent_path()/file.filename(),Overwrite::Ask,cb);if(target.empty())throw Error(ErrorCode::Cancelled,"Output skipped");outputs.push_back(target);}
-    std::vector<fs::path> backups(outputs.size());std::size_t committed=0;
-    CommitGuard commit(cb);
-    try{
-      for(std::size_t i=0;i<outputs.size();++i){checkCancelled(cb);if(fs::exists(outputs[i])){backups[i]=staging.path/("backup-"+std::to_string(i));fs::copy_file(outputs[i],backups[i]);}replaceFile(files[i],outputs[i]);++committed;}
-    }catch(...){
-      for(std::size_t i=0;i<committed;++i){std::error_code error;if(backups[i].empty())fs::remove(outputs[i],error);else {try{replaceFile(backups[i],outputs[i]);}catch(...){staging.preserve=true;}}}
-      throw;
-    }
+    std::vector<fs::path> outputs;std::vector<bool> replacements;
+    for(const auto& file:files){bool allowed=false;auto target=chooseTarget(staging.path.parent_path()/file.filename(),Overwrite::Ask,cb,&allowed);if(target.empty())throw Error(ErrorCode::Cancelled,"Output skipped");outputs.push_back(target);replacements.push_back(allowed);}
+    OutputJournal journal(staging.path,output,files,outputs,replacements);
+    {CommitGuard commit(cb);try{journal.commit(cb);}catch(...){if(!journal.rollback()){staging.preserve=true;throw Error(ErrorCode::IoError,"Commit failed; recovery data retained at "+staging.path.u8string());}throw;}}
     if(options.deleteSources)for(const auto& pair:original){if(fingerprint(pair.first)!=pair.second||!cb.trash(pair.first))throw Error(ErrorCode::IoError,"Archive saved, but some source files could not be moved to trash");}
     return outputs;
   }catch(const bit7z::BitException& e){translate(e,options.password,cb);}
 }
 namespace {
-template<class F> void editArchive(Engine& engine,bit7z::Bit7zLibrary& lib,const fs::path& file,const std::string& password,const Callbacks& cb,F edit){
+template<class F> void editArchive(Engine& engine,bit7z::Bit7zLibrary& lib,const fs::path& input,const std::string& password,const Callbacks& cb,F edit){
+  const auto file=nativePath(input);
   auto listing=engine.list(file,password,{},cb);const auto& format=formatFor(listing.format);
   if(listing.format!="zip"&&listing.format!="7z"&&listing.format!="tar")throw Error(ErrorCode::UnsupportedOperation,"Read-only archive format");
   TemporaryDirectory staging(fs::absolute(file).parent_path());const auto copy=staging.path/file.filename();fs::copy_file(file,copy);
@@ -194,8 +185,9 @@ template<class F> void editArchive(Engine& engine,bit7z::Bit7zLibrary& lib,const
       if(!password.empty()){editor.setPassword(ns(password),headers?bit7z::EncryptionScope::DataAndHeaders:bit7z::EncryptionScope::DataOnly);if(listing.format=="zip")editor.setFormatProperty(L"em",L"AES256");}
       edit(editor,listing);editor.applyChanges();}
     engine.test(copy,password,cb);checkCancelled(cb);
-    if(revision(file)!=listing.revision)throw Error(ErrorCode::IoError,"Archive changed during update");
-    {CommitGuard commit(cb);replaceFile(copy,file);}
+    if(revision(file)!=listing.sourceRevision)throw Error(ErrorCode::IoError,"Archive changed during update");
+    OutputJournal journal(staging.path,file,{copy},{staging.path.parent_path()/file.filename()},{true});
+    {CommitGuard commit(cb);try{journal.commit(cb);}catch(...){if(!journal.rollback()){staging.preserve=true;throw Error(ErrorCode::IoError,"Commit failed; recovery data retained at "+staging.path.u8string());}throw;}}
   }catch(const bit7z::BitException& e){translate(e,password,cb);}
 }
 }

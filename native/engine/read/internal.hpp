@@ -6,6 +6,17 @@
 #include <bit7z/biterror.hpp>
 #include "temporary.hpp"
 namespace reazip {
+inline fs::path nativePath(const fs::path& value){
+#ifdef _WIN32
+  const auto original=value.native();if(original.compare(0,4,L"\\\\?\\")==0)return value;
+#endif
+  auto result=fs::absolute(value).lexically_normal();
+#ifdef _WIN32
+  result.make_preferred();const auto text=result.native();if(text.compare(0,4,L"\\\\?\\")==0)return result;if(text.compare(0,2,L"\\\\")==0)return fs::path(L"\\\\?\\UNC\\"+text.substr(2));return fs::path(L"\\\\?\\"+text);
+#else
+  return result;
+#endif
+}
 inline bit7z::tstring ns(const fs::path& p) { return p.native(); }
 inline bit7z::tstring ns(const std::string& p) { return fs::u8path(p).native(); }
 inline std::string utf8(const bit7z::tstring& s) { return fs::path(s).u8string(); }

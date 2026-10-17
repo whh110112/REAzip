@@ -27,8 +27,9 @@ int main(int argc, char** argv) {
   QJsonArray launchPaths;QString action="open";
   for(int i=1;i<arguments.size();++i){const auto arg=arguments[i];if(arg=="--screenshot"||arg=="--design-scene"||arg=="--theme"||arg=="--language"||arg=="--performance"){++i;continue;}if(arg=="--extract-here")action="extract_here";else if(arg=="--extract-to")action="extract_to";else if(arg=="--add")action="add";else if(!arg.startsWith('-')&&QFileInfo::exists(arg))launchPaths.append(QFileInfo(arg).absoluteFilePath());}
   QJsonObject launch{{"version",1},{"action",action},{"paths",launchPaths}};
-  platform::Instance instance(platform::dataDirectory());
-  if(!arguments.contains("--smoke")&&!arguments.contains("--design-preview")){const auto state=instance.start(launch);if(state==1)return 0;if(state<0){qCritical().noquote()<<instance.error();return 3;}}
+  QTemporaryDir smokeData;const bool testing=arguments.contains("--smoke")||arguments.contains("--design-preview");QString startupFailure;
+  platform::Instance instance(testing?smokeData.path()+"/instance":platform::dataDirectory());
+  if(!testing){const auto state=instance.start(launch);if(state==1)return 0;if(state<0){startupFailure=instance.error();qCritical().noquote()<<startupFailure;}}
 #ifdef Q_OS_WIN
   const auto worker=QCoreApplication::applicationDirPath()+"/reazip-worker.exe";
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.dll";
@@ -36,13 +37,12 @@ int main(int argc, char** argv) {
   const auto worker=QCoreApplication::applicationDirPath()+"/reazip-worker";
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.so";
 #endif
-  QTemporaryDir smokeData;
-  const bool testing=arguments.contains("--smoke")||arguments.contains("--design-preview");
-  AppController controller(worker,library,nullptr,testing?smokeData.path():QString());
+  AppController controller(worker,library,nullptr,testing||!startupFailure.isEmpty()?smokeData.path():QString());
   for(const auto& option:{QString("--theme"),QString("--language")}){const auto index=arguments.indexOf(option);if(index>=0&&index+1<arguments.size())controller.setPreference(option=="--theme"?"skin":"language",arguments[index+1]);}
   QQmlApplicationEngine engine;
-  engine.rootContext()->setContextProperty("backend",app.arguments().contains("--design-preview")?nullptr:static_cast<QObject*>(&controller));
+  engine.rootContext()->setContextProperty("backend",app.arguments().contains("--design-preview")||!startupFailure.isEmpty()?nullptr:static_cast<QObject*>(&controller));
   engine.rootContext()->setContextProperty("designPreview",app.arguments().contains("--design-preview"));
+  engine.rootContext()->setContextProperty("startupFailure",startupFailure);
   QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
   engine.loadFromModule("REAzip", "Main");
   if(!engine.rootObjects().isEmpty())if(auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first()))QObject::connect(window,&QQuickWindow::frameSwapped,&app,[&]{if(firstFrame<0)firstFrame=startup.elapsed();});
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
   QObject::connect(&instance,&platform::Instance::request,&controller,dispatch);
   platform::OpenEvents openEvents;app.installEventFilter(&openEvents);
   QObject::connect(&openEvents,&platform::OpenEvents::open,&controller,[&](QString path){dispatch({{"version",1},{"action","open"},{"paths",QJsonArray{path}}});});
-  if(!app.arguments().contains("--design-preview"))QTimer::singleShot(0,&controller,[&]{dispatch(launch);});
+  if(!app.arguments().contains("--design-preview")&&startupFailure.isEmpty())QTimer::singleShot(0,&controller,[&]{dispatch(launch);});
   const auto scene=arguments.indexOf("--design-scene");
   if(testing&&scene>=0&&scene+1<arguments.size())QTimer::singleShot(300,&app,[&]{if(!engine.rootObjects().isEmpty())QMetaObject::invokeMethod(engine.rootObjects().first(),"openDesignScene",Q_ARG(QVariant,arguments[scene+1]));});
   QElapsedTimer smokeElapsed;smokeElapsed.start();QTimer smokeTimer;

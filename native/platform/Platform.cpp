@@ -36,7 +36,7 @@ quint64 residentBytes(){
 }
 QString dataDirectory(QString directory){if(directory.isEmpty())directory=QCoreApplication::applicationDirPath();if(QFileInfo::exists(directory+"/portable.flag"))return directory+"/data";return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)+"/native";}
 Instance::Instance(QString directory,QObject* parent):QObject(parent),server(this){
-  QDir().mkpath(directory);QFile::setPermissions(directory,QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner);
+  storage=directory;const bool existed=QFileInfo::exists(directory);if(!QDir().mkpath(directory))diagnostic="Cannot write data directory: "+directory+". Move the portable package to a writable folder.";else if(!existed)QFile::setPermissions(directory,QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner);
   const auto hash=QCryptographicHash::hash(directory.toUtf8(),QCryptographicHash::Sha256).toHex().left(24);
 #ifdef Q_OS_WIN
   name="REAzip-"+QString::fromLatin1(hash);
@@ -65,8 +65,9 @@ Instance::Instance(QString directory,QObject* parent):QObject(parent),server(thi
 }
 bool Instance::valid(const QJsonObject& request){if(request["version"].toInt()!=1)return false;const auto action=request["action"].toString();if(action!="open"&&action!="extract_here"&&action!="extract_to"&&action!="add")return false;
   if(!request["paths"].isArray()||request["paths"].toArray().size()>128)return false;for(const auto& v:request["paths"].toArray())if(!v.isString()||!QFileInfo(v.toString()).isAbsolute()||v.toString().contains(QChar::Null))return false;return true;}
-int Instance::start(QJsonObject request){if(!valid(request)){diagnostic="Invalid launch request";return -1;}
+int Instance::start(QJsonObject request){if(!diagnostic.isEmpty())return -1;if(!valid(request)){diagnostic="Invalid launch request";return -1;}
   if(lock->tryLock(0)){QLocalServer::removeServer(name);if(server.listen(name))return 0;diagnostic=server.errorString();return -1;}
+  if(lock->error()==QLockFile::PermissionError){diagnostic="Cannot write data directory: "+storage+". Move the portable package to a writable folder.";return -1;}
   for(int attempt=0;attempt<5;++attempt){QLocalSocket socket;socket.connectToServer(name);if(!socket.waitForConnected(300))continue;
     const auto bytes=QJsonDocument(request).toJson(QJsonDocument::Compact)+'\n';socket.write(bytes);if(!socket.waitForBytesWritten(500))continue;if(socket.waitForReadyRead(1000)&&socket.readLine()=="OK\n")return 1;}
   diagnostic="Existing instance did not accept the request; retry after it exits";return -1;
@@ -118,7 +119,9 @@ QString unregisterApplication(QString executable,QString prefix){
 bool propagateOrigin(QString archive,QString destination,QString* error){
 #ifdef Q_OS_WIN
   QFile source(archive+":Zone.Identifier");if(!source.exists())return true;if(!source.open(QIODevice::ReadOnly)){if(error)*error="Cannot read archive origin metadata";return false;}const auto zone=source.read(65537);if(zone.size()>65536){if(error)*error="Archive origin metadata exceeds limit";return false;}
-  QFile target(destination+":Zone.Identifier");if(!target.open(QIODevice::WriteOnly|QIODevice::Truncate)||target.write(zone)!=zone.size()){if(error)*error="Cannot preserve archive origin metadata";return false;}return target.flush();
+  auto target=QDir::toNativeSeparators(destination)+":Zone.Identifier";if(!target.startsWith("\\\\?\\"))target=target.startsWith("\\\\")?"\\\\?\\UNC\\"+target.mid(2):"\\\\?\\"+target;
+  auto handle=CreateFileW(reinterpret_cast<const wchar_t*>(target.utf16()),GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);
+  if(handle==INVALID_HANDLE_VALUE){if(error)*error="Cannot preserve archive origin metadata";return false;}DWORD written{};const bool ok=WriteFile(handle,zone.constData(),static_cast<DWORD>(zone.size()),&written,nullptr)&&written==static_cast<DWORD>(zone.size())&&FlushFileBuffers(handle);CloseHandle(handle);if(!ok&&error)*error="Cannot write archive origin metadata";return ok;
 #else
   Q_UNUSED(archive);Q_UNUSED(destination);Q_UNUSED(error);return true;
 #endif

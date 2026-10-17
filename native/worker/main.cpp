@@ -11,18 +11,24 @@
 #include <QStandardPaths>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QRegularExpression>
 #include "../platform/Platform.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <chrono>
 using namespace reazip;
 namespace {
 constexpr std::size_t maximumFrame=16*1024*1024;
 std::string text(const QJsonValue& v){if(!v.isString())throw Error(ErrorCode::UnsupportedOperation,"Expected a string field");return v.toString().toUtf8().toStdString();}
 fs::path file(const QJsonValue& v){return fs::u8path(text(v));}
-QString qs(const std::string& v){return QString::fromUtf8(v.data(),static_cast<qsizetype>(v.size()));}
+QString qs(const std::string& v){auto value=QString::fromUtf8(v.data(),static_cast<qsizetype>(v.size()));
+#ifdef _WIN32
+  if(value.startsWith("\\\\?\\UNC\\"))return "\\\\"+value.mid(8);if(value.startsWith("\\\\?\\"))return value.mid(4);
+#endif
+  return value;}
 std::vector<std::string> strings(const QJsonValue& v){if(v.isUndefined())return {};if(!v.isArray())throw Error(ErrorCode::UnsupportedOperation,"Expected array");std::vector<std::string> result;for(const auto& x:v.toArray())result.push_back(text(x));return result;}
 QString errorName(ErrorCode code){switch(code){
 #define CASE(x) case ErrorCode::x:return #x;
@@ -54,7 +60,8 @@ class Session {
     send("started");
     try{
       Engine engine(library);Callbacks cb;cb.cancelled=[&]{return stop.load();};
-      cb.progress=[&](auto current,auto total){send("progress",{{"current",QString::number(current)},{"total",QString::number(total)}});};
+      std::mutex progressMutex;auto lastProgress=std::chrono::steady_clock::now()-std::chrono::seconds(1);
+      cb.progress=[&](auto current,auto total){std::lock_guard<std::mutex> lock(progressMutex);const auto now=std::chrono::steady_clock::now();if(now-lastProgress<std::chrono::milliseconds(50)&&!(total>0&&current==total))return;lastProgress=now;send("progress",{{"current",QString::number(current)},{"total",QString::number(total)}});};
       cb.commitState=[&](bool value){send("progress",{{"phase",value?"committing":"running"}});};
       cb.overwrite=[&](const fs::path& p){auto a=ask("overwriteRequired",{{"path",qs(p.u8string())}});if(a["choice"].toString()=="cancel"){cancel();throw Error(ErrorCode::Cancelled,"Task cancelled");}return policy(a["choice"].toString());};
       cb.trash=[](const fs::path& p){return QFile::moveToTrash(qs(p.u8string()));};
@@ -64,6 +71,7 @@ class Session {
       if(operation!="identity"){
         QFileInfo info(request[operation=="create"?"output":"archive"].toString());
         auto canonical=info.canonicalFilePath();if(canonical.isEmpty())canonical=QDir(info.absolutePath()).canonicalPath()+"/"+info.fileName();
+        canonical.remove(QRegularExpression("\\.\\d{3,}$")); // all volumes share the same archive lock
 #ifdef _WIN32
         canonical=canonical.toLower();
 #endif
@@ -81,8 +89,8 @@ class Session {
           else if(operation=="list"){
             const auto listing=engine.list(file(request["archive"]),password,request["codepage"].toString().toStdString(),cb);
             result={{"format",qs(listing.format)},{"revision",qs(listing.revision)},{"physicalSize",QString::number(listing.physicalSize)}};
-            QJsonArray chunk;
-            for(const auto& e:listing.entries){QJsonObject entry{{"entryId",qs(e.id)},{"index",QString::number(e.index)},{"path",qs(e.path)},{"directory",e.directory},{"link",e.link},{"size",QString::number(e.size)},{"encrypted",e.encrypted},{"encryption",qs(e.encryption)}};if(e.packed)entry["packedSize"]=QString::number(*e.packed);if(e.modified)entry["modified"]=QDateTime::fromSecsSinceEpoch(*e.modified).toLocalTime().toString("yyyy-MM-dd HH:mm");chunk.append(entry);if(chunk.size()==512){send("entriesChunk",{{"entries",chunk}});chunk={};}}
+            QJsonArray chunk;qsizetype chunkBytes=0;
+            for(const auto& e:listing.entries){QJsonObject entry{{"entryId",qs(e.id)},{"index",QString::number(e.index)},{"path",qs(e.path)},{"directory",e.directory},{"link",e.link},{"size",QString::number(e.size)},{"encrypted",e.encrypted},{"encryption",qs(e.encryption)}};if(e.packed)entry["packedSize"]=QString::number(*e.packed);if(e.modified)entry["modified"]=QDateTime::fromSecsSinceEpoch(*e.modified).toLocalTime().toString("yyyy-MM-dd HH:mm");const auto bytes=QJsonDocument(entry).toJson(QJsonDocument::Compact).size();if(bytes>8*1024*1024)throw Error(ErrorCode::UnsafeEntry,"Archive entry metadata exceeds protocol limit");if(!chunk.isEmpty()&&(chunk.size()>=512||chunkBytes+bytes>1024*1024)){send("entriesChunk",{{"entries",chunk}});chunk={};chunkBytes=0;}chunk.append(entry);chunkBytes+=bytes;}
             if(!chunk.isEmpty())send("entriesChunk",{{"entries",chunk}});
           }else if(operation=="test")engine.test(file(request["archive"]),password,cb);
           else if(operation=="extract"){
@@ -121,7 +129,8 @@ int main(int argc,char** argv){
     if(type=="hello"){session.send("ready");continue;}
     if(type=="submit"&&!submitted&&!message["jobId"].toString().isEmpty()){
       session.id=message["jobId"].toString().toStdString();submitted=true;job=std::thread([&,message]{session.execute(message,library);});
-    }else if(submitted&&message["jobId"].toString().toStdString()==session.id&&!session.done){
+    }else if(submitted&&(type=="cancel"||type=="respondChallenge")&&message["jobId"].toString().toStdString()!=session.id){continue;}
+    else if(submitted&&message["jobId"].toString().toStdString()==session.id&&!session.done){
       if(type=="cancel")session.cancel();else if(type=="respondChallenge")session.respond(message);
     }else {session.send("failed",{{"code","ProtocolStateError"}});session.cancel();break;}
   }
