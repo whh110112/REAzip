@@ -10,7 +10,7 @@ static bit7z::tstring native(const fs::path& p) { return p.native(); }
 static void require(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
 int main(int argc, char** argv) {
   try {
-    require(argc == 3, "usage: reazip-probe LIBRARY TEST-DIRECTORY");
+    require(argc == 4, "usage: reazip-probe LIBRARY TEST-DIRECTORY ISO-FIXTURE");
     const fs::path library = fs::absolute(fs::u8path(argv[1]));
     const fs::path work = fs::absolute(fs::u8path(argv[2]));
     fs::create_directories(work);
@@ -35,6 +35,10 @@ int main(int argc, char** argv) {
       require(restored == contents, "roundtrip bytes differ");
       std::cout << format.first << ": create/list/test/extract PASS\n";
     }
+    bit7z::BitArchiveReader iso(engine, native(fs::absolute(fs::u8path(argv[3]))));
+    require(iso.itemsCount() == 1, "full engine ISO entry count");
+    iso.test();
+    std::cout << "ISO: full native engine format PASS\n";
     std::cout << "Engine 26.04; bit7z 4.1.0; native pointer bits " << sizeof(void*) * 8 << "; library " << library.u8string() << '\n';
     return 0;
   } catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }
