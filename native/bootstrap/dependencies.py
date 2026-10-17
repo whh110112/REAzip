@@ -27,7 +27,7 @@ def main():
     if not (bit / '.git').exists():
         run('git','clone','--no-checkout',LOCK['bit7z']['repository'],bit)
     actual = subprocess.check_output(['git','rev-parse','HEAD'],cwd=bit,text=True).strip() if (bit/'.git/HEAD').exists() else ''
-    if actual != LOCK['bit7z']['commit']:
+    if actual != LOCK['bit7z']['commit'] or not (bit/'CMakeLists.txt').exists():
         run('git','fetch','--depth','1','origin',LOCK['bit7z']['commit'],cwd=bit)
         run('git','checkout','--detach',LOCK['bit7z']['commit'],cwd=bit)
     source = download(LOCK['sevenZip']['artifacts']['source'])

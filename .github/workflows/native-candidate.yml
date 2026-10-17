@@ -43,6 +43,7 @@ jobs:
         run: |
           args=()
           if [[ "$RUNNER_OS" == Windows ]]; then
+            args+=(-G "Visual Studio 17 2022")
             if [[ '${{ matrix.arch }}' == arm64 ]]; then args+=(-A ARM64); else args+=(-A x64); fi
           elif [[ "$RUNNER_OS" == macOS ]]; then
             args+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0)
@@ -59,6 +60,8 @@ jobs:
           elif [[ "$RUNNER_OS" == macOS ]]; then app=.native-build/candidate/bin/reazip.app/Contents/MacOS/reazip;
           else app=.native-build/candidate/bin/reazip; fi
           "$app" --smoke native/tests/fixtures/sample.iso --screenshot .native-build/native-smoke.png
+      - name: Build and isolate-test offline candidate packages
+        run: python native/packaging/package.py --build .native-build/candidate --arch ${{ matrix.arch }} --qt-prefix "${{ env.QT_PREFIX }}" --output .native-build/artifacts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -66,4 +69,31 @@ jobs:
           path: |
             .native-build/candidate/Testing/Temporary/LastTest.log
             .native-build/native-smoke.png
+            .native-build/artifacts/*
           if-no-files-found: ignore
+  aggregate:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-checks-*
+          path: candidates
+      - name: Require every architecture and artifact format
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('candidates');manifests=list(root.rglob('*-manifest.json'))
+          expected={(os,arch) for os in ['windows','macos','linux'] for arch in ['x64','arm64']};found=set()
+          for path in manifests:
+              data=json.loads(path.read_text());found.add((data['os'],data['architecture']))
+              required={'windows':{'.exe','.zip'},'macos':{'.dmg','.zip'},'linux':{'.AppImage','.deb','.gz'}}[data['os']]
+              assert required<={pathlib.Path(item['file']).suffix for item in data['artifacts']}
+          assert found==expected,(found,expected)
+          assert len({json.loads(path.read_text())['sourceCommit'] for path in manifests})==1
+          pathlib.Path('candidate-status.json').write_text(json.dumps({'sixTargetsBuilt':True,'publicReleaseAuthorized':False,'releaseGate':'T10 acceptance required'},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aggregate-candidate-status
+          path: candidate-status.json
