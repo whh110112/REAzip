@@ -44,7 +44,7 @@ AppController::AppController(QString worker,QString engine,QObject* parent,QStri
   submit({{"operation","identity"}},{});
   QTimer::singleShot(0,this,[this]{for(const auto& notice:settings.takeNotices())emit message(notice,false);for(const auto& notice:themeService.notices())emit message(notice,false);if(restoreTabs()){QVariantList urls;for(const auto& value:preferences["openTabs"].toArray()){if(QFileInfo(value.toString()).isFile())urls.append(QUrl::fromLocalFile(value.toString()));else emit message(translate("openFailed","Missing saved archive")+": "+value.toString(),true);}openUrls(urls);}});
 }
-AppController::~AppController(){QJsonArray paths;for(const auto& t:documents)paths.append(t.path);settings.set("openTabs",restoreTabs()?paths:QJsonArray{});}
+AppController::~AppController(){QObject::disconnect(&jobs,nullptr,this,nullptr);QObject::disconnect(&model,nullptr,this,nullptr);QJsonArray paths;for(const auto& t:documents)paths.append(t.path);settings.set("openTabs",restoreTabs()?paths:QJsonArray{});}
 const AppController::Tab* AppController::tab()const{for(const auto& t:documents)if(t.id==current)return &t;return nullptr;}
 AppController::Tab* AppController::find(QString id){for(auto& t:documents)if(t.id==id)return &t;return nullptr;}
 QVariantList AppController::tabs()const{QVariantList result;for(const auto& t:documents)result.append(QVariantMap{{"id",t.id},{"name",QFileInfo(t.path).fileName()}});return result;}

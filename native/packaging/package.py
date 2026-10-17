@@ -1,5 +1,5 @@
 """Build-only native candidate packager; no publishing capability or credentials."""
-import argparse,hashlib,json,os,pathlib,platform,shutil,struct,subprocess,sys,tarfile,time,urllib.request,uuid,zipfile
+import argparse,hashlib,json,os,pathlib,platform,shutil,struct,subprocess,sys,tarfile,time,urllib.request,uuid,zipfile,re
 ROOT=pathlib.Path(__file__).resolve().parents[1];REPO=ROOT.parent
 LOCK=json.loads((ROOT/'packaging/tools.lock.json').read_text());DEPS=json.loads((ROOT/'deps.lock.json').read_text())
 def run(*args,**kw):subprocess.run([str(a) for a in args],check=True,**kw)
@@ -56,10 +56,21 @@ def main():
     resources=bundle/'Contents/Resources' if system=='Darwin' else stage
     resources.mkdir(parents=True,exist_ok=True);licenses=resources/'LICENSES';licenses.mkdir(exist_ok=True)
     shutil.copy2(REPO/'LICENSE',licenses/'REAzip-MIT.txt');shutil.copy2(ROOT/'.deps/bit7z/LICENSE',licenses/'bit7z-MPL-2.0.txt')
+    ghc=build/'_deps/ghc_filesystem-src'
+    if (ghc/'LICENSE').exists():shutil.copy2(ghc/'LICENSE',licenses/'ghc-filesystem-MIT.txt')
+    if system=='Linux':shutil.copy2(ROOT/'packaging/licenses/AppImage-runtime-MIT.txt',licenses/'AppImage-runtime-MIT.txt')
+    if system=='Windows' and (stage/'libstdc++-6.dll').exists():
+        cache=(build/'CMakeCache.txt').read_text();match=re.search(r'^CMAKE_CXX_COMPILER:FILEPATH=(.+)$',cache,re.M)
+        if not match:raise RuntimeError('Cannot locate MinGW runtime license inventory')
+        compiler_licenses=pathlib.Path(match.group(1).strip()).parent.parent/'licenses'
+        if not compiler_licenses.is_dir():raise RuntimeError('MinGW runtime license inventory missing')
+        shutil.copytree(compiler_licenses,licenses/'MinGW-runtime',dirs_exist_ok=True)
     shutil.copytree(ROOT/'.deps/7zip/DOC',licenses/'7-Zip',ignore=shutil.ignore_patterns('*.hhp','*.wxs'),dirs_exist_ok=True)
     run(sys.executable,ROOT/'packaging/collect-licenses.py','--qt-prefix',qt,'--output',licenses/'Qt')
     shutil.copy2(ROOT/'packaging/NOTICE.md',resources/'NOTICE.md')
     sources=resources/'sources';sources.mkdir(exist_ok=True);shutil.copy2(ROOT/'.deps'/DEPS['sevenZip']['artifacts']['source']['name'],sources/'7zip-26.04-original.tar.xz')
+    if (ghc/'LICENSE').exists():
+        with tarfile.open(sources/'ghc-filesystem-source.tar.gz','w:gz') as archive:archive.add(ghc,arcname='ghc-filesystem',filter=lambda info:None if '/.git' in info.name else info)
     shutil.copy2(ROOT/'bootstrap/posix-codepage.inc',sources/'posix-codepage.inc');shutil.copy2(ROOT/'bootstrap/dependencies.py',sources/'dependencies.py')
     if system!='Windows':shutil.copy2(ROOT/'.deps/7zip/CPP/Common/StringConvert.cpp',sources/'StringConvert.cpp')
     with tarfile.open(sources/'bit7z-source.tar.gz','w:gz') as archive:
@@ -133,7 +144,13 @@ def main():
     elif system=='Darwin':
         archive=output/(name+'.zip');run('ditto','-c','-k','--sequesterRsrc','--keepParent',bundle,archive);artifacts.append(archive)
         dmgroot=build/('dmg-'+uuid.uuid4().hex);dmgroot.mkdir();shutil.copytree(bundle,dmgroot/'REAzip.app',symlinks=True);(dmgroot/'Applications').symlink_to('/Applications')
-        dmg=output/(name+'.dmg');run('hdiutil','create','-volname','REAzip','-srcfolder',dmgroot,'-ov','-format','UDZO',dmg);artifacts.append(dmg)
+        (dmgroot/'.metadata_never_index').touch();dmg=output/(name+'.dmg')
+        for attempt in range(4):
+            try:run('hdiutil','create','-volname','REAzip','-fs','HFS+','-srcfolder',dmgroot,'-ov','-format','UDZO',dmg);break
+            except subprocess.CalledProcessError:
+                if attempt==3:raise
+                time.sleep(3*(attempt+1))
+        artifacts.append(dmg)
     else:
         # CMake deployed Qt and its transitive libraries; AppRun sets paths relative to its readonly package.
         launcher='#!/bin/sh\nAPPDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexport LD_LIBRARY_PATH="$APPDIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\nexec "$APPDIR/bin/reazip" "$@"\n'

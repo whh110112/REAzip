@@ -4,7 +4,7 @@
 #include <QTimer>
 #include <QFileInfo>
 JobController::JobController(QString worker,QString engine,QObject* parent):QObject(parent),workerPath(std::move(worker)),enginePath(std::move(engine)){}
-JobController::~JobController(){if(active){active->closeWriteChannel();if(!active->waitForFinished(2000)&&!committing){active->kill();active->waitForFinished(2000);}else if(committing)active->waitForFinished(-1);}}
+JobController::~JobController(){pending.clear();if(active){auto process=active;active=nullptr;QObject::disconnect(process,nullptr,this,nullptr);process->closeWriteChannel();if(!process->waitForFinished(2000)){if(committing)process->waitForFinished(-1);else{process->kill();process->waitForFinished(2000);}}}}
 QString JobController::submit(QJsonObject request){
   const auto id=QUuid::createUuid().toString(QUuid::WithoutBraces);request["jobId"]=id;request["protocolVersion"]=1;request["type"]="submit";pending.enqueue(request);if(!active)startNext();return id;
 }

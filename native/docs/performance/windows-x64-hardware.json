@@ -1,0 +1,169 @@
+{
+  "samples": [
+    {
+      "version": "0.2.1",
+      "electron": "44.9.0",
+      "firstFrameMs": 299.3929,
+      "archiveReadyMs": -1,
+      "residentBytes": "356859904",
+      "processCount": 4,
+      "scene": "empty",
+      "measurement": "Application-entry to ready-to-show; summed process working sets include shared pages, warm OS caches",
+      "implementation": "legacy",
+      "sample": 0
+    },
+    {
+      "version": "0.2.1",
+      "electron": "44.9.0",
+      "firstFrameMs": 271.0236,
+      "archiveReadyMs": -1,
+      "residentBytes": "357027840",
+      "processCount": 4,
+      "scene": "empty",
+      "measurement": "Application-entry to ready-to-show; summed process working sets include shared pages, warm OS caches",
+      "implementation": "legacy",
+      "sample": 1
+    },
+    {
+      "version": "0.2.1",
+      "electron": "44.9.0",
+      "firstFrameMs": 280.9687,
+      "archiveReadyMs": -1,
+      "residentBytes": "353517568",
+      "processCount": 4,
+      "scene": "empty",
+      "measurement": "Application-entry to ready-to-show; summed process working sets include shared pages, warm OS caches",
+      "implementation": "legacy",
+      "sample": 2
+    },
+    {
+      "archiveReadyMs": -1,
+      "firstFrameMs": 1560,
+      "measuredAtMs": 3647,
+      "qt": "6.8.3",
+      "residentBytes": "184066048",
+      "scene": "empty",
+      "version": "0.3.0-dev",
+      "implementation": "native",
+      "sample": 0
+    },
+    {
+      "archiveReadyMs": -1,
+      "firstFrameMs": 1514,
+      "measuredAtMs": 3564,
+      "qt": "6.8.3",
+      "residentBytes": "183214080",
+      "scene": "empty",
+      "version": "0.3.0-dev",
+      "implementation": "native",
+      "sample": 1
+    },
+    {
+      "archiveReadyMs": -1,
+      "firstFrameMs": 1557,
+      "measuredAtMs": 3658,
+      "qt": "6.8.3",
+      "residentBytes": "185217024",
+      "scene": "empty",
+      "version": "0.3.0-dev",
+      "implementation": "native",
+      "sample": 2
+    },
+    {
+      "version": "0.2.1",
+      "electron": "44.9.0",
+      "firstFrameMs": 250.5829,
+      "archiveReadyMs": 609.6207,
+      "residentBytes": "386953216",
+      "processCount": 4,
+      "scene": "archive",
+      "measurement": "Application-entry to ready-to-show; summed process working sets include shared pages, warm OS caches",
+      "implementation": "legacy",
+      "sample": 0
+    },
+    {
+      "version": "0.2.1",
+      "electron": "44.9.0",
+      "firstFrameMs": 283.6013,
+      "archiveReadyMs": 626.9335,
+      "residentBytes": "380219392",
+      "processCount": 4,
+      "scene": "archive",
+      "measurement": "Application-entry to ready-to-show; summed process working sets include shared pages, warm OS caches",
+      "implementation": "legacy",
+      "sample": 1
+    },
+    {
+      "version": "0.2.1",
+      "electron": "44.9.0",
+      "firstFrameMs": 257.1043,
+      "archiveReadyMs": 593.8643,
+      "residentBytes": "379969536",
+      "processCount": 4,
+      "scene": "archive",
+      "measurement": "Application-entry to ready-to-show; summed process working sets include shared pages, warm OS caches",
+      "implementation": "legacy",
+      "sample": 2
+    },
+    {
+      "archiveReadyMs": 873,
+      "firstFrameMs": 830,
+      "measuredAtMs": 2902,
+      "qt": "6.8.3",
+      "residentBytes": "189648896",
+      "scene": "archive",
+      "version": "0.3.0-dev",
+      "implementation": "native",
+      "sample": 0
+    },
+    {
+      "archiveReadyMs": 526,
+      "firstFrameMs": 493,
+      "measuredAtMs": 2591,
+      "qt": "6.8.3",
+      "residentBytes": "189501440",
+      "scene": "archive",
+      "version": "0.3.0-dev",
+      "implementation": "native",
+      "sample": 1
+    },
+    {
+      "archiveReadyMs": 1063,
+      "firstFrameMs": 1028,
+      "measuredAtMs": 3155,
+      "qt": "6.8.3",
+      "residentBytes": "188850176",
+      "scene": "archive",
+      "version": "0.3.0-dev",
+      "implementation": "native",
+      "sample": 2
+    }
+  ],
+  "medians": {
+    "legacy-empty": {
+      "firstFrameMs": 280.9687,
+      "archiveReadyMs": -1.0,
+      "residentBytes": 356859904.0
+    },
+    "native-empty": {
+      "firstFrameMs": 1557.0,
+      "archiveReadyMs": -1.0,
+      "residentBytes": 184066048.0
+    },
+    "legacy-archive": {
+      "firstFrameMs": 257.1043,
+      "archiveReadyMs": 609.6207,
+      "residentBytes": 380219392.0
+    },
+    "native-archive": {
+      "firstFrameMs": 830.0,
+      "archiveReadyMs": 873.0,
+      "residentBytes": 189501440.0
+    }
+  },
+  "limitations": [
+    "Same Windows machine, normal window platform, warm filesystem caches.",
+    "Internal application-entry to first-frame timing excludes different runtime loading before the entry point.",
+    "Electron memory sums all app processes; native idle worker has exited."
+  ]
+}

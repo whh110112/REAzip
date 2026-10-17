@@ -77,7 +77,7 @@ ApplicationWindow {
         Rectangle { Layout.fillWidth:true;implicitHeight:56;color:window.paper
             RowLayout { anchors.fill:parent;anchors.leftMargin:14;anchors.rightMargin:14;spacing:8
                 Action { text:window.t("newArchive","新建压缩");primary:true;enabled:!!window.api;onClicked:createDialog.open() }
-                Action { text:window.t("extractTo","解压到");enabled:window.hasArchive&&!!window.api;onClicked:extractDialog.open() }
+                Action { objectName:"extractButton";text:window.t("extractTo","解压到");enabled:window.hasArchive&&!!window.api;onClicked:extractDialog.open() }
                 Action { text:window.t("test","测试");enabled:window.hasArchive&&!!window.api;onClicked:window.api.testArchive() }
                 Action { text:window.t("add","添加");enabled:window.api?window.api.canModify:false;onClicked:addDialog.open() }
                 Action { text:window.t("delete","删除");enabled:window.api?window.api.hasSelection&&window.api.canModify:false;onClicked:deleteDialog.open() }
@@ -109,7 +109,7 @@ ApplicationWindow {
                             }
                         }
                     }
-                    ListView { id:files;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;model:window.api?window.api.entries:(window.preview?previewEntries:null);boundsBehavior:Flickable.StopAtBounds
+                    ListView { id:files;objectName:"filesList";Layout.fillWidth:true;Layout.fillHeight:true;clip:true;model:window.api?window.api.entries:(window.preview?previewEntries:null);boundsBehavior:Flickable.StopAtBounds
                         ScrollBar.vertical:ScrollBar {}
                         delegate:Rectangle { required property string entryId;required property string name;required property bool directory;required property string displaySize;required property string displayPacked;required property string kind;required property string modified;required property bool selected
                             width:files.width;height:40;color:selected?window.token("--accent-soft","#E6F1FB"):window.paper
@@ -172,18 +172,18 @@ ApplicationWindow {
         }
         footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.enabled?volume.text:""});createPassword.clear();createDialog.close()} } }
     }
-    Sheet { id:extractDialog;title:window.t("extractTo","解压到");paper:window.card;ink:window.ink;edge:window.edge
+    Sheet { id:extractDialog;objectName:"extractDialog";title:window.t("extractTo","解压到");paper:window.card;ink:window.ink;edge:window.edge
         ColumnLayout { width:parent.width;spacing:12
             Caption { text:window.t("saveTo","目标目录") }
-            RowLayout { Field { id:extractDest;text:window.api?window.api.defaultExtractDir:"";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="extract";folders.open()} } }
-            CheckBox { id:smart;text:window.t("smartExtract","智能选择同名目录");checked:true;palette.text:window.ink }
+            RowLayout { Field { id:extractDest;objectName:"extractDestination";text:window.api?window.api.defaultExtractDir:"";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="extract";folders.open()} } }
+            CheckBox { id:smart;objectName:"smartExtract";text:window.t("smartExtract","智能选择同名目录");checked:true;palette.text:window.ink }
             ComboBox { id:overwrite;textRole:"label";valueRole:"value";model:[{label:window.t("ask","询问"),value:"ask"},{label:window.t("overwrite","覆盖"),value:"overwrite"},{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"}] }
-            CheckBox { id:openAfter;text:window.t("openAfter","完成后打开目录");checked:true;palette.text:window.ink }
+            CheckBox { id:openAfter;objectName:"openAfter";text:window.t("openAfter","完成后打开目录");checked:true;palette.text:window.ink }
         }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:extractDialog.reject() } Action { text:window.t("startExtract","开始解压");primary:true;onClicked:{if(window.api)window.api.extractArchive({destination:extractDest.text,smart:smart.checked,overwrite:overwrite.currentValue,openAfter:openAfter.checked});extractDialog.close()} } }
+        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:extractDialog.reject() } Action { objectName:"extractStart";text:window.t("startExtract","开始解压");primary:true;onClicked:{if(window.api)window.api.extractArchive({destination:extractDest.text,smart:smart.checked,overwrite:overwrite.currentValue,openAfter:openAfter.checked});extractDialog.close()} } }
     }
-    Sheet { id:passwordDialog;title:window.t("needPassword","需要密码");paper:window.card;ink:window.ink;edge:window.edge
-        ColumnLayout { width:parent.width;Caption { text:window.currentChallenge.incorrect?window.t("passwordWrong","密码错误，请重试"):window.t("enterPassword","请输入归档密码") } Field { id:password;echoMode:TextInput.Password;Layout.fillWidth:true;onAccepted:passwordDialog.accept() } }
+    Sheet { id:passwordDialog;objectName:"passwordDialog";title:window.t("needPassword","需要密码");paper:window.card;ink:window.ink;edge:window.edge
+        ColumnLayout { width:parent.width;Caption { text:window.currentChallenge.incorrect?window.t("passwordWrong","密码错误，请重试"):window.t("enterPassword","请输入归档密码") } Field { id:password;objectName:"passwordField";echoMode:TextInput.Password;Layout.fillWidth:true;onAccepted:passwordDialog.accept() } }
         standardButtons:Dialog.Ok|Dialog.Cancel
         onOpened:{password.clear();password.forceActiveFocus()}
         onAccepted:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,password.text);password.clear()}
@@ -194,12 +194,13 @@ ApplicationWindow {
         standardButtons:Dialog.Ok|Dialog.Cancel
         onAccepted:if(window.api)window.api.openExternal(window.executablePath)
     }
-    Sheet { id:conflictDialog;title:window.t("conflictTitle","目标位置已有同名文件");paper:window.card;ink:window.ink;edge:window.edge
+    Sheet { id:conflictDialog;objectName:"conflictDialog";title:window.t("conflictTitle","目标位置已有同名文件");paper:window.card;ink:window.ink;edge:window.edge
         Caption { width:parent.width;text:window.currentChallenge.path||"";wrapMode:Text.WrapAnywhere }
-        footer:RowLayout { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"},{label:window.t("overwrite","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
+        footer:RowLayout { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"},{label:window.t("overwrite","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;objectName:"conflict-"+modelData.value;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
         onRejected:if(window.api)window.api.cancelTask()
     }
     Sheet { id:progressDialog;title:window.t("loading","处理中");paper:window.card;ink:window.ink;edge:window.edge;closePolicy:Popup.NoAutoClose
+        onRejected:if(window.api)window.api.cancelTask()
         ColumnLayout { width:parent.width;Label { text:Math.round(window.api?window.api.progress:0)+"%";color:window.ink;font.pixelSize:32;Layout.alignment:Qt.AlignHCenter } ProgressBar { Layout.fillWidth:true;value:window.api?window.api.progress/100:0 } Caption { text:window.api?window.t("state"+window.api.jobState,window.api.jobState):"" } }
         footer:Action { text:window.t("cancelTask","取消任务");onClicked:if(window.api)window.api.cancelTask() }
     }

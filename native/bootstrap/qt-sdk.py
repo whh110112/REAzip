@@ -20,6 +20,8 @@ if not (prefix/'lib/cmake/Qt6/Qt6Config.cmake').exists():raise SystemExit('Qt pr
 if os.environ.get('GITHUB_ENV'):
     with open(os.environ['GITHUB_ENV'],'a',encoding='utf-8') as f:
         f.write(f'QT_PREFIX={prefix}\nCMAKE_PREFIX_PATH={prefix}\n')
+        if system=='Windows':f.write('QT_QPA_FONTDIR='+os.environ.get('SystemRoot','C:/Windows')+'/Fonts\n')
+        elif system=='Darwin':f.write('QT_QPA_FONTDIR=/System/Library/Fonts\n')
         if host_path:f.write(f'QT_HOST_PATH={host_path}\n')
     with open(os.environ['GITHUB_PATH'],'a',encoding='utf-8') as f:f.write(str(prefix/'bin')+'\n')
 print('QT_PREFIX='+str(prefix))
