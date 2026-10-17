@@ -15,6 +15,7 @@ ApplicationWindow {
     property var currentChallenge: ({})
     property string folderTarget: "extract"
     property string toastText: ""
+    property string executablePath: ""
     function t(key, fallback) { if (api) { let epoch = api.revision; return api.translate(key, fallback) } return fallback }
     function token(key, fallback) { return colors[key] || fallback }
     readonly property color paper: token("--bg", "#FFFFFF")
@@ -181,6 +182,11 @@ ApplicationWindow {
         onAccepted:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,password.text);password.clear()}
         onRejected:{password.clear();if(window.api)window.api.cancelTask()}
     }
+    Sheet { id:executableDialog;title:window.t("confirmOpen","打开可执行文件");paper:window.card;ink:window.ink;edge:window.edge
+        Caption { width:parent.width;text:window.t("confirmExecutable","此归档条目可能运行程序或脚本。确定打开？")+"\n"+window.executablePath;wrapMode:Text.WrapAnywhere }
+        standardButtons:Dialog.Ok|Dialog.Cancel
+        onAccepted:if(window.api)window.api.openExternal(window.executablePath)
+    }
     Sheet { id:conflictDialog;title:window.t("conflictTitle","目标位置已有同名文件");paper:window.card;ink:window.ink;edge:window.edge
         Caption { width:parent.width;text:window.currentChallenge.path||"";wrapMode:Text.WrapAnywhere }
         footer:RowLayout { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skipAll","跳过"),value:"skip"},{label:window.t("renameAll","重命名"),value:"rename"},{label:window.t("overwriteAll","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
@@ -208,6 +214,7 @@ ApplicationWindow {
     Popup { id:toast;anchors.centerIn:parent;width:Math.min(600,window.width-40);background:Rectangle{color:window.ink;radius:10} Label{width:parent.width;text:window.toastText;color:window.paper;wrapMode:Text.Wrap} Timer{id:toastTimer;interval:4000;onTriggered:toast.close()} }
     Connections { target:window.api;ignoreUnknownSignals:true
         function onMessage(text,error){window.toastText=text;toast.open();toastTimer.restart()}
+        function onExecutableRequested(path){window.executablePath=path;executableDialog.open()}
         function onChallenge(jobId,challengeId,kind,details){window.currentChallenge=details;window.currentChallenge.jobId=jobId;window.currentChallenge.challengeId=challengeId;progressDialog.close();if(kind==="passwordRequired")passwordDialog.open();else conflictDialog.open()}
         function onJobChanged(){if(window.api.busy&&window.api.jobState!=="AwaitingPassword"&&window.api.jobState!=="AwaitingOverwrite")progressDialog.open();else progressDialog.close()}
     }

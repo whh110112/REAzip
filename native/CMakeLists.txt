@@ -49,3 +49,6 @@ foreach(module engine/read engine/write worker jobs platform settings themes i18
     add_subdirectory("${module}")
   endif()
 endforeach()
+if(TARGET reazip)
+  add_custom_command(TARGET reazip POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:reazip>/engine" COMMAND ${CMAKE_COMMAND} -E copy_if_different "${REAZIP_ENGINE_DIR}/${REAZIP_ENGINE_FILE}" "$<TARGET_FILE_DIR:reazip>/engine/${REAZIP_ENGINE_FILE}")
+endif()

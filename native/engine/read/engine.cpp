@@ -84,6 +84,8 @@ Listing Engine::list(const fs::path& p,const std::string& pw,const std::string& 
     e.directory=item.isDir();e.encrypted=item.isEncrypted();e.link=item.isSymLink();e.size=item.size();
     const auto packed=item.itemProperty(bit7z::BitProperty::PackSize);
     if(packed.isUInt64())e.packed=packed.getUInt64();
+    const auto time=item.itemProperty(bit7z::BitProperty::MTime);
+    if(time.isFileTime())e.modified=std::chrono::duration_cast<std::chrono::seconds>(time.getTimePoint().time_since_epoch()).count();
     auto hard=item.itemProperty(bit7z::BitProperty::HardLink);if(!hard.isEmpty())e.link=true;
     const auto method=item.itemProperty(bit7z::BitProperty::Method);
     if(!e.encrypted)e.encryption="none";

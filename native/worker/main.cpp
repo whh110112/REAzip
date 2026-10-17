@@ -10,6 +10,7 @@
 #include <QLockFile>
 #include <QStandardPaths>
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <atomic>
 #include <condition_variable>
 #include <iostream>
@@ -79,7 +80,7 @@ class Session {
             const auto listing=engine.list(file(request["archive"]),password,request["codepage"].toString().toStdString(),cb);
             result={{"format",qs(listing.format)},{"revision",qs(listing.revision)},{"physicalSize",QString::number(listing.physicalSize)}};
             QJsonArray chunk;
-            for(const auto& e:listing.entries){QJsonObject entry{{"entryId",qs(e.id)},{"index",QString::number(e.index)},{"path",qs(e.path)},{"directory",e.directory},{"link",e.link},{"size",QString::number(e.size)},{"encrypted",e.encrypted},{"encryption",qs(e.encryption)}};if(e.packed)entry["packedSize"]=QString::number(*e.packed);chunk.append(entry);if(chunk.size()==512){send("entriesChunk",{{"entries",chunk}});chunk={};}}
+            for(const auto& e:listing.entries){QJsonObject entry{{"entryId",qs(e.id)},{"index",QString::number(e.index)},{"path",qs(e.path)},{"directory",e.directory},{"link",e.link},{"size",QString::number(e.size)},{"encrypted",e.encrypted},{"encryption",qs(e.encryption)}};if(e.packed)entry["packedSize"]=QString::number(*e.packed);if(e.modified)entry["modified"]=QDateTime::fromSecsSinceEpoch(*e.modified).toLocalTime().toString("yyyy-MM-dd HH:mm");chunk.append(entry);if(chunk.size()==512){send("entriesChunk",{{"entries",chunk}});chunk={};}}
             if(!chunk.isEmpty())send("entriesChunk",{{"entries",chunk}});
           }else if(operation=="test")engine.test(file(request["archive"]),password,cb);
           else if(operation=="extract"){

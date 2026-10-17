@@ -20,6 +20,7 @@ struct Entry {
   bool directory{}, encrypted{}, link{};
   std::uint64_t size{};
   std::optional<std::uint64_t> packed;
+  std::optional<std::int64_t> modified;
 };
 struct Listing { std::string revision, format; std::uint64_t physicalSize{}; std::vector<Entry> entries; };
 struct Callbacks {
