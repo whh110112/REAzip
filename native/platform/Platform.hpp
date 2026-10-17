@@ -9,6 +9,7 @@ QString dataDirectory(QString applicationDirectory={});
 QString registerApplication(QString executable,QString testRegistryPrefix={});
 QString unregisterApplication(QString executable,QString testRegistryPrefix={});
 bool propagateOrigin(QString archive,QString destination,QString* error=nullptr);
+quint64 residentBytes();
 class Instance : public QObject {
   Q_OBJECT
  public:

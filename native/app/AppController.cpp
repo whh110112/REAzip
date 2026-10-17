@@ -50,6 +50,7 @@ AppController::Tab* AppController::find(QString id){for(auto& t:documents)if(t.i
 QVariantList AppController::tabs()const{QVariantList result;for(const auto& t:documents)result.append(QVariantMap{{"id",t.id},{"name",QFileInfo(t.path).fileName()}});return result;}
 QString AppController::archiveName()const{return tab()?QFileInfo(tab()->path).fileName():QString();}
 QString AppController::archiveFormat()const{return tab()?tab()->format:QString();}
+QString AppController::version()const{return QCoreApplication::applicationVersion();}
 QString AppController::breadcrumb()const{return archiveName()+(model.folder().isEmpty()?QString():" / "+model.folder());}
 bool AppController::canModify()const{return tab()&&!busy()&&(tab()->format=="zip"||tab()->format=="7z"||tab()->format=="tar");}
 QString AppController::defaultArchiveDir()const{const auto path=preferences["archiveDir"].toString();return QFileInfo(path).isDir()?path:QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);}

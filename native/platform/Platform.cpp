@@ -16,11 +16,24 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 #include <shlobj.h>
+#include <psapi.h>
 #else
 #include <unistd.h>
 #include <sys/socket.h>
+#ifdef Q_OS_MACOS
+#include <mach/mach.h>
+#endif
 #endif
 namespace platform {
+quint64 residentBytes(){
+#ifdef Q_OS_WIN
+  PROCESS_MEMORY_COUNTERS counters{};return GetProcessMemoryInfo(GetCurrentProcess(),&counters,sizeof(counters))?counters.WorkingSetSize:0;
+#elif defined(Q_OS_MACOS)
+  mach_task_basic_info_data_t info{};mach_msg_type_number_t count=MACH_TASK_BASIC_INFO_COUNT;return task_info(mach_task_self(),MACH_TASK_BASIC_INFO,reinterpret_cast<task_info_t>(&info),&count)==KERN_SUCCESS?info.resident_size:0;
+#else
+  QFile file("/proc/self/statm");if(!file.open(QIODevice::ReadOnly))return 0;const auto parts=file.readAll().simplified().split(' ');return parts.size()>1?parts[1].toULongLong()*static_cast<quint64>(sysconf(_SC_PAGESIZE)):0;
+#endif
+}
 QString dataDirectory(QString directory){if(directory.isEmpty())directory=QCoreApplication::applicationDirPath();if(QFileInfo::exists(directory+"/portable.flag"))return directory+"/data";return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)+"/native";}
 Instance::Instance(QString directory,QObject* parent):QObject(parent),server(this){
   QDir().mkpath(directory);QFile::setPermissions(directory,QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner);

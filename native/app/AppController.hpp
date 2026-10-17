@@ -29,6 +29,7 @@ class AppController : public QObject {
   Q_PROPERTY(double progress READ progress NOTIFY jobChanged)
   Q_PROPERTY(QString jobState READ jobState NOTIFY jobChanged)
   Q_PROPERTY(QString engineIdentity READ engineIdentity NOTIFY changed)
+  Q_PROPERTY(QString version READ version CONSTANT)
   Q_PROPERTY(QVariantMap colors READ colors NOTIFY changed)
   Q_PROPERTY(QVariantList themeList READ themeList NOTIFY changed)
   Q_PROPERTY(QVariantList languages READ languages NOTIFY changed)
@@ -44,6 +45,7 @@ class AppController : public QObject {
   QVariantList details()const;QString statusSummary()const;QString status()const;
   bool canModify()const;bool hasSelection()const{return !model.selection().isEmpty();}QString selectedName()const{return model.selectedName();}
   QString defaultArchiveDir()const;QString defaultExtractDir()const;
+  QString version()const;
   bool busy()const{return jobs.busy();}double progress()const{return jobs.progress();}QString jobState()const{return jobs.state();}QString engineIdentity()const{return identity;}
   QVariantMap colors()const;QVariantList themeList()const;QVariantList languages()const;
   bool rtl()const;bool restoreTabs()const{return preferences["restoreTabs"].toBool(true);}int revision()const{return epoch;}

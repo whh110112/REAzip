@@ -88,7 +88,7 @@ def main():
         if detected:binaries.append({'path':relative,'architecture':detected})
         if detected and (any(word in file.name.lower() for word in ['webengine','electron','chromium']) or file.name.lower() in ['7z.exe','7zz','node','node.exe']):raise RuntimeError('Forbidden runtime payload: '+relative)
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
-    manifest={'schemaVersion':1,'version':version,'sourceCommit':commit,'os':osname,'architecture':a.arch,'qt':'6.8.3','bit7z':'4.1.0','sevenZip':'26.04','binaries':binaries,'signing':'ad-hoc, not notarized' if system=='Darwin' else 'unsigned','publicReleaseAuthorized':False}
+    manifest={'schemaVersion':1,'version':version,'sourceCommit':commit,'sourceDirty':subprocess.run(['git','diff','--quiet','HEAD','--','native'],cwd=REPO).returncode!=0,'os':osname,'architecture':a.arch,'qt':'6.8.3','bit7z':'4.1.0','sevenZip':'26.04','binaries':binaries,'signing':'ad-hoc, not notarized' if system=='Darwin' else 'unsigned','publicReleaseAuthorized':False}
     (resources/'artifact-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     (resources/'acceptance.json').write_text(json.dumps({'coreTests':'see CI LastTest.log','guiSmoke':'must pass isolated stage check','systemIntegration':'manual desktop acceptance pending','publicRelease':'blocked pending T10'},indent=2)+'\n')
     (resources/'README.txt').write_text('REAzip native development candidate '+version+'\n\nOpen reazip to use the application. No Node.js, Qt SDK, or separately installed 7-Zip is required.\nWindows portable ZIP: portable.flag keeps settings/themes under adjacent data. Installer: standard user data directory.\nRead NOTICE.md and acceptance.json for licenses, signing and acceptance status.\n')
@@ -101,7 +101,9 @@ def main():
     for key in ['QT_PLUGIN_PATH','QML_IMPORT_PATH','QML2_IMPORT_PATH','LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','QT_QPA_PLATFORM_PLUGIN_PATH']:env.pop(key,None)
     env['PATH']=os.path.join(os.environ.get('SystemRoot','C:/Windows'),'System32') if system=='Windows' else '/usr/bin:/bin'
     env['QT_QPA_PLATFORM']='offscreen';env['QT_QUICK_BACKEND']='software';env['QT_FORCE_STDERR_LOGGING']='1'
-    result=subprocess.run([str(executable),'--smoke',str(ROOT/'tests/fixtures/sample.iso'),'--screenshot',str(output/(name+'-smoke.png'))],cwd=stage,env=env,capture_output=True,timeout=30)
+    if system=='Windows':env['QT_QPA_FONTDIR']=os.environ.get('SystemRoot','C:/Windows')+'/Fonts'
+    elif system=='Darwin':env['QT_QPA_FONTDIR']='/System/Library/Fonts'
+    result=subprocess.run([str(executable),'--smoke',str(ROOT/'tests/fixtures/sample.iso'),'--screenshot',str(output/(name+'-smoke.png')),'--performance',str(output/(name+'-performance.json'))],cwd=stage,env=env,capture_output=True,timeout=30)
     (output/(name+'-smoke.log')).write_bytes(result.stdout+result.stderr)
     if result.returncode:raise RuntimeError(f'Isolated packaged application/worker smoke failed ({result.returncode}): '+result.stderr.decode(errors='replace'))
     artifacts=[]
@@ -112,9 +114,19 @@ def main():
             if not (inno/'ISCC.exe').exists():run(installer,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/CURRENTUSER','/DIR='+str(inno))
             run(inno/'ISCC.exe','/DStage='+str(stage),'/DOutput='+str(output),'/DArch='+a.arch,'/DVersion='+version,ROOT/'packaging/REAzip.iss')
             artifacts.append(output/(name+'-Setup.exe'))
+            if os.environ.get('GITHUB_ACTIONS')=='true':
+                installed=build/('installed-'+uuid.uuid4().hex)
+                run(artifacts[-1],'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/NOICONS','/TASKS=','/DIR='+str(installed))
+                if (installed/'portable.flag').exists():raise RuntimeError('Installer incorrectly enabled portable mode')
+                run(installed/'reazip.exe','--smoke',ROOT/'tests/fixtures/sample.iso',env=env)
+                run(installed/'unins000.exe','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')
+                deadline=time.monotonic()+15
+                while (installed/'reazip.exe').exists() and time.monotonic()<deadline:time.sleep(.2)
+                if (installed/'reazip.exe').exists():raise RuntimeError('Uninstall did not remove application payload')
     elif system=='Darwin':
         archive=output/(name+'.zip');run('ditto','-c','-k','--sequesterRsrc','--keepParent',bundle,archive);artifacts.append(archive)
-        dmg=output/(name+'.dmg');run('hdiutil','create','-volname','REAzip','-srcfolder',bundle,'-ov','-format','UDZO',dmg);artifacts.append(dmg)
+        dmgroot=build/('dmg-'+uuid.uuid4().hex);dmgroot.mkdir();shutil.copytree(bundle,dmgroot/'REAzip.app',symlinks=True);(dmgroot/'Applications').symlink_to('/Applications')
+        dmg=output/(name+'.dmg');run('hdiutil','create','-volname','REAzip','-srcfolder',dmgroot,'-ov','-format','UDZO',dmg);artifacts.append(dmg)
     else:
         # CMake deployed Qt and its transitive libraries; AppRun sets paths relative to its readonly package.
         launcher='#!/bin/sh\nAPPDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexport LD_LIBRARY_PATH="$APPDIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\nexec "$APPDIR/bin/reazip" "$@"\n'
@@ -131,7 +143,7 @@ def main():
         debroot=build/('deb-'+uuid.uuid4().hex);application=debroot/'opt/reazip';shutil.copytree(stage,application,symlinks=True);(debroot/'DEBIAN').mkdir();debarch='arm64' if a.arch=='arm64' else 'amd64'
         (debroot/'DEBIAN/control').write_text(f'Package: reazip\nVersion: {version.replace("-dev","~dev")}\nArchitecture: {debarch}\nMaintainer: whh110112\nSection: utils\nPriority: optional\nDepends: libc6 (>= 2.39), libgl1, libxkbcommon0, libxcb-cursor0\nDescription: Native archive manager using Qt Quick and 7-Zip\n')
         applications=debroot/'usr/share/applications';applications.mkdir(parents=True);(applications/'com.reazip.app.desktop').write_text(desktop.replace('Exec=AppRun','Exec=/opt/reazip/AppRun').replace('Icon=reazip','Icon=/opt/reazip/reazip.svg'))
-        bindir=debroot/'usr/bin';bindir.mkdir(parents=True);(bindir/'reazip').symlink_to('/opt/reazip/AppRun')
+        bindir=debroot/'usr/bin';bindir.mkdir(parents=True);(bindir/'reazip').write_text('#!/bin/sh\nexec /opt/reazip/AppRun "$@"\n');(bindir/'reazip').chmod(0o755)
         deb=output/(name+'.deb');run('dpkg-deb','--root-owner-group','--build',debroot,deb);artifacts.append(deb)
     summaries=[{'file':file.name,'size':file.stat().st_size,'sha256':sha(file)} for file in artifacts]
     (output/(name+'-manifest.json')).write_text(json.dumps(dict(manifest,artifacts=summaries,unpackedBytes=sum(f.stat().st_size for f in stage.rglob('*') if f.is_file())),indent=2)+'\n')

@@ -12,16 +12,20 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QElapsedTimer>
+#include <QJsonDocument>
+#include <QSaveFile>
 int main(int argc, char** argv) {
+  QElapsedTimer startup;startup.start();qint64 firstFrame=-1,archiveReady=-1;
   QGuiApplication app(argc, argv);
   QGuiApplication::setOrganizationName("REAzip");
   QGuiApplication::setApplicationName("REAzip");
+  QCoreApplication::setApplicationVersion(REAZIP_VERSION_FULL);
   QQuickStyle::setStyle("Basic");
   const auto arguments=app.arguments();
   if(arguments.contains("--register"))return platform::registerApplication(app.applicationFilePath()).isEmpty()?0:2;
   if(arguments.contains("--unregister"))return platform::unregisterApplication(app.applicationFilePath()).isEmpty()?0:2;
   QJsonArray launchPaths;QString action="open";
-  for(int i=1;i<arguments.size();++i){const auto arg=arguments[i];if(arg=="--screenshot"||arg=="--design-scene"||arg=="--theme"||arg=="--language"){++i;continue;}if(arg=="--extract-here")action="extract_here";else if(arg=="--extract-to")action="extract_to";else if(arg=="--add")action="add";else if(!arg.startsWith('-')&&QFileInfo::exists(arg))launchPaths.append(QFileInfo(arg).absoluteFilePath());}
+  for(int i=1;i<arguments.size();++i){const auto arg=arguments[i];if(arg=="--screenshot"||arg=="--design-scene"||arg=="--theme"||arg=="--language"||arg=="--performance"){++i;continue;}if(arg=="--extract-here")action="extract_here";else if(arg=="--extract-to")action="extract_to";else if(arg=="--add")action="add";else if(!arg.startsWith('-')&&QFileInfo::exists(arg))launchPaths.append(QFileInfo(arg).absoluteFilePath());}
   QJsonObject launch{{"version",1},{"action",action},{"paths",launchPaths}};
   platform::Instance instance(platform::dataDirectory());
   if(!arguments.contains("--smoke")&&!arguments.contains("--design-preview")){const auto state=instance.start(launch);if(state==1)return 0;if(state<0){qCritical().noquote()<<instance.error();return 3;}}
@@ -41,6 +45,8 @@ int main(int argc, char** argv) {
   engine.rootContext()->setContextProperty("designPreview",app.arguments().contains("--design-preview"));
   QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
   engine.loadFromModule("REAzip", "Main");
+  if(!engine.rootObjects().isEmpty())if(auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first()))QObject::connect(window,&QQuickWindow::frameSwapped,&app,[&]{if(firstFrame<0)firstFrame=startup.elapsed();});
+  QObject::connect(&controller,&AppController::operationCompleted,&app,[&](QString operation,QJsonObject){if(operation=="list"&&archiveReady<0)archiveReady=startup.elapsed();});
   auto dispatch=[&](QJsonObject request){controller.handleLaunch(request);if(!engine.rootObjects().isEmpty())if(auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first())){window->show();window->raise();window->requestActivate();}};
   QObject::connect(&instance,&platform::Instance::request,&controller,dispatch);
   platform::OpenEvents openEvents;app.installEventFilter(&openEvents);
@@ -56,6 +62,10 @@ int main(int argc, char** argv) {
     const auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first());
     const auto index=app.arguments().indexOf("--screenshot");
     if(index>=0 && index+1<app.arguments().size() && (!window||!window->grabWindow().save(app.arguments()[index+1]))){app.exit(2);return;}
+    const auto performance=arguments.indexOf("--performance");if(performance>=0&&performance+1<arguments.size()){
+      QSaveFile file(arguments[performance+1]);if(!file.open(QIODevice::WriteOnly)){app.exit(5);return;}
+      QJsonObject record{{"version",app.applicationVersion()},{"qt",qVersion()},{"firstFrameMs",firstFrame},{"archiveReadyMs",archiveReady},{"residentBytes",QString::number(platform::residentBytes())},{"measuredAtMs",startup.elapsed()},{"scene",launchPaths.isEmpty()?"empty":"archive"}};file.write(QJsonDocument(record).toJson());if(!file.commit()){app.exit(5);return;}
+    }
     app.exit(0);
   });smokeTimer.start();}
   return app.exec();

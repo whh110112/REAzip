@@ -33,4 +33,4 @@ Name: "register"; Description: "Register archive file types and classic context 
 [Run]
 Filename: "{app}\reazip.exe"; Parameters: "--register"; Tasks: register; Flags: runhidden waituntilterminated
 [UninstallRun]
-Filename: "{app}\reazip.exe"; Parameters: "--unregister"; Flags: runhidden waituntilterminated
+Filename: "{app}\reazip.exe"; Parameters: "--unregister"; Flags: runhidden waituntilterminated; RunOnceId: "REAzipOwnedRegistration"
