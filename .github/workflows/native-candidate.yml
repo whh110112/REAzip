@@ -35,7 +35,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .native-build/Qt
-          key: qt-6.8.3-${{ runner.os }}-${{ matrix.arch }}-base-declarative-tools-translations-v1
+          key: qt-6.8.3-${{ runner.os }}-${{ matrix.arch }}-base-declarative-tools-translations-icu-wayland-v2
       - run: python native/bootstrap/qt-sdk.py --arch ${{ matrix.arch }} --output .native-build/Qt
       - run: python native/bootstrap/dependencies.py --arch ${{ matrix.arch }}
       - name: Configure full native application

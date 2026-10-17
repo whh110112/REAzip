@@ -9,7 +9,9 @@ elif system=='Darwin':host='mac';arch='clang_64';folder='macos'
 else:host='linux' if a.arch=='x64' else 'linux_arm64';arch='linux_gcc_64' if a.arch=='x64' else 'linux_gcc_arm64';folder='gcc_64' if a.arch=='x64' else 'gcc_arm64'
 prefix=root/'6.8.3'/folder
 if not (prefix/'lib/cmake/Qt6/Qt6Config.cmake').exists():
-    command=['aqt','install-qt',host,'desktop','6.8.3',arch,'--outputdir',str(root),'--archives','qtbase','qtdeclarative','qttools','qttranslations','--autodesktop']
+    archives=['qtbase','qtdeclarative','qttools','qttranslations']
+    if system=='Linux':archives+=['icu','qtwayland']
+    command=['aqt','install-qt',host,'desktop','6.8.3',arch,'--outputdir',str(root),'--archives',*archives,'--autodesktop']
     for attempt in range(3):
         if subprocess.run(command).returncode==0:break
         if attempt==2:raise SystemExit('Qt SDK download failed')

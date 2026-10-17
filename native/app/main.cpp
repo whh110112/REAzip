@@ -11,6 +11,7 @@
 #include "../platform/Platform.hpp"
 #include <QJsonArray>
 #include <QDebug>
+#include <QElapsedTimer>
 int main(int argc, char** argv) {
   QGuiApplication app(argc, argv);
   QGuiApplication::setOrganizationName("REAzip");
@@ -47,12 +48,15 @@ int main(int argc, char** argv) {
   if(!app.arguments().contains("--design-preview"))QTimer::singleShot(0,&controller,[&]{dispatch(launch);});
   const auto scene=arguments.indexOf("--design-scene");
   if(testing&&scene>=0&&scene+1<arguments.size())QTimer::singleShot(300,&app,[&]{if(!engine.rootObjects().isEmpty())QMetaObject::invokeMethod(engine.rootObjects().first(),"openDesignScene",Q_ARG(QVariant,arguments[scene+1]));});
-  if(app.arguments().contains("--smoke")) QTimer::singleShot(700,&app,[&]{
-    if(engine.rootObjects().isEmpty()){app.exit(1);return;}
+  QElapsedTimer smokeElapsed;smokeElapsed.start();QTimer smokeTimer;
+  if(app.arguments().contains("--smoke")){smokeTimer.setInterval(100);QObject::connect(&smokeTimer,&QTimer::timeout,&app,[&]{
+    if(smokeElapsed.elapsed()<700)return;
+    if(!arguments.contains("--design-preview")&&(controller.busy()||(!launchPaths.isEmpty()&&controller.archiveFormat().isEmpty()))){if(smokeElapsed.elapsed()<15000)return;app.exit(4);return;}
+    smokeTimer.stop();if(engine.rootObjects().isEmpty()){app.exit(1);return;}
     const auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first());
     const auto index=app.arguments().indexOf("--screenshot");
     if(index>=0 && index+1<app.arguments().size() && (!window||!window->grabWindow().save(app.arguments()[index+1]))){app.exit(2);return;}
     app.exit(0);
-  });
+  });smokeTimer.start();}
   return app.exec();
 }
