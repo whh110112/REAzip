@@ -1,0 +1,182 @@
+{
+  "zh-CN": [
+    "加密 7Z 文件头",
+    "打开可执行文件",
+    "此条目可能运行程序或脚本。确定打开？",
+    "准备拖出",
+    "拖出选中项",
+    "支持 JSON 颜色变量；自定义 CSS 已保留但不执行。",
+    "系统集成功能因平台和安装方式而异。",
+    "加密"
+  ],
+  "zh-TW": [
+    "加密 7Z 檔頭",
+    "開啟可執行檔",
+    "此項目可能執行程式或指令碼。確定開啟？",
+    "準備拖出",
+    "拖出所選項目",
+    "支援 JSON 色彩變數；自訂 CSS 保留但不執行。",
+    "系統整合依平台與安裝方式而異。",
+    "加密"
+  ],
+  "en": [
+    "Encrypt 7Z headers",
+    "Open executable file",
+    "This item may run a program or script. Open it?",
+    "Prepare drag",
+    "Drag selected items",
+    "JSON color tokens supported; custom CSS is preserved but cannot run.",
+    "System integration varies by platform and installation.",
+    "Encryption"
+  ],
+  "ja": [
+    "7Z ヘッダーを暗号化",
+    "実行ファイルを開く",
+    "プログラムやスクリプトが実行される可能性があります。開きますか？",
+    "ドラッグを準備",
+    "選択項目をドラッグ",
+    "JSON の色に対応。独自 CSS は保存されますが実行されません。",
+    "システム連携は環境とインストール方法により異なります。",
+    "暗号化"
+  ],
+  "ko": [
+    "7Z 헤더 암호화",
+    "실행 파일 열기",
+    "프로그램 또는 스크립트가 실행될 수 있습니다. 여시겠습니까?",
+    "드래그 준비",
+    "선택 항목 드래그",
+    "JSON 색상을 지원합니다. 사용자 CSS는 보존되지만 실행되지 않습니다.",
+    "시스템 통합은 플랫폼과 설치 방식에 따라 다릅니다.",
+    "암호화"
+  ],
+  "fr": [
+    "Chiffrer les en-têtes 7Z",
+    "Ouvrir un exécutable",
+    "Cet élément peut exécuter un programme ou un script. L’ouvrir ?",
+    "Préparer le glisser",
+    "Glisser la sélection",
+    "Couleurs JSON prises en charge ; CSS conservé mais non exécuté.",
+    "L’intégration dépend du système et de l’installation.",
+    "Chiffrement"
+  ],
+  "de": [
+    "7Z-Kopfdaten verschlüsseln",
+    "Ausführbare Datei öffnen",
+    "Dieses Element kann ein Programm oder Skript ausführen. Öffnen?",
+    "Ziehen vorbereiten",
+    "Auswahl ziehen",
+    "JSON-Farben werden unterstützt; eigenes CSS bleibt erhalten, wird aber nicht ausgeführt.",
+    "Die Systemintegration hängt von Plattform und Installation ab.",
+    "Verschlüsselung"
+  ],
+  "es": [
+    "Cifrar cabeceras 7Z",
+    "Abrir ejecutable",
+    "Este elemento puede ejecutar un programa o script. ¿Abrirlo?",
+    "Preparar arrastre",
+    "Arrastrar selección",
+    "Se admiten colores JSON; el CSS se conserva, pero no se ejecuta.",
+    "La integración varía según el sistema y la instalación.",
+    "Cifrado"
+  ],
+  "pt-BR": [
+    "Criptografar cabeçalhos 7Z",
+    "Abrir executável",
+    "Este item pode executar um programa ou script. Abrir?",
+    "Preparar arraste",
+    "Arrastar seleção",
+    "Cores JSON são aceitas; o CSS é preservado, mas não é executado.",
+    "A integração depende do sistema e da instalação.",
+    "Criptografia"
+  ],
+  "ru": [
+    "Шифровать заголовки 7Z",
+    "Открыть исполняемый файл",
+    "Этот элемент может запустить программу или сценарий. Открыть?",
+    "Подготовить перетаскивание",
+    "Перетащить выбранное",
+    "Поддерживаются цвета JSON; CSS сохраняется, но не выполняется.",
+    "Интеграция зависит от системы и способа установки.",
+    "Шифрование"
+  ],
+  "it": [
+    "Cifra intestazioni 7Z",
+    "Apri file eseguibile",
+    "Questo elemento può eseguire un programma o uno script. Aprire?",
+    "Prepara trascinamento",
+    "Trascina selezione",
+    "Colori JSON supportati; il CSS viene conservato ma non eseguito.",
+    "L’integrazione dipende dal sistema e dall’installazione.",
+    "Cifratura"
+  ],
+  "pl": [
+    "Szyfruj nagłówki 7Z",
+    "Otwórz plik wykonywalny",
+    "Ten element może uruchomić program lub skrypt. Otworzyć?",
+    "Przygotuj przeciąganie",
+    "Przeciągnij zaznaczenie",
+    "Obsługiwane są kolory JSON; CSS jest zachowany, ale nie jest wykonywany.",
+    "Integracja zależy od systemu i sposobu instalacji.",
+    "Szyfrowanie"
+  ],
+  "tr": [
+    "7Z başlıklarını şifrele",
+    "Çalıştırılabilir dosyayı aç",
+    "Bu öğe bir program veya betik çalıştırabilir. Açılsın mı?",
+    "Sürüklemeyi hazırla",
+    "Seçilenleri sürükle",
+    "JSON renkleri desteklenir; özel CSS korunur ancak çalıştırılmaz.",
+    "Sistem bütünleşmesi platforma ve kuruluma göre değişir.",
+    "Şifreleme"
+  ],
+  "vi": [
+    "Mã hóa tiêu đề 7Z",
+    "Mở tệp thực thi",
+    "Mục này có thể chạy chương trình hoặc tập lệnh. Mở?",
+    "Chuẩn bị kéo",
+    "Kéo các mục đã chọn",
+    "Hỗ trợ màu JSON; CSS được giữ lại nhưng không chạy.",
+    "Tích hợp hệ thống tùy nền tảng và cách cài đặt.",
+    "Mã hóa"
+  ],
+  "th": [
+    "เข้ารหัสส่วนหัว 7Z",
+    "เปิดไฟล์ปฏิบัติการ",
+    "รายการนี้อาจเรียกใช้โปรแกรมหรือสคริปต์ ต้องการเปิดหรือไม่?",
+    "เตรียมลาก",
+    "ลากรายการที่เลือก",
+    "รองรับสี JSON โดยเก็บ CSS ไว้แต่ไม่เรียกใช้",
+    "การผสานระบบขึ้นอยู่กับแพลตฟอร์มและวิธีติดตั้ง",
+    "การเข้ารหัส"
+  ],
+  "id": [
+    "Enkripsi header 7Z",
+    "Buka berkas eksekusi",
+    "Item ini dapat menjalankan program atau skrip. Buka?",
+    "Siapkan seret",
+    "Seret item terpilih",
+    "Warna JSON didukung; CSS disimpan tetapi tidak dijalankan.",
+    "Integrasi sistem bergantung pada platform dan pemasangan.",
+    "Enkripsi"
+  ],
+  "ar": [
+    "تشفير ترويسات 7Z",
+    "فتح ملف تنفيذي",
+    "قد يشغّل هذا العنصر برنامجًا أو نصًا برمجيًا. هل تريد فتحه؟",
+    "تجهيز السحب",
+    "سحب العناصر المحددة",
+    "ألوان JSON مدعومة؛ يُحفظ CSS المخصص دون تنفيذه.",
+    "يعتمد التكامل على النظام وطريقة التثبيت.",
+    "التشفير"
+  ],
+  "hi": [
+    "7Z हेडर एन्क्रिप्ट करें",
+    "निष्पादन योग्य फ़ाइल खोलें",
+    "यह आइटम प्रोग्राम या स्क्रिप्ट चला सकता है। खोलें?",
+    "खींचने की तैयारी",
+    "चुने आइटम खींचें",
+    "JSON रंग समर्थित हैं; कस्टम CSS सहेजा जाता है लेकिन चलाया नहीं जाता।",
+    "सिस्टम एकीकरण प्लेटफ़ॉर्म और स्थापना पर निर्भर है।",
+    "एन्क्रिप्शन"
+  ]
+}

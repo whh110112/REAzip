@@ -7,7 +7,7 @@
 #include <iostream>
 int main(int argc,char** argv){
   QCoreApplication app(argc,argv);if(app.arguments().size()!=4)return 2;
-  QTemporaryDir work;AppController controller(app.arguments()[1],app.arguments()[2]);int stage=0,passwordAttempts=0,overwrites=0;QString oldId;bool failed=false;
+  QTemporaryDir work;AppController controller(app.arguments()[1],app.arguments()[2],nullptr,work.path()+"/data");int stage=0,passwordAttempts=0,overwrites=0;QString oldId;bool failed=false;
   auto require=[&](bool value,const char* message){if(!value){std::cerr<<message<<'\n';failed=true;app.exit(1);}return value;};
   auto model=qobject_cast<EntryModel*>(controller.entries());
   const auto name=QString::fromUtf8("中文 😀.txt"),target=QDir(work.path()).filePath(name);

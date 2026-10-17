@@ -5,6 +5,7 @@ Dialog {
     property color paper: "#FFFFFF"
     property color ink: "#2C2C2A"
     property color edge: "#D3D1C7"
+    property var api: typeof backend !== "undefined" ? backend : null
     parent: Overlay.overlay
     anchors.centerIn: parent
     width: Math.min(580, parent ? parent.width - 40 : 580)
@@ -18,4 +19,12 @@ Dialog {
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: sheet.edge }
     }
     Overlay.modal: Rectangle { color: "#6130302C" }
+    footer: DialogButtonBox {
+        standardButtons: sheet.standardButtons
+        onAccepted: sheet.accept()
+        onRejected: sheet.reject()
+        delegate: Button {
+            text: { if(sheet.api){let epoch=sheet.api.revision;return DialogButtonBox.buttonRole===DialogButtonBox.AcceptRole?sheet.api.translate("confirm","OK"):sheet.api.translate("cancel","Cancel")}return DialogButtonBox.buttonRole===DialogButtonBox.AcceptRole?"OK":"Cancel" }
+        }
+    }
 }

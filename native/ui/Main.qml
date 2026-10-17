@@ -18,6 +18,9 @@ ApplicationWindow {
     property string executablePath: ""
     function t(key, fallback) { if (api) { let epoch = api.revision; return api.translate(key, fallback) } return fallback }
     function token(key, fallback) { return colors[key] || fallback }
+    function openDesignScene(scene) {
+        if(scene==="create")createDialog.open();else if(scene==="extract")extractDialog.open();else if(scene==="settings")settingsDialog.open();else if(scene==="appearance"){settingsPages.currentIndex=1;settingsDialog.open()}else if(scene==="password")passwordDialog.open();else if(scene==="conflict"){window.currentChallenge={path:"example.txt"};conflictDialog.open()}else if(scene==="progress")progressDialog.open()
+    }
     readonly property color paper: token("--bg", "#FFFFFF")
     readonly property color surface: token("--surface", "#F1EFE8")
     readonly property color card: token("--card", "#FFFFFF")
@@ -160,27 +163,27 @@ ApplicationWindow {
             Field { id:createName;text:"archive.zip";Layout.fillWidth:true }
             Caption { text:window.t("saveTo","保存到") }
             RowLayout { Field { id:createDest;text:window.api?window.api.defaultArchiveDir:"";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="create";folders.open()} } }
-            RowLayout { ComboBox { id:format;model:["zip","7z","tar","tgz"] } ComboBox { id:level;model:[0,1,3,5,7,9];currentIndex:3 } Field { id:volume;placeholderText:"分卷字节数（可选）";Layout.fillWidth:true } }
-            Field { id:createPassword;placeholderText:window.t("password","密码");echoMode:TextInput.Password;enabled:format.currentIndex<2;Layout.fillWidth:true }
-            CheckBox { id:headers;text:"7Z 文件头加密";enabled:format.currentText==="7z";palette.text:window.ink }
-            CheckBox { id:deleteSources;text:window.t("deleteAfter","成功校验后将源文件移至回收站");palette.text:window.ink }
+            RowLayout { ComboBox { id:format;model:["zip","7z","tar","tgz"] } ComboBox { id:level;model:[0,1,3,5,7,9];currentIndex:3 } Field { id:volume;placeholderText:window.t("volume","分卷大小")+" (B)";enabled:format.currentText!=="tgz";Layout.fillWidth:true } }
+            Field { id:createPassword;placeholderText:window.t("passwordOptional","密码（可选）");echoMode:TextInput.Password;enabled:format.currentIndex<2;Layout.fillWidth:true }
+            CheckBox { id:headers;text:window.t("encryptHeaders","7Z 文件头加密");enabled:format.currentText==="7z";palette.text:window.ink }
+            CheckBox { id:deleteSources;text:window.t("deleteSource","成功校验后将源文件移至回收站");palette.text:window.ink }
             Caption { text:window.inputs.length+" "+window.t("files","文件/目录") }
             RowLayout { Action { text:window.t("addFiles","选择文件");onClicked:sourcesDialog.open() } Action { text:window.t("addFolder","选择目录");onClicked:{window.folderTarget="source";folders.open()} } }
         }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.text});createPassword.clear();createDialog.close()} } }
+        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.enabled?volume.text:""});createPassword.clear();createDialog.close()} } }
     }
     Sheet { id:extractDialog;title:window.t("extractTo","解压到");paper:window.card;ink:window.ink;edge:window.edge
         ColumnLayout { width:parent.width;spacing:12
             Caption { text:window.t("saveTo","目标目录") }
             RowLayout { Field { id:extractDest;text:window.api?window.api.defaultExtractDir:"";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="extract";folders.open()} } }
             CheckBox { id:smart;text:window.t("smartExtract","智能选择同名目录");checked:true;palette.text:window.ink }
-            ComboBox { id:overwrite;model:["ask","overwrite","skip","rename"] }
+            ComboBox { id:overwrite;textRole:"label";valueRole:"value";model:[{label:window.t("ask","询问"),value:"ask"},{label:window.t("overwrite","覆盖"),value:"overwrite"},{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"}] }
             CheckBox { id:openAfter;text:window.t("openAfter","完成后打开目录");checked:true;palette.text:window.ink }
         }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:extractDialog.reject() } Action { text:window.t("startExtract","开始解压");primary:true;onClicked:{if(window.api)window.api.extractArchive({destination:extractDest.text,smart:smart.checked,overwrite:overwrite.currentText,openAfter:openAfter.checked});extractDialog.close()} } }
+        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:extractDialog.reject() } Action { text:window.t("startExtract","开始解压");primary:true;onClicked:{if(window.api)window.api.extractArchive({destination:extractDest.text,smart:smart.checked,overwrite:overwrite.currentValue,openAfter:openAfter.checked});extractDialog.close()} } }
     }
     Sheet { id:passwordDialog;title:window.t("needPassword","需要密码");paper:window.card;ink:window.ink;edge:window.edge
-        ColumnLayout { width:parent.width;Caption { text:window.currentChallenge.incorrect?window.t("wrongPassword","密码错误，请重试"):window.t("needPassword","请输入归档密码") } Field { id:password;echoMode:TextInput.Password;Layout.fillWidth:true;onAccepted:passwordDialog.accept() } }
+        ColumnLayout { width:parent.width;Caption { text:window.currentChallenge.incorrect?window.t("passwordWrong","密码错误，请重试"):window.t("enterPassword","请输入归档密码") } Field { id:password;echoMode:TextInput.Password;Layout.fillWidth:true;onAccepted:passwordDialog.accept() } }
         standardButtons:Dialog.Ok|Dialog.Cancel
         onOpened:{password.clear();password.forceActiveFocus()}
         onAccepted:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,password.text);password.clear()}
@@ -193,11 +196,11 @@ ApplicationWindow {
     }
     Sheet { id:conflictDialog;title:window.t("conflictTitle","目标位置已有同名文件");paper:window.card;ink:window.ink;edge:window.edge
         Caption { width:parent.width;text:window.currentChallenge.path||"";wrapMode:Text.WrapAnywhere }
-        footer:RowLayout { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skipAll","跳过"),value:"skip"},{label:window.t("renameAll","重命名"),value:"rename"},{label:window.t("overwriteAll","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
+        footer:RowLayout { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"},{label:window.t("overwrite","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
         onRejected:if(window.api)window.api.cancelTask()
     }
     Sheet { id:progressDialog;title:window.t("loading","处理中");paper:window.card;ink:window.ink;edge:window.edge;closePolicy:Popup.NoAutoClose
-        ColumnLayout { width:parent.width;Label { text:Math.round(window.api?window.api.progress:0)+"%";color:window.ink;font.pixelSize:32;Layout.alignment:Qt.AlignHCenter } ProgressBar { Layout.fillWidth:true;value:window.api?window.api.progress/100:0 } Caption { text:window.api?window.api.jobState:"" } }
+        ColumnLayout { width:parent.width;Label { text:Math.round(window.api?window.api.progress:0)+"%";color:window.ink;font.pixelSize:32;Layout.alignment:Qt.AlignHCenter } ProgressBar { Layout.fillWidth:true;value:window.api?window.api.progress/100:0 } Caption { text:window.api?window.t("state"+window.api.jobState,window.api.jobState):"" } }
         footer:Action { text:window.t("cancelTask","取消任务");onClicked:if(window.api)window.api.cancelTask() }
     }
     Sheet { id:deleteDialog;title:window.t("delete","删除");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Caption { text:window.t("deleteConfirm","确认删除所选归档条目？") } onAccepted:if(window.api)window.api.deleteSelected() }
@@ -207,8 +210,8 @@ ApplicationWindow {
             ColumnLayout { Layout.preferredWidth:135;Layout.alignment:Qt.AlignTop;Repeater { model:[window.t("tabGeneral","常规"),window.t("tabAppearance","外观皮肤"),window.t("tabAssoc","文件关联"),window.t("tabLanguage","语言"),window.t("tabAbout","关于")];delegate:Action { required property int index;required property string modelData;text:modelData;Layout.fillWidth:true;primary:settingsPages.currentIndex===index;onClicked:settingsPages.currentIndex=index } } }
             StackLayout { id:settingsPages;Layout.fillWidth:true;Layout.preferredHeight:300
                 ColumnLayout { Caption { text:window.t("defaultExtractDir","默认解压位置") } Field { text:window.api?window.api.defaultExtractDir:"";Layout.fillWidth:true;onEditingFinished:if(window.api)window.api.setPreference("extractDir",text) } Caption { text:window.t("defaultArchiveDir","默认压缩位置") } Field { text:window.api?window.api.defaultArchiveDir:"";Layout.fillWidth:true;onEditingFinished:if(window.api)window.api.setPreference("archiveDir",text) } CheckBox { text:window.t("restoreTabs","启动时恢复上次标签");checked:window.api?window.api.restoreTabs:false;palette.text:window.ink;onToggled:if(window.api)window.api.setPreference("restoreTabs",checked) } ComboBox { model:["Auto","936","950","932","65001"];onActivated:if(window.api)window.api.setPreference("codepage",currentIndex===0?"":currentText) } Item { Layout.fillHeight:true } }
-                ColumnLayout { GridLayout { columns:2;Repeater { model:window.api?window.api.themeList:[];delegate:Action { required property var modelData;text:modelData.name;Layout.fillWidth:true;onClicked:if(window.api)window.api.setPreference("skin",modelData.id) } } } Action { text:window.t("openSkinDir","打开皮肤目录");onClicked:if(window.api)window.api.openThemeDirectory() } Action { text:window.t("rescan","重新扫描");onClicked:if(window.api)window.api.rescanThemes() } Caption { text:"JSON 颜色变量兼容；追加 CSS 不执行";wrapMode:Text.Wrap;Layout.fillWidth:true } Item { Layout.fillHeight:true } }
-                ColumnLayout { Caption { text:"ZIP · 7Z · RAR · TAR · GZ · ISO" } Caption { text:"系统集成状态以平台实现为准";wrapMode:Text.Wrap;Layout.fillWidth:true } Action { text:window.t("applyDefault","注册关联并打开默认应用设置");enabled:!!window.api;onClicked:window.api.applyAssociations() } Item { Layout.fillHeight:true } }
+                ColumnLayout { GridLayout { columns:2;Repeater { model:window.api?window.api.themeList:[];delegate:Action { required property var modelData;text:modelData.name;Layout.fillWidth:true;onClicked:if(window.api)window.api.setPreference("skin",modelData.id) } } } Action { text:window.t("openSkinDir","打开皮肤目录");onClicked:if(window.api)window.api.openThemeDirectory() } Action { text:window.t("rescan","重新扫描");onClicked:if(window.api)window.api.rescanThemes() } Caption { text:window.t("themeCompatibility","JSON 颜色变量兼容；追加 CSS 不执行");wrapMode:Text.Wrap;Layout.fillWidth:true } Item { Layout.fillHeight:true } }
+                ColumnLayout { Caption { text:"ZIP · 7Z · RAR · TAR · GZ · ISO" } Caption { text:window.t("platformIntegration","系统集成状态以平台实现为准");wrapMode:Text.Wrap;Layout.fillWidth:true } Action { text:window.t("applyDefault","注册关联并打开默认应用设置");enabled:!!window.api;onClicked:window.api.applyAssociations() } Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:window.t("uiLanguage","界面语言") } ComboBox { model:window.api?window.api.languages:[];textRole:"name";onActivated:if(window.api)window.api.setPreference("language",model[currentIndex].code) } Caption { text:window.t("langHint","支持18种语言") } Item { Layout.fillHeight:true } }
                 ColumnLayout { Label { text:"REAzip 0.3.0-dev";color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/REAzip" } Item { Layout.fillHeight:true } }
             }

@@ -1,0 +1,8 @@
+if(TARGET Qt6::Core)
+  add_library(reazip-settings STATIC Settings.cpp Settings.hpp ../themes/Themes.cpp ../themes/Themes.hpp)
+  target_link_libraries(reazip-settings PUBLIC reazip-platform Qt6::Gui)
+  target_compile_features(reazip-settings PUBLIC cxx_std_17)
+  add_executable(reazip-settings-test ../tests/settings/settings.cpp)
+  target_link_libraries(reazip-settings-test PRIVATE reazip-settings)
+  add_test(NAME native-settings COMMAND reazip-settings-test)
+endif()

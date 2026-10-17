@@ -31,7 +31,10 @@ int main(int argc, char** argv) {
   const auto worker=QCoreApplication::applicationDirPath()+"/reazip-worker";
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.so";
 #endif
-  AppController controller(worker,library);
+  QTemporaryDir smokeData;
+  const bool testing=arguments.contains("--smoke")||arguments.contains("--design-preview");
+  AppController controller(worker,library,nullptr,testing?smokeData.path():QString());
+  for(const auto& option:{QString("--theme"),QString("--language")}){const auto index=arguments.indexOf(option);if(index>=0&&index+1<arguments.size())controller.setPreference(option=="--theme"?"skin":"language",arguments[index+1]);}
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("backend",app.arguments().contains("--design-preview")?nullptr:static_cast<QObject*>(&controller));
   engine.rootContext()->setContextProperty("designPreview",app.arguments().contains("--design-preview"));
@@ -42,6 +45,8 @@ int main(int argc, char** argv) {
   platform::OpenEvents openEvents;app.installEventFilter(&openEvents);
   QObject::connect(&openEvents,&platform::OpenEvents::open,&controller,[&](QString path){dispatch({{"version",1},{"action","open"},{"paths",QJsonArray{path}}});});
   if(!app.arguments().contains("--design-preview"))QTimer::singleShot(0,&controller,[&]{dispatch(launch);});
+  const auto scene=arguments.indexOf("--design-scene");
+  if(testing&&scene>=0&&scene+1<arguments.size())QTimer::singleShot(300,&app,[&]{if(!engine.rootObjects().isEmpty())QMetaObject::invokeMethod(engine.rootObjects().first(),"openDesignScene",Q_ARG(QVariant,arguments[scene+1]));});
   if(app.arguments().contains("--smoke")) QTimer::singleShot(700,&app,[&]{
     if(engine.rootObjects().isEmpty()){app.exit(1);return;}
     const auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first());

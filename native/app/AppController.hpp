@@ -4,6 +4,8 @@
 #include <QVariantList>
 #include <QTemporaryDir>
 #include <QUrl>
+#include "../settings/Settings.hpp"
+#include "../themes/Themes.hpp"
 #include <memory>
 #include <vector>
 class AppController : public QObject {
@@ -35,7 +37,8 @@ class AppController : public QObject {
   Q_PROPERTY(int revision READ revision NOTIFY changed)
   Q_PROPERTY(bool dragPrepared READ dragPrepared NOTIFY changed)
  public:
-  AppController(QString worker,QString engine,QObject* parent=nullptr);
+  AppController(QString worker,QString engine,QObject* parent=nullptr,QString dataDirectory={});
+  ~AppController() override;
   QObject* entries(){return &model;} QVariantList tabs()const;QString activeTab()const{return current;}
   bool hasArchive()const{return tab()!=nullptr;}QString archiveName()const;QString archiveFormat()const;QString breadcrumb()const;
   QVariantList details()const;QString statusSummary()const;QString status()const;
@@ -73,7 +76,7 @@ class AppController : public QObject {
   struct Tab {QString id,path,format,revision,folder;QJsonArray entries;quint64 physical{};};
   struct Context {QString tabId,path,openEntry;bool openAfter{},temporary{},drag{};};
   JobController jobs;EntryModel model;QVector<Tab> documents;QHash<QString,Context> contexts;QString current,identity;
-  QJsonObject preferences,translations;QJsonArray skins;int epoch{};
+  Settings settings;Themes themeService;QJsonObject preferences,translations,english;QJsonArray skins;int epoch{};
   QList<QUrl> dragUrls;QHash<QString,QString> launchActions;
   std::vector<std::unique_ptr<QTemporaryDir>> temporary;
   const Tab* tab()const;Tab* find(QString id);void showTab();
