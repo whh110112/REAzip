@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "scope": "Only identifiers needed for existing data/installation compatibility and its audits. No UI, README, release-note or new payload branding exceptions.",
+  "identifiers": {
+    "native/app/AppController.cpp": {
+      "occurrences": 2,
+      "reason": "Read existing profile directories during migration."
+    },
+    "native/platform/Platform.cpp": {
+      "occurrences": 14,
+      "reason": "Read existing platform data and clean or redirect owned legacy registry entries."
+    },
+    "native/vault/Vault.cpp": {
+      "occurrences": 1,
+      "reason": "Preserve DPAPI entropy so existing encrypted vaults remain readable."
+    },
+    "native/packaging/ZENzip.iss": {
+      "occurrences": 5,
+      "reason": "Keep installer upgrade identity and delete obsolete application files and shortcuts."
+    },
+    "native/packaging/package.py": {
+      "occurrences": 2,
+      "reason": "Debian package replacement/conflict identifiers for upgrades."
+    },
+    "native/engine/write/journal.cpp": {
+      "occurrences": 2,
+      "reason": "Recover earlier interrupted archive transactions."
+    },
+    "native/tests/vault/vault.cpp": {
+      "occurrences": 2,
+      "reason": "Independent encrypted-vault compatibility fixture."
+    },
+    "native/tests/platform/platform.cpp": {
+      "occurrences": 7,
+      "reason": "Ownership and legacy-handler migration regression coverage."
+    },
+    "native/tests/engine-write/journal.py": {
+      "occurrences": 3,
+      "reason": "Real interrupted-transaction compatibility regression."
+    },
+    "native/tools/check-debian-upgrade.py": {
+      "occurrences": 6,
+      "reason": "Download the published historical package and assert obsolete payload removal."
+    },
+    "native/tools/check-branding.py": {
+      "occurrences": 1,
+      "reason": "Matcher used only by the branding audit itself."
+    }
+  }
+}

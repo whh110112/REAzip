@@ -1,6 +1,6 @@
 # ZENzip 安装指南
 
-从 [v0.4.0 发布页](https://github.com/whh110112/ZENzip/releases/tag/v0.4.0) 下载对应平台的包。实测范围与限制见 [0.4.0 验证报告](../../docs/verification-0.4.0.md)。
+从 [v0.4.1 发布页](https://github.com/whh110112/ZENzip/releases/tag/v0.4.1) 下载对应平台的包。实测范围与限制见 [0.4.1 验证报告](../../docs/verification-0.4.1.md)。
 
 按操作系统和CPU选择x64或ARM64。解开GitHub artifact外层ZIP后，先核对包旁SHA256SUMS和manifest中的版本、sourceCommit、architecture、signing；这些是构建记录，不是第三方代码签名。
 
@@ -15,6 +15,6 @@
 
 无需另外安装Node、Qt SDK或7-Zip。Windows未签名；macOS未公证。不要全局关闭系统安全设置。
 
-安装版配置使用Qt标准用户数据路径下native目录；Windows便携配置固定旁边data。首次发现旧 Electron 的 REAzip/reazip 配置时，只迁移白名单设置、颜色主题与有效标签，原目录保留；不复制密码。自定义CSS不会运行，转换告警保存在迁移记录中。损坏JSON会先备份；更高版本schema只读，避免降级破坏。
+安装版配置使用Qt标准用户数据路径下native目录；Windows便携配置固定旁边data。首次发现早期 Electron 配置时，只迁移白名单设置、颜色主题与有效标签，原目录保留；不复制密码。自定义CSS不会运行，转换告警保存在迁移记录中。损坏JSON会先备份；更高版本schema只读，避免降级破坏。
 
-已有原生 REAzip 配置会原地复用，Windows 加密密码库不需要导出。安装器保留升级标识；已有安装可继续使用旧目录名，新安装使用 ZENzip 目录。完整交互桌面验收的剩余范围见验证报告。历史 v0.2.1 发行保持原样。
+已有原生版本配置会原地复用，Windows 加密密码库不需要导出。安装器保留升级标识；已有安装可继续使用旧目录名，新安装使用 ZENzip 目录。完整交互桌面验收的剩余范围见验证报告。历史 v0.2.1 发行保持原样。

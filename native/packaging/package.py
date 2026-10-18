@@ -108,7 +108,7 @@ def main():
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
     manifest={'schemaVersion':1,'version':version,'sourceCommit':commit,'sourceDirty':subprocess.run(['git','diff','--quiet','HEAD','--','native'],cwd=REPO).returncode!=0,'os':osname,'architecture':a.arch,'qt':'6.8.3','bit7z':'4.1.0','sevenZip':'26.04','binaries':binaries,'signing':'ad-hoc, not notarized' if system=='Darwin' else 'unsigned','publicReleaseAuthorized':True}
     (resources/'artifact-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-    (resources/'acceptance.json').write_text(json.dumps({'coreTests':'see CI LastTest.log','guiSmoke':'must pass isolated stage check','systemIntegration':'Windows installed registration and shell action verified in CI; interactive cross-platform desktop checks remain documented','publicRelease':'authorized for 0.4.0; see verification report for tested scope'},indent=2)+'\n')
+    (resources/'acceptance.json').write_text(json.dumps({'coreTests':'see CI LastTest.log','guiSmoke':'must pass isolated stage check','systemIntegration':'Windows installed registration and shell action verified in CI; interactive cross-platform desktop checks remain documented','publicRelease':f'authorized for {version}; see verification report for tested scope'},indent=2)+'\n')
     (resources/'README.txt').write_text('ZENzip '+version+'\n\nOpen zenzip to use the application. No Node.js, Qt SDK, or separately installed 7-Zip is required.\nWindows portable ZIP: portable.flag keeps settings/themes under adjacent data. Installer: standard user data directory.\nRead NOTICE.md and acceptance.json for licenses, signing and acceptance status.\n')
     if system=='Darwin':
         iconset=build/'zenzip.iconset';iconset.mkdir(exist_ok=True)
@@ -183,6 +183,7 @@ def main():
         applications=debroot/'usr/share/applications';applications.mkdir(parents=True);(applications/'com.zenzip.app.desktop').write_text(desktop.replace('Exec=AppRun','Exec=/opt/zenzip/AppRun').replace('Icon=zenzip','Icon=/opt/zenzip/zenzip.svg'))
         bindir=debroot/'usr/bin';bindir.mkdir(parents=True);(bindir/'zenzip').write_text('#!/bin/sh\nexec /opt/zenzip/AppRun "$@"\n');(bindir/'zenzip').chmod(0o755)
         deb=output/(name+'.deb');run('dpkg-deb','--root-owner-group','--build',debroot,deb);artifacts.append(deb)
+    run(sys.executable,ROOT/'tools/check-branding.py','--stage',stage)
     summaries=[{'file':file.name,'size':file.stat().st_size,'sha256':sha(file)} for file in artifacts]
     (output/(name+'-manifest.json')).write_text(json.dumps(dict(manifest,artifacts=summaries,unpackedBytes=sum(f.stat().st_size for f in stage.rglob('*') if f.is_file())),indent=2)+'\n')
     (output/(name+'-SHA256SUMS.txt')).write_text(''.join(item['sha256']+'  '+item['file']+'\n' for item in summaries))
