@@ -6,6 +6,7 @@ import json
 import pathlib
 import tempfile
 import unittest
+from unittest.mock import patch
 
 path = pathlib.Path(__file__).resolve().parents[2] / 'tools/publish-native.py'
 spec = importlib.util.spec_from_file_location('publish_native', path)
@@ -79,6 +80,21 @@ class PromotionValidation(unittest.TestCase):
         data['artifacts'][0]['file'] = '../outside.exe'
         self.edit(artifacts=data['artifacts'])
         with self.assertRaises(AssertionError): self.validate()
+
+    def test_draft_is_found_without_the_published_tag_endpoint(self):
+        draft = dict(id=7, tag_name='v99.1.2', draft=True)
+        def api(*arguments, **kwargs):
+            # Mirror GitHub's observed draft lookup behavior, not an existing
+            # published release. Calling the tag endpoint would fail here.
+            if arguments == ('api', 'repos/example/project/releases?per_page=100'):
+                return [draft]
+            raise RuntimeError('Draft is not visible through the tag endpoint')
+        with patch.object(publisher, 'gh', side_effect=api):
+            self.assertEqual(publisher.find_release('example/project', 'v99.1.2'), draft)
+
+    def test_absent_draft_returns_none(self):
+        with patch.object(publisher, 'gh', return_value=[]):
+            self.assertIsNone(publisher.find_release('example/project', 'v99.1.2'))
 
 
 if __name__ == '__main__':

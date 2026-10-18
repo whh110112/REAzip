@@ -57,6 +57,13 @@ def gh(*arguments, json_result=False):
     return json.loads(result) if json_result else result
 
 
+def find_release(repo, tag):
+    # The tag endpoint can return 404 for a newly created draft. The authenticated
+    # release list includes drafts and is also the resumable lookup path.
+    releases = gh('api', f'repos/{repo}/releases?per_page=100', json_result=True)
+    return next((release for release in releases if release['tag_name'] == tag), None)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--candidate-dir', required=True, type=pathlib.Path)
@@ -112,15 +119,14 @@ Windows packages are unsigned. macOS packages are ad-hoc signed and not notarize
         assert exact[0]['object']['type'] == 'commit' and exact[0]['object']['sha'] == source, 'Existing tag does not identify this tested source'
     else:
         gh('api', '--method', 'POST', f'repos/{repo}/git/refs', '-f', 'ref=refs/tags/' + tag, '-f', 'sha=' + source)
-    releases = gh('api', f'repos/{repo}/releases?per_page=100', json_result=True)
-    matches = [item for item in releases if item['tag_name'] == tag]
-    if matches:
-        release = matches[0]
+    release = find_release(repo, tag)
+    if release:
         assert release['draft'] is True, 'Refusing to replace a published release'
     else:
         gh('release', 'create', tag, '--repo', repo, '--verify-tag', '--title', 'ZENzip ' + version,
            '--notes-file', notes, '--draft')
-        release = gh('api', f'repos/{repo}/releases/tags/{tag}', json_result=True)
+        release = find_release(repo, tag)
+        assert release and release['draft'] is True, 'New draft not visible; rerun to resume promotion'
     release_id = release['id']
     for name in sorted(expected):
         current = gh('api', f'repos/{repo}/releases/{release_id}', json_result=True)
