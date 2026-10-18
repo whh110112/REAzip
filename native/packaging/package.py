@@ -156,7 +156,7 @@ def main():
         launcher='#!/bin/sh\nAPPDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexport LD_LIBRARY_PATH="$APPDIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\nexec "$APPDIR/bin/reazip" "$@"\n'
         (stage/'AppRun').write_text(launcher);(stage/'AppRun').chmod(0o755)
         desktop=('[Desktop Entry]\nType=Application\nName=REAzip\nComment=Open, create and extract archives\n'
-                 'Exec=AppRun %F\nIcon=reazip\nTerminal=false\nCategories=Utility;Archiver;\n'
+                 'Exec=AppRun %F\nIcon=reazip\nTerminal=false\nCategories=Utility;Archiving;\n'
                  'MimeType=application/zip;application/x-7z-compressed;application/vnd.rar;application/x-tar;application/gzip;application/x-bzip2;application/x-xz;application/zstd;application/x-lzma;application/x-cd-image;application/x-iso9660-image;application/x-ms-wim;application/x-archive;application/x-arj;application/x-lzh-compressed;\n'
                  'Actions=ExtractHere;ExtractTo;\n'
                  '\n[Desktop Action ExtractHere]\nName=Extract here\nExec=AppRun --extract-here %f\n'
