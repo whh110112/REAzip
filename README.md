@@ -8,7 +8,7 @@ A quiet, cross-platform archive manager. Native 7-Zip and a simple Qt Quick inte
 
 [Download](https://github.com/whh110112/ZENzip/releases/tag/v0.4.1) · [Installation](native/docs/installation-guide.md) · [Known limitations](native/docs/known-limitations.md)
 
-![ZENzip English interface](docs/screenshots/en.png)
+![ZENzip 0.4.1 English interface](docs/screenshots/en.png)
 
 ## A little less noise
 

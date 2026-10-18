@@ -8,7 +8,7 @@
 
 [下载](https://github.com/whh110112/ZENzip/releases/tag/v0.4.1) · [安装指南](native/docs/installation-guide.md) · [已知限制](native/docs/known-limitations.md)
 
-![ZENzip 简体中文界面](docs/screenshots/zh-CN.png)
+![ZENzip 0.4.1 简体中文界面](docs/screenshots/zh-CN.png)
 
 ## 少一点纷扰
 

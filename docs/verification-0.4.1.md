@@ -6,6 +6,14 @@ Stable maintenance release containing the localized settings fixes from PR #3 an
 
 The release workflow promotes artifacts only from a successful Native candidate run on main whose source commit matches the checked-out release sources. All six OS/architecture manifests must name version 0.4.1 and the same clean source commit. Every package is checked against its manifest SHA-256 before upload, and every uploaded asset is checked against GitHub's reported digest before publication. The release page links the exact candidate run and source commit.
 
+## Published build evidence
+
+- Source: `e9d7c405f44f95c62838db2e21b3f4f27fbf58c9`.
+- [Native candidate 39143335032](https://github.com/whh110112/ZENzip/actions/runs/39143335032): six targets passed, 15/15 CTest per target, packaging and aggregate verification passed.
+- The earlier [Native foundation run](https://github.com/whh110112/ZENzip/actions/runs/39140865402) passed all six targets on the identical native source tree; the later source checkpoint changes only CI collection/concurrency metadata.
+- The paired README previews were copied byte-for-byte from this compiled Windows build and verified against its capture manifest. Thirty dedicated native tab captures were also retrieved; Chinese, Arabic Ink and Hindi Slate samples were manually reviewed.
+- Documentation and release-tool follow-up leaves the published application/runtime sources unchanged.
+
 ## Regression and packaging scope
 
 - Windows, macOS and Linux, each x64 and ARM64: 15 CTest suites, architecture checks and isolated application/worker startup.
