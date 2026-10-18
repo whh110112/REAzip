@@ -4,7 +4,7 @@
 
 A cross-platform archive manager with a native 7-Zip core and a tabbed, themeable Qt Quick interface. REAzip pairs the proven 7-Zip 26.04 engine with the everyday workflow Bandizip popularized — tabs, queues, smart extraction and per-entry conflict control — while keeping the whole feature surface honest: nothing in the UI is a fake button.
 
-> **Status: 0.3.0-dev candidate.** The published v0.2.1 is the previous Electron build. Native releases are gated on a full six-target acceptance run; see the [acceptance report](native/docs/acceptance-report.md) for exactly what has been verified and what has not.
+> **Status: 0.3.0-dev pre-release.** Six native targets build and pass 14/14 tests each on the same commit; the [acceptance report](native/docs/acceptance-report.md) states exactly what is verified and what is not. v0.2.1 is the previous Electron build.
 
 | Main window (light) | Create archive | Extract |
 |---|---|---|
@@ -52,7 +52,9 @@ Comparison is limited to publicly documented capabilities and REAzip's own accep
 
 ## Downloads
 
-Candidate packages (Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + tar.gz + deb) are produced by the [native candidate workflow](https://github.com/whh110112/REAzip/actions/workflows/native-candidate.yml); every package ships with its version, source SHA, architecture, SHA-256, signature status and license notices.
+The pre-release [`v0.3.0-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.0-dev) carries the six-target builds: Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + deb + tar.gz. Every package ships with its version, source SHA, architecture, per-binary SHA-256, signature status and license notices; `SHA256SUMS.txt` covers the release assets.
+
+It is flagged **pre-release** on purpose: the automated six-target gate is green on commit `caa96528`, but the manual acceptance items listed in the [acceptance report](native/docs/acceptance-report.md) (side-by-side visual review, real desktop association and menus, drag-out, large-archive stress) have not been run yet.
 
 - Windows binaries are **unsigned**; macOS builds are ad-hoc signed and **not notarized**.
 - Linux `deb` requires glibc ≥ 2.39 (built on Ubuntu 24.04); macOS deployment target is 13.0.

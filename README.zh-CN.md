@@ -4,7 +4,7 @@
 
 一款以完整 7-Zip 原生库为核心的跨平台压缩包管理器，提供多标签、六主题的 Qt Quick 界面。REAzip 把久经考验的 7-Zip 26.04 引擎和 Bandizip 普及的日常操作流——多标签、任务队列、智能解压、逐条目冲突处理——结合在一起，同时保持功能面诚实：界面上没有假按钮。
 
-> **状态：0.3.0-dev 候选版本。** 已公开的 v0.2.1 是旧 Electron 版。原生版本只有在六目标完整验收通过后才会正式发布；哪些已验证、哪些未验证，见[验收报告](native/docs/acceptance-report.md)。
+> **状态：0.3.0-dev 预发布（pre-release）。** 六个原生目标在同一提交上构建成功、各自 14/14 测试通过；哪些已验证、哪些未验证，见[验收报告](native/docs/acceptance-report.md)。v0.2.1 是旧 Electron 版。
 
 | 主窗口（浅色） | 新建压缩 | 解压 |
 |---|---|---|
@@ -52,7 +52,9 @@ RTL（阿拉伯语）与简体中文预览：![RTL](native/design/native-referen
 
 ## 下载
 
-候选包（Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + tar.gz + deb）由 [native candidate workflow](https://github.com/whh110112/REAzip/actions/workflows/native-candidate.yml) 产出；每个包都附带版本、源码 SHA、CPU 架构、SHA-256、签名状态与许可声明。
+预发布 [`v0.3.0-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.0-dev) 提供六目标安装包：Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + deb + tar.gz。每个包附带版本、源码 SHA、CPU 架构、逐文件 SHA-256、签名状态与许可声明，另有 `SHA256SUMS.txt` 覆盖全部附件。
+
+标为**预发布**是有意的：自动化六目标门禁已在提交 `caa96528` 上全绿，但[验收报告](native/docs/acceptance-report.md)里的人工项（并排视觉比对、真实桌面关联与菜单、拖出、大包压力）尚未执行。
 
 - Windows 未代码签名；macOS 为 ad-hoc 签名、未公证。
 - Linux deb 需要 glibc ≥ 2.39（Ubuntu 24.04 构建）；macOS 部署目标 13.0。
