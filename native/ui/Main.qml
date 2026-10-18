@@ -60,8 +60,10 @@ ApplicationWindow {
         contentItem: RowLayout { id: footerActions; spacing: 8 }
     }
     component Field: TextField {
-        color: window.ink; selectByMouse: true; implicitHeight: 36; font.pixelSize: 13
-        background: Rectangle { radius: 8; color: window.card; border.color: window.edge }
+        color: window.ink; selectByMouse: true; font.pixelSize: 13
+        // Keep Qt's implicitHeight binding: it includes both entered text and
+        // placeholder fallback metrics. A fixed height clips taller scripts.
+        background: Rectangle { implicitHeight: 36; radius: 8; color: window.card; border.color: window.edge }
     }
     component Caption: SafeLabel { color: window.muted; font.pixelSize: 13 }
     component SettingsLabel: Caption {
