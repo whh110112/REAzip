@@ -29,7 +29,7 @@ Source: "{#Stage}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs crea
 Name: "{group}\REAzip"; Filename: "{app}\reazip.exe"
 Name: "{group}\Uninstall REAzip"; Filename: "{uninstallexe}"
 [Tasks]
-Name: "register"; Description: "Register archive file types and classic context menu"; Flags: unchecked
+Name: "register"; Description: "Register archive file types and the classic context menu (recommended)"
 [Run]
 Filename: "{app}\reazip.exe"; Parameters: "--register"; Tasks: register; Flags: runhidden waituntilterminated
 [UninstallRun]

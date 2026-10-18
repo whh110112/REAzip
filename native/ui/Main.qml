@@ -22,7 +22,7 @@ ApplicationWindow {
     function token(key, fallback) { return colors[key] || fallback }
     Component.onCompleted:if(fatalStartup){errorText=fatalStartup;errorDialog.open()}
     function openDesignScene(scene) {
-        if(scene==="create")createDialog.open();else if(scene==="extract")extractDialog.open();else if(scene==="settings")settingsDialog.open();else if(scene==="appearance"){settingsPages.currentIndex=1;settingsDialog.open()}else if(scene==="password")passwordDialog.open();else if(scene==="conflict"){window.currentChallenge={path:"example.txt"};conflictDialog.open()}else if(scene==="progress")progressDialog.open()
+        if(scene==="create")createDialog.open();else if(scene==="extract")extractDialog.open();else if(scene==="settings")settingsDialog.open();else if(scene==="appearance"){settingsPages.currentIndex=2;settingsDialog.open()}else if(scene==="vault"){settingsPages.currentIndex=1;settingsDialog.open()}else if(scene==="password")passwordDialog.open();else if(scene==="conflict"){window.currentChallenge={path:"example.txt"};conflictDialog.open()}else if(scene==="progress")progressDialog.open()
     }
     readonly property color paper: token("--bg", "#FFFFFF")
     readonly property color surface: token("--surface", "#F1EFE8")
@@ -168,13 +168,19 @@ ApplicationWindow {
             Caption { text:window.t("saveTo","保存到") }
             RowLayout { Field { id:createDest;text:window.api?window.api.defaultArchiveDir:"";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="create";folders.open()} } }
             RowLayout { ComboBox { id:format;model:["zip","7z","tar","tgz"] } ComboBox { id:level;model:[0,1,3,5,7,9];currentIndex:3 } Field { id:volume;placeholderText:window.t("volume","分卷大小")+" (B)";enabled:format.currentText!=="tgz";Layout.fillWidth:true } }
-            Field { id:createPassword;placeholderText:window.t("passwordOptional","密码（可选）");echoMode:TextInput.Password;enabled:format.currentIndex<2;Layout.fillWidth:true }
+            Caption { text:window.t("encryption","加密") }
+            RowLayout { Layout.fillWidth:true;spacing:8
+                Field { id:createPassword;objectName:"createPassword";placeholderText:window.t("passwordOptional","密码（可选）");echoMode:showCreatePassword.checked?TextInput.Normal:TextInput.Password;enabled:format.currentIndex<2;Layout.fillWidth:true }
+                CheckBox { id:showCreatePassword;objectName:"createPasswordShow";text:window.t("showPassword","显示");palette.text:window.ink;enabled:createPassword.enabled } }
+            RowLayout { Layout.fillWidth:true;spacing:8
+                ComboBox { id:createVaultPick;objectName:"createPasswordVault";Layout.fillWidth:true;textRole:"name";model:[{name:window.t("vaultPick","使用已保存的密码"),id:""}].concat(window.api?window.api.passwords:[]);onActivated:if(window.api&&currentIndex>0){createPassword.text=window.api.passwordOf(model[currentIndex].id);window.api.usePassword(model[currentIndex].id)} }
+                CheckBox { id:saveCreatePassword;objectName:"createPasswordSave";text:window.t("saveToVault","保存到密码库");palette.text:window.ink;enabled:createPassword.text.length>0&&createPassword.enabled } }
             CheckBox { id:headers;text:window.t("encryptHeaders","7Z 文件头加密");enabled:format.currentText==="7z";palette.text:window.ink }
             CheckBox { id:deleteSources;text:window.t("deleteSource","成功校验后将源文件移至回收站");palette.text:window.ink }
             Caption { text:window.inputs.length+" "+window.t("files","文件/目录") }
             RowLayout { Action { text:window.t("addFiles","选择文件");onClicked:sourcesDialog.open() } Action { text:window.t("addFolder","选择目录");onClicked:{window.folderTarget="source";folders.open()} } }
         }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.enabled?volume.text:""});createPassword.clear();createDialog.close()} } }
+        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{if(saveCreatePassword.checked&&createPassword.text.length>0)window.api.savePassword(createName.text,createPassword.text);window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.enabled?volume.text:""});createPassword.clear();saveCreatePassword.checked=false;createDialog.close()} } }
     }
     Sheet { id:extractDialog;objectName:"extractDialog";title:window.t("extractTo","解压到");paper:window.card;ink:window.ink;edge:window.edge
         ColumnLayout { width:parent.width;spacing:12
@@ -187,10 +193,15 @@ ApplicationWindow {
         footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:extractDialog.reject() } Action { objectName:"extractStart";text:window.t("startExtract","开始解压");primary:true;onClicked:{if(window.api)window.api.extractArchive({destination:extractDest.text,smart:smart.checked,overwrite:overwrite.currentValue,openAfter:openAfter.checked});extractDialog.close()} } }
     }
     Sheet { id:passwordDialog;objectName:"passwordDialog";title:window.t("needPassword","需要密码");paper:window.card;ink:window.ink;edge:window.edge
-        ColumnLayout { width:parent.width;Caption { text:window.currentChallenge.incorrect?window.t("passwordWrong","密码错误，请重试"):window.t("enterPassword","请输入归档密码") } Field { id:password;objectName:"passwordField";echoMode:TextInput.Password;Layout.fillWidth:true;onAccepted:passwordDialog.accept() } }
+        ColumnLayout { width:parent.width;spacing:10
+            Caption { text:window.currentChallenge.incorrect?window.t("passwordWrong","密码错误，请重试"):window.t("enterPassword","请输入归档密码") }
+            Field { id:password;objectName:"passwordField";echoMode:TextInput.Password;Layout.fillWidth:true;onAccepted:passwordDialog.accept() }
+            RowLayout { Layout.fillWidth:true;spacing:8
+                ComboBox { objectName:"passwordVaultPick";Layout.fillWidth:true;textRole:"name";model:[{name:window.t("vaultPick","使用已保存的密码"),id:""}].concat(window.api?window.api.passwords:[]);onActivated:if(window.api&&currentIndex>0){password.text=window.api.passwordOf(model[currentIndex].id);password.forceActiveFocus()} }
+                CheckBox { id:rememberPassword;objectName:"passwordRemember";text:window.t("saveToVault","保存到密码库");palette.text:window.ink;enabled:password.text.length>0 } } }
         standardButtons:Dialog.Ok|Dialog.Cancel
-        onOpened:{password.clear();password.forceActiveFocus()}
-        onAccepted:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,password.text);password.clear()}
+        onOpened:{password.clear();rememberPassword.checked=false;password.forceActiveFocus()}
+        onAccepted:{if(window.api){if(rememberPassword.checked&&password.text.length>0)window.api.savePassword(window.api.archiveName,password.text);window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,password.text)};password.clear()}
         onRejected:{password.clear();if(window.api)window.api.cancelTask()}
     }
     Sheet { id:executableDialog;title:window.t("confirmOpen","打开可执行文件");paper:window.card;ink:window.ink;edge:window.edge
@@ -217,7 +228,7 @@ ApplicationWindow {
     Sheet { id:renameDialog;title:window.t("rename","重命名");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Field { id:renameText;width:parent.width;text:window.api?window.api.selectedName:"" } onAccepted:if(window.api)window.api.renameSelected(renameText.text) }
     Sheet { id:settingsDialog;title:window.t("settings","设置");width:Math.min(780,window.width-40);paper:window.card;ink:window.ink;edge:window.edge
         RowLayout { width:parent.width;spacing:18
-            ColumnLayout { Layout.preferredWidth:135;Layout.alignment:Qt.AlignTop;Repeater { model:[window.t("tabGeneral","常规"),window.t("tabAppearance","外观皮肤"),window.t("tabAssoc","文件关联"),window.t("tabLanguage","语言"),window.t("tabAbout","关于")];delegate:Action { required property int index;required property string modelData;text:modelData;Layout.fillWidth:true;primary:settingsPages.currentIndex===index;soft:true;onClicked:settingsPages.currentIndex=index } } }
+            ColumnLayout { Layout.preferredWidth:135;Layout.alignment:Qt.AlignTop;Repeater { model:[window.t("tabGeneral","常规"),window.t("tabPassword","密码"),window.t("tabAppearance","外观皮肤"),window.t("tabAssoc","文件关联"),window.t("tabLanguage","语言"),window.t("tabAbout","关于")];delegate:Action { required property int index;required property string modelData;text:modelData;Layout.fillWidth:true;primary:settingsPages.currentIndex===index;soft:true;onClicked:settingsPages.currentIndex=index } } }
             StackLayout { id:settingsPages;Layout.fillWidth:true;Layout.preferredHeight:300
                 ColumnLayout { spacing:0
                     RowLayout { Layout.fillWidth:true;Layout.topMargin:6;Layout.bottomMargin:12;spacing:12
@@ -244,8 +255,33 @@ ApplicationWindow {
                         Item { Layout.fillWidth:true }
                         ComboBox { objectName:"prefCodepage";textRole:"label";valueRole:"value";implicitWidth:150;model:[{label:window.t("cpAuto","自动"),value:""},{label:"GBK (936)",value:"936"},{label:"Big5 (950)",value:"950"},{label:"Shift-JIS (932)",value:"932"},{label:"UTF-8 (65001)",value:"65001"}];onActivated:if(window.api)window.api.setPreference("codepage",currentValue) } }
                     Item { Layout.fillHeight:true } }
+                ColumnLayout { spacing:0
+                    RowLayout { Layout.fillWidth:true;Layout.topMargin:6;Layout.bottomMargin:10;spacing:12
+                        Caption { text:window.t("savedPasswords","已保存的密码");color:window.ink }
+                        Item { Layout.fillWidth:true }
+                        Caption { text:window.api?(window.api.vaultProtection==="dpapi"?window.t("vaultProtectionDpapi","使用当前 Windows 账户加密（DPAPI）"):window.t("vaultProtectionFile","未加密，仅受文件权限保护")):"";font.pixelSize:12;wrapMode:Text.Wrap;horizontalAlignment:Text.AlignRight } }
+                    RowLayout { Layout.fillWidth:true;Layout.bottomMargin:10;spacing:8
+                        Field { id:vaultName;objectName:"vaultName";placeholderText:window.t("vaultName","名称");Layout.preferredWidth:150 }
+                        Field { id:vaultSecret;objectName:"vaultSecret";placeholderText:window.t("vaultSecret","密码");echoMode:TextInput.Password;Layout.fillWidth:true }
+                        Action { objectName:"vaultAdd";text:window.t("vaultAdd","保存");primary:true;enabled:!!window.api&&vaultName.text.trim().length>0&&vaultSecret.text.length>0
+                            onClicked:{if(window.api&&window.api.savePassword(vaultName.text,vaultSecret.text)){vaultName.clear();vaultSecret.clear()}} } }
+                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
+                    ListView { objectName:"vaultList";Layout.fillWidth:true;Layout.preferredHeight:132;clip:true;model:window.api?window.api.passwords:[]
+                        delegate:RowLayout { required property var modelData;width:ListView.view?ListView.view.width:0;spacing:8
+                            SafeLabel { text:modelData.name;color:window.ink;elide:Text.ElideRight;Layout.fillWidth:true }
+                            Caption { text:"••••••••";font.pixelSize:12 }
+                            Action { text:window.t("vaultRemove","移除");onClicked:if(window.api)window.api.forgetPassword(modelData.id) } } }
+                    Caption { text:window.t("vaultEmptyHint","没有保存的密码时显示为空。密码只在本机使用，解压弹窗里可直接选用。");wrapMode:Text.Wrap;Layout.fillWidth:true;font.pixelSize:12;Layout.topMargin:8 }
+                    Item { Layout.fillHeight:true } }
                 ColumnLayout { GridLayout { columns:2;Repeater { model:window.api?window.api.themeList:[];delegate:Action { required property var modelData;text:modelData.name;Layout.fillWidth:true;onClicked:if(window.api)window.api.setPreference("skin",modelData.id) } } } Action { text:window.t("openSkinDir","打开皮肤目录");onClicked:if(window.api)window.api.openThemeDirectory() } Action { text:window.t("rescan","重新扫描");onClicked:if(window.api)window.api.rescanThemes() } Caption { text:window.t("themeCompatibility","JSON 颜色变量兼容；追加 CSS 不执行");wrapMode:Text.Wrap;Layout.fillWidth:true } Item { Layout.fillHeight:true } }
-                ColumnLayout { Caption { text:"ZIP · 7Z · RAR · TAR · GZ · ISO" } Caption { text:window.t("platformIntegration","系统集成状态以平台实现为准");wrapMode:Text.Wrap;Layout.fillWidth:true } Action { text:window.t("applyDefault","注册关联并打开默认应用设置");enabled:!!window.api;onClicked:window.api.applyAssociations() } Item { Layout.fillHeight:true } }
+                ColumnLayout { spacing:8
+                    SafeLabel { text:window.t("assocSummary","关联状态");color:window.ink }
+                    SafeLabel { objectName:"assocStatus";text:window.api?window.api.associationStatus:"";wrapMode:Text.WrapAnywhere;Layout.fillWidth:true;color:window.muted;font.pixelSize:12 }
+                    RowLayout { spacing:8
+                        Action { objectName:"applyAssociations";text:window.t("applyDefault","注册关联并打开默认应用设置");enabled:!!window.api;onClicked:window.api.applyAssociations() }
+                        Action { objectName:"refreshAssociations";text:window.t("refresh","刷新");enabled:!!window.api;onClicked:window.api.refreshAssociations() } }
+                    Caption { text:window.t("assocHint","Windows 11 的现代右键菜单需要签名 COM 组件；本版本提供经典右键菜单（在「显示更多选项」中）。");wrapMode:Text.Wrap;Layout.fillWidth:true;font.pixelSize:12 }
+                    Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:window.t("uiLanguage","界面语言") } ComboBox { model:window.api?window.api.languages:[];textRole:"name";onActivated:if(window.api)window.api.setPreference("language",model[currentIndex].code) } Caption { text:window.t("langHint","支持18种语言") } Item { Layout.fillHeight:true } }
                 ColumnLayout { SafeLabel { text:"REAzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/REAzip" } Item { Layout.fillHeight:true } }
             }

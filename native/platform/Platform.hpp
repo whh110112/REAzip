@@ -8,6 +8,9 @@ namespace platform {
 QString dataDirectory(QString applicationDirectory={});
 QString registerApplication(QString executable,QString testRegistryPrefix={});
 QString unregisterApplication(QString executable,QString testRegistryPrefix={});
+// Human-readable, platform-accurate report of what is actually registered. The settings page shows
+// this verbatim so nobody has to guess whether associations are in place.
+QString associationSummary(QString executable,QString testRegistryPrefix={});
 bool propagateOrigin(QString archive,QString destination,QString* error=nullptr);
 quint64 residentBytes();
 class Instance : public QObject {

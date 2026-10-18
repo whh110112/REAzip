@@ -1,6 +1,6 @@
 if(TARGET Qt6::Quick)
   add_library(reazip-models STATIC EntryModel.cpp EntryModel.hpp ../app/AppController.cpp ../app/AppController.hpp)
-  target_link_libraries(reazip-models PUBLIC reazip-jobs reazip-platform reazip-settings Qt6::Gui)
+  target_link_libraries(reazip-models PUBLIC reazip-jobs reazip-platform reazip-settings reazip-vault Qt6::Gui)
   target_compile_features(reazip-models PUBLIC cxx_std_17)
   if(MSVC)
     target_compile_options(reazip-models PRIVATE /utf-8)

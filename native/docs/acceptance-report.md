@@ -1,8 +1,20 @@
 # 原生迁移阶段验收报告（2026-10-18，交接快照）
 
-**结论：已有可构建、可操作的原生候选；自动化门禁已通过，T10 仍因人工验收缺口未完全通过。** 当前检查点 `caa96528`（N01/N02 修复提交），六目标 CI 全绿，见下方证据。
+**结论：已有可构建、可操作的原生候选；自动化门禁已通过，T10 仍因人工验收缺口未完全通过。** 上一检查点 `caa96528`（N01/N02 修复提交）六目标 CI 全绿；0.3.1-dev 在其上新增密码库、Windows 经典右键菜单与三平台关联声明，验证结果见 Release 说明与下方"0.3.1-dev 新增项"。
 
-## 本轮复验结果（caa96528 → candidate 39092715383）
+## 0.3.1-dev 新增项
+
+三项功能已实现并有自动化覆盖；**六目标结果以本次提交触发的 CI 为准**，未出结果前本报告不写 PASS。
+
+| 编号 | 项目 | 实现 | 覆盖 |
+|---|---|---|---|
+| V01 | 密码库（设置 → 密码；创建/解压弹窗可选用）| Windows 用 DPAPI（`CryptProtectData` + 固定应用熵）加密整个条目列表；macOS/Linux 以 0600 权限保存明文并在界面标注"未加密"；损坏文件保留为 `.corrupt-<ms>`；便携格式在 Windows 上首次保存即升级为 DPAPI；无法解密的 DPAPI 库在其他平台置为只读，拒绝覆盖 | `native-vault` 测试：校验拒绝、加密/权限断言、二次加载、删除、损坏保留、便携导入、跨平台拒写 |
+| V02 | Windows 右键菜单 | 每个 `SystemFileAssociations\<ext>\shell\REAzip.extract_here/extract_to` 增加 `Icon`、`MultiSelectModel`（解压到此处可多选）、`OwnerExecutable`；`*` 与 `Directory` 的"添加到压缩包"同样带图标与多选；新增 `Applications\reazip.exe`（`FriendlyAppName`/`DefaultIcon`/`SupportedTypes`）让"打开方式"列表可见；扩展名从 11 个扩到 22 个（zipx/cab/lz/lzma/zst/zstd/arj/lzh/tbz/txz 等） | `native-platform`：断言图标、MultiSelectModel、Applications/SupportedTypes、摘要含"modern menu"说明；卸载后不残留 |
+| V03 | 三平台文件关联 | Windows：ProgID + `Capabilities\FileAssociations` + `RegisteredApplications` + `OpenWithProgids`，注册后打开系统默认应用设置；macOS：`Info.plist` 增加 `CFBundleTypeExtensions`、`LSHandlerRank=Default`、`LSSupportsOpeningDocumentsInPlace` 与 9 个 UTI；Linux：`.desktop` 补 `TryExec`/`Actions`/15 个 MIME 类型，并调用 `update-desktop-database` 与 `xdg-mime default`。设置页"文件关联"显示真实状态（程序 ID、动词数量、默认应用项、Win11 说明 / xdg-mime 查询结果） | `native-platform`：Windows 注册表断言；Linux 断言 `%F`、`MimeType=application/zip;`、`Actions=ExtractHere;ExtractTo;`、`--extract-here %f` 与摘要；macOS 由打包后的 plist 结构保证（CI 打包步骤校验） |
+
+明确不做的部分：Windows 11 现代菜单需要 `IExplorerCommand` COM 服务器 + 包标识 + 代码签名，Finder Quick Action / Nautilus 扩展同理；本轮不伪造这些入口。macOS 的默认处理程序只能由用户在 Finder 确认，程序不越权写入。
+
+## 上一轮复验结果（caa96528 → candidate 39092715383）
 
 同 SHA 六个原生 runner 全部成功，每个目标 CTest **14/14 通过**（Windows x64/ARM64、Linux x64/ARM64、macOS x64/ARM64），aggregate 校验六目标均产出 `.exe`+`.zip` / `.dmg`+`.zip` / `.AppImage`+`.deb`+`.gz` 且 `sourceCommit` 唯一。Foundation 39092715464 同为六目标成功。
 

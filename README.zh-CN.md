@@ -4,7 +4,7 @@
 
 一款以完整 7-Zip 原生库为核心的跨平台压缩包管理器，提供多标签、六主题的 Qt Quick 界面。REAzip 把久经考验的 7-Zip 26.04 引擎和 Bandizip 普及的日常操作流——多标签、任务队列、智能解压、逐条目冲突处理——结合在一起，同时保持功能面诚实：界面上没有假按钮。
 
-> **状态：0.3.0-dev 预发布（pre-release）。** 六个原生目标在同一提交上构建成功、各自 14/14 测试通过；哪些已验证、哪些未验证，见[验收报告](native/docs/acceptance-report.md)。v0.2.1 是旧 Electron 版。
+> **状态：0.3.1-dev 预发布（pre-release）。** 六个原生目标在同一提交上构建并测试；哪些已验证、哪些未验证，见[验收报告](native/docs/acceptance-report.md)。v0.2.1 是旧 Electron 版。
 
 | 主窗口（浅色） | 新建压缩 | 解压 |
 |---|---|---|
@@ -30,13 +30,14 @@ RTL（阿拉伯语）与简体中文预览：![RTL](native/design/native-referen
 - **旧压缩包文件名编码** — GBK / Big5 / Shift-JIS 显式解码，另有自动策略。
 - **安全内建** — 解压时阻断路径逃逸、符号链接与重解析点攻击；所有写入经临时文件原子提交并带日志恢复，崩溃或磁盘满不会破坏原压缩包。
 - **六主题、18 语言、完整 RTL** — 并保守迁移旧版自定义颜色 token。
-- **按系统能力提供集成** — Windows 每用户关联与经典资源管理器菜单、macOS bundle 文件类型注册、Linux MIME/desktop 项；系统默认应用始终由用户决定。
+- **密码库** — 保存常用密码，创建/解压时直接选用。Windows 下用 DPAPI 加密（与当前 Windows 账户绑定）；macOS/Linux 只受 0600 文件权限保护，界面会如实标注"未加密"而不是暗示已加密。密码库损坏或来自其他平台时保留原文件，绝不清空覆盖。
+- **按系统能力提供集成** — Windows：每用户 ProgID、默认应用项、"打开方式"列表，以及覆盖 22 种扩展名的经典右键动词（解压到此处 / 解压到… / 添加到压缩包），带图标并支持多选；macOS：bundle 内声明 UTI 与 `CFBundleTypeExtensions`；Linux：desktop 项声明 15 种 MIME 类型与桌面动作，并调用 `update-desktop-database` 与 `xdg-mime default`。系统默认应用始终由用户决定，设置页会显示真实注册状态。
 
 ## 功能对照
 
 对比仅限公开资料与本项目自身的验收范围；“–”表示本版本未实现。
 
-| 能力 | REAzip 0.3.0-dev | 7-Zip | NanaZip | Bandizip |
+| 能力 | REAzip 0.3.1-dev | 7-Zip | NanaZip | Bandizip |
 |---|---|---|---|---|
 | ZIP / 7Z / TAR / GZ 创建与解压 | ✓ | ✓ | ✓ | ✓ |
 | RAR / RAR5 / ISO / WIM 解压 | ✓ | ✓ | ✓ | ✓ |
@@ -45,6 +46,8 @@ RTL（阿拉伯语）与简体中文预览：![RTL](native/design/native-referen
 | 旧 ZIP 代码页（GBK/Big5/Shift-JIS） | ✓ | ✓ | ✓ | ✓ |
 | 多标签浏览 | ✓ | – | – | ✓ |
 | 任务队列与取消 | ✓ | – | – | ✓ |
+| 密码库（Windows DPAPI 加密） | ✓ | – | – | ✓ |
+| 经典右键菜单：解压到此处 / 添加 | ✓ | ✓ | ✓ | ✓ |
 | 主题 / 18 语言 / RTL | ✓ | – | 部分 | 部分 |
 | 无管理员权限的每用户安装 | ✓ | ✓ | ✓ (MSIX) | ✓ |
 | Win11 现代右键菜单 | – | – | ✓ | ✓ |
@@ -52,9 +55,9 @@ RTL（阿拉伯语）与简体中文预览：![RTL](native/design/native-referen
 
 ## 下载
 
-预发布 [`v0.3.0-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.0-dev) 提供六目标安装包：Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + deb + tar.gz。每个包附带版本、源码 SHA、CPU 架构、逐文件 SHA-256、签名状态与许可声明，另有 `SHA256SUMS.txt` 覆盖全部附件。
+预发布 [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) 提供六目标安装包：Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + deb + tar.gz。每个包附带版本、源码 SHA、CPU 架构、逐文件 SHA-256、签名状态与许可声明，另有 `SHA256SUMS.txt` 覆盖全部附件。
 
-标为**预发布**是有意的：自动化六目标门禁已在提交 `caa96528` 上全绿，但[验收报告](native/docs/acceptance-report.md)里的人工项（并排视觉比对、真实桌面关联与菜单、拖出、大包压力）尚未执行。
+标为**预发布**是有意的：自动化六目标门禁会在每个目标上构建并测试，但[验收报告](native/docs/acceptance-report.md)里的人工项（并排视觉比对、真实桌面关联与菜单、拖出、大包压力）尚未执行。
 
 - Windows 未代码签名；macOS 为 ad-hoc 签名、未公证。
 - Linux deb 需要 glibc ≥ 2.39（Ubuntu 24.04 构建）；macOS 部署目标 13.0。

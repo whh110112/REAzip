@@ -155,7 +155,12 @@ def main():
         # CMake deployed Qt and its transitive libraries; AppRun sets paths relative to its readonly package.
         launcher='#!/bin/sh\nAPPDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexport LD_LIBRARY_PATH="$APPDIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\nexec "$APPDIR/bin/reazip" "$@"\n'
         (stage/'AppRun').write_text(launcher);(stage/'AppRun').chmod(0o755)
-        desktop='[Desktop Entry]\nType=Application\nName=REAzip\nExec=AppRun %F\nIcon=reazip\nTerminal=false\nCategories=Utility;Archiving;\nMimeType=application/zip;application/x-7z-compressed;application/vnd.rar;\n'
+        desktop=('[Desktop Entry]\nType=Application\nName=REAzip\nComment=Open, create and extract archives\n'
+                 'Exec=AppRun %F\nIcon=reazip\nTerminal=false\nCategories=Utility;Archiver;\n'
+                 'MimeType=application/zip;application/x-7z-compressed;application/vnd.rar;application/x-tar;application/gzip;application/x-bzip2;application/x-xz;application/zstd;application/x-lzma;application/x-cd-image;application/x-iso9660-image;application/x-ms-wim;application/x-archive;application/x-arj;application/x-lzh-compressed;\n'
+                 'Actions=ExtractHere;ExtractTo;\n'
+                 '\n[Desktop Action ExtractHere]\nName=Extract here\nExec=AppRun --extract-here %f\n'
+                 '\n[Desktop Action ExtractTo]\nName=Extract to folder...\nExec=AppRun --extract-to %f\n')
         (stage/'reazip.desktop').write_text(desktop)
         # Code-native SVG icon, matching the existing two-square app mark.
         (stage/'reazip.svg').write_text('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect x="20" y="20" width="170" height="170" rx="42" fill="#378add"/><rect x="134" y="134" width="98" height="98" rx="24" fill="white" stroke="#378add" stroke-width="12"/></svg>')

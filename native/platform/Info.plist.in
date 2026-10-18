@@ -4,17 +4,40 @@
 <key>CFBundleExecutable</key><string>reazip</string>
 <key>CFBundleIdentifier</key><string>com.reazip.app</string>
 <key>CFBundleName</key><string>REAzip</string>
+<key>CFBundleDisplayName</key><string>REAzip</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
 <key>CFBundleVersion</key><string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>
+<key>LSSupportsOpeningDocumentsInPlace</key><true/>
+<!-- One document type covering every archive UTI we handle. LSHandlerRank Default makes the bundle a
+     candidate for the system default; macOS still keeps an existing handler until the user changes it
+     in Finder -> Get Info -> Open With -> Change All, which no third-party app may do for them. -->
 <key>CFBundleDocumentTypes</key><array><dict>
-<key>CFBundleTypeName</key><string>Archive</string><key>CFBundleTypeRole</key><string>Editor</string>
-<key>LSHandlerRank</key><string>Alternate</string>
-<key>LSItemContentTypes</key><array><string>public.zip-archive</string><string>org.7-zip.7-zip-archive</string><string>com.rarlab.rar-archive</string><string>public.tar-archive</string><string>org.gnu.gnu-zip-archive</string><string>public.iso-image</string></array>
+<key>CFBundleTypeName</key><string>Archive</string>
+<key>CFBundleTypeRole</key><string>Editor</string>
+<key>LSHandlerRank</key><string>Default</string>
+<key>LSItemContentTypes</key><array>
+<string>public.zip-archive</string>
+<string>org.7-zip.7-zip-archive</string>
+<string>com.rarlab.rar-archive</string>
+<string>public.tar-archive</string>
+<string>org.gnu.gnu-zip-archive</string>
+<string>org.gnu.gnu-bzip2-archive</string>
+<string>org.tukaani.xz-archive</string>
+<string>public.iso-image</string>
+<string>com.microsoft.wim-archive</string>
+</array>
+<key>CFBundleTypeExtensions</key><array>
+<string>zip</string><string>7z</string><string>rar</string><string>tar</string>
+<string>gz</string><string>tgz</string><string>bz2</string><string>tbz</string>
+<string>xz</string><string>txz</string><string>lzma</string><string>zst</string>
+<string>iso</string><string>wim</string><string>cab</string>
+</array>
 </dict></array>
 <key>UTImportedTypeDeclarations</key><array>
-<dict><key>UTTypeIdentifier</key><string>org.7-zip.7-zip-archive</string><key>UTTypeConformsTo</key><array><string>public.archive</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>7z</string></array></dict></dict>
-<dict><key>UTTypeIdentifier</key><string>com.rarlab.rar-archive</string><key>UTTypeConformsTo</key><array><string>public.archive</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>rar</string></array></dict></dict>
+<dict><key>UTTypeIdentifier</key><string>org.7-zip.7-zip-archive</string><key>UTTypeDescription</key><string>7-Zip Archive</string><key>UTTypeConformsTo</key><array><string>public.archive</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>7z</string></array></dict></dict>
+<dict><key>UTTypeIdentifier</key><string>com.rarlab.rar-archive</string><key>UTTypeDescription</key><string>RAR Archive</string><key>UTTypeConformsTo</key><array><string>public.archive</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>rar</string></array></dict></dict>
+<dict><key>UTTypeIdentifier</key><string>com.microsoft.wim-archive</string><key>UTTypeDescription</key><string>Windows Imaging Format</string><key>UTTypeConformsTo</key><array><string>public.archive</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>wim</string></array></dict></dict>
 </array></dict></plist>

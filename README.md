@@ -30,13 +30,14 @@ RTL (Arabic) and Simplified Chinese previews: ![RTL](native/design/native-refere
 - **Legacy filename encodings** — explicit GBK / Big5 / Shift-JIS decoding for old ZIP files, with an automatic policy.
 - **Safe by construction** — path-escape, symlink and reparse-point attacks are blocked during extraction; every write lands through a committed temporary file with journal recovery, so a crash or a full disk never corrupts the original archive.
 - **Six themes, 18 languages, full RTL** — with conservative migration of old custom color tokens.
-- **Desktop integration where the OS allows it** — per-user file associations on Windows (classic Explorer menu), bundle type registration on macOS, MIME/desktop entries on Linux. The system default application always stays under your control.
+- **Password vault** — save passwords once and pick them while creating or extracting. On Windows the vault is encrypted with DPAPI (tied to your Windows account); on macOS/Linux it is protected by owner-only file permissions and the UI says exactly that instead of implying encryption. A damaged or foreign vault is preserved, never silently replaced.
+- **Desktop integration where the OS allows it** — Windows: per-user ProgID, Default Programs entry, "Open with" list and classic context-menu verbs (extract here / extract to / add to archive) with icons and multi-select over 22 extensions. macOS: UTI + `CFBundleTypeExtensions` declarations in the bundle. Linux: desktop entry with 15 MIME types, desktop actions, `update-desktop-database` and `xdg-mime default`. The system default application always stays under your control, and the settings page shows the actual registration state.
 
 ## Feature comparison
 
 Comparison is limited to publicly documented capabilities and REAzip's own acceptance scope; “–” means not implemented in this version.
 
-| Capability | REAzip 0.3.0-dev | 7-Zip | NanaZip | Bandizip |
+| Capability | REAzip 0.3.1-dev | 7-Zip | NanaZip | Bandizip |
 |---|---|---|---|---|
 | ZIP / 7Z / TAR / GZ create + extract | ✓ | ✓ | ✓ | ✓ |
 | RAR / RAR5 / ISO / WIM extract | ✓ | ✓ | ✓ | ✓ |
@@ -45,16 +46,18 @@ Comparison is limited to publicly documented capabilities and REAzip's own accep
 | Legacy ZIP code pages (GBK/Big5/Shift-JIS) | ✓ | ✓ | ✓ | ✓ |
 | Tabbed browsing | ✓ | – | – | ✓ |
 | Task queue with cancellation | ✓ | – | – | ✓ |
-| Themes / 18 languages / RTL | ✓ | – | partial | partial |
+| Saved password vault (DPAPI on Windows) | ✓ | – | – | ✓ |
+| Classic context menu: extract here / add | ✓ | ✓ | ✓ | ✓ |
+| Theme / 18 languages / RTL | ✓ | – | partial | partial |
 | Per-user install without admin | ✓ | ✓ | ✓ (MSIX) | ✓ |
 | Windows 11 modern context menu | – | – | ✓ | ✓ |
 | SFX creation, password recovery, archive repair | – | – | – | ✓ |
 
 ## Downloads
 
-The pre-release [`v0.3.0-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.0-dev) carries the six-target builds: Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + deb + tar.gz. Every package ships with its version, source SHA, architecture, per-binary SHA-256, signature status and license notices; `SHA256SUMS.txt` covers the release assets.
+The pre-release [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) carries the six-target builds: Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + deb + tar.gz. Every package ships with its version, source SHA, architecture, per-binary SHA-256, signature status and license notices; `SHA256SUMS.txt` covers the release assets.
 
-It is flagged **pre-release** on purpose: the automated six-target gate is green on commit `caa96528`, but the manual acceptance items listed in the [acceptance report](native/docs/acceptance-report.md) (side-by-side visual review, real desktop association and menus, drag-out, large-archive stress) have not been run yet.
+It is flagged **pre-release** on purpose: the automated six-target gate builds and tests every target, but the manual acceptance items listed in the [acceptance report](native/docs/acceptance-report.md) (side-by-side visual review, real desktop association and menus, drag-out, large-archive stress) have not been run yet.
 
 - Windows binaries are **unsigned**; macOS builds are ad-hoc signed and **not notarized**.
 - Linux `deb` requires glibc ≥ 2.39 (built on Ubuntu 24.04); macOS deployment target is 13.0.

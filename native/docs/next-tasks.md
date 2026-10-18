@@ -26,13 +26,21 @@ bit7z 的 `CStdOutStream::Write` 把回写给 7-Zip 的 `processedSize` 算成 `
 
 剩余：干净物理机/VM 上的真实安装运行验收（当前只在 runner 上做过安装→启动→卸载）。
 
-## N05 / 发布准备 —— 已执行
+## N05 / P1：密码库与系统集成 —— **已完成（0.3.1-dev）**
 
-以 `v0.3.0-dev` **pre-release** 形式发布，附件为六目标真实包 + 各平台 manifest + 校验和。R01–R35/T00–T10 状态已按实测更新；未签名/未公证状态如实标注。旧公开 v0.2.1 保留。**没有**因任务书齐全就标记 T10 通过。
+- 密码库 `native/vault`：Windows 用 DPAPI 加密整库（附加固定应用熵），macOS/Linux 以 0600 保存并在界面标注"未加密"；损坏文件保留为 `.corrupt-<ms>`；便携格式在 Windows 上首次保存升级为 DPAPI；无法解密的库在其他平台置只读、拒绝覆盖。界面入口：设置 → 密码、创建归档密码区（显示/隐藏、选用、保存）、解压密码弹窗（选用、保存）。
+- Windows 经典右键菜单：22 个扩展名的"解压到此处/解压到…"带图标与多选，`*`/`Directory` 的"添加到压缩包"同样；新增 `Applications\reazip.exe` 使"打开方式"可见。
+- 三平台关联：Windows ProgID+Capabilities+RegisteredApplications+OpenWithProgids；macOS `CFBundleTypeExtensions`/`LSHandlerRank`/`LSSupportsOpeningDocumentsInPlace` 与 9 个 UTI；Linux `.desktop` 15 MIME + Actions + `update-desktop-database` + `xdg-mime default`。设置页"文件关联"显示真实状态。
+
+**仍未完成**：Win11 现代菜单（IExplorerCommand + 包标识 + 签名）、Finder Quick Action、Nautilus/Dolphin 扩展、macOS Keychain / Linux Secret Service 接入。这些需要各自平台的扩展工程与签名，不在"补个注册表键"的范围里。
+
+## N06 / 发布准备 —— 已执行
+
+`v0.3.0-dev` 已作为 pre-release 发布；`v0.3.1-dev` 为本次密码库与系统集成版本，附件为六目标真实包 + 各平台 manifest + 校验和。R01–R35/T00–T10 状态按实测更新；未签名/未公证状态如实标注。旧公开 v0.2.1 保留。**没有**因任务书齐全就标记 T10 通过。
 
 ## 关于"和 NanaZip / Bandizip 功能类似"
 
-能对齐的部分已在 0.3.0-dev 实现：多标签、任务队列与取消、智能解压、逐条目冲突处理、分卷、ZIP64、AES-256、旧代码页、六主题、18 语言 RTL。**无法在本版本对齐**：Win11 现代右键菜单、Finder/Nautilus shell 扩展、SFX 创建、密码恢复、复杂损坏修复、图库预览、自动更新。这些需要 COM shell 扩展、签名证书与长期维护的独立工程，不是本次迁移能"补完"的；界面上不会出现假入口。见[功能对照](feature-parity.md)与[已知限制](known-limitations.md)。
+能对齐的部分已在 0.3.0-dev/0.3.1-dev 实现：多标签、任务队列与取消、智能解压、逐条目冲突处理、分卷、ZIP64、AES-256、旧代码页、密码库、经典右键菜单、三平台关联声明、六主题、18 语言 RTL。**无法在本版本对齐**：Win11 现代右键菜单、Finder/Nautilus shell 扩展、SFX 创建、密码恢复、复杂损坏修复、图库预览、自动更新。这些需要 COM shell 扩展、签名证书与长期维护的独立工程，不是本次迁移能"补完"的；界面上不会出现假入口。见[功能对照](feature-parity.md)与[已知限制](known-limitations.md)。
 
 ## 体积（可选后续优化，均未实施）
 

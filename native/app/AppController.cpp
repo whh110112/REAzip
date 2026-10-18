@@ -19,7 +19,7 @@ namespace {
 QJsonDocument json(QString path){QFile file(path);if(!file.open(QIODevice::ReadOnly))return {};return QJsonDocument::fromJson(file.readAll());}
 bool executable(QString name){static const QStringList extensions={"exe","com","bat","cmd","ps1","sh","bash","zsh","app","desktop","msi","scr","vbs","js","jse","wsf","hta","py","pl","rb","jar","lnk","url"};return extensions.contains(QFileInfo(name).suffix().toLower())||QFileInfo(name).isExecutable();}
 }
-AppController::AppController(QString worker,QString engine,QObject* parent,QString directory):QObject(parent),jobs(worker,engine,this),model(this),settings(directory.isEmpty()?platform::dataDirectory():directory){
+AppController::AppController(QString worker,QString engine,QObject* parent,QString directory):QObject(parent),jobs(worker,engine,this),model(this),settings(directory.isEmpty()?platform::dataDirectory():directory),vault(settings.directory()+"/vault"){
   QString legacy;
   if(directory.isEmpty()){
 #ifdef Q_OS_WIN
@@ -31,7 +31,7 @@ AppController::AppController(QString worker,QString engine,QObject* parent,QStri
 #endif
     for(const auto& name:{"reazip","REAzip"})if(QFileInfo::exists(base+'/'+name+"/settings.json")){legacy=base+'/'+name;break;}
   }
-  settings.load(legacy);preferences=settings.values();themeService.load(settings.directory()+"/themes",json(":/data/themes/builtin.json").array());skins=themeService.all();
+  settings.load(legacy);vault.load();preferences=settings.values();themeService.load(settings.directory()+"/themes",json(":/data/themes/builtin.json").array());skins=themeService.all();
   english=json(":/data/i18n/en.json").object();translations=json(":/data/i18n/"+preferences["language"].toString()+".json").object();
   const auto temporaryRoot=settings.directory()+"/temporary";QDir().mkpath(temporaryRoot);QFile::setPermissions(temporaryRoot,QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner);
   for(const auto& item:QDir(temporaryRoot).entryInfoList({"open-*","drag-*"},QDir::Dirs|QDir::NoDotAndDotDot))if(!item.isSymLink()&&item.lastModified().daysTo(QDateTime::currentDateTime())>7&&QFileInfo(item.canonicalFilePath()).absolutePath()==QDir(temporaryRoot).canonicalPath())QDir(item.absoluteFilePath()).removeRecursively();
@@ -41,8 +41,9 @@ AppController::AppController(QString worker,QString engine,QObject* parent,QStri
   connect(&jobs,&JobController::challenge,this,&AppController::challenge);
   connect(&jobs,&JobController::result,this,&AppController::completed);
   connect(&jobs,&JobController::failed,this,&AppController::failed);
+  connect(&vault,&Vault::changed,this,[this]{++epoch;emit changed();});
   submit({{"operation","identity"}},{});
-  QTimer::singleShot(0,this,[this]{for(const auto& notice:settings.takeNotices())emit message(notice,false);for(const auto& notice:themeService.notices())emit message(notice,false);if(restoreTabs()){QVariantList urls;for(const auto& value:preferences["openTabs"].toArray()){if(QFileInfo(value.toString()).isFile())urls.append(QUrl::fromLocalFile(value.toString()));else emit message(translate("openFailed","Missing saved archive")+": "+value.toString(),true);}openUrls(urls);}});
+  QTimer::singleShot(0,this,[this]{for(const auto& notice:settings.takeNotices())emit message(notice,false);for(const auto& notice:themeService.notices())emit message(notice,false);if(!vault.error().isEmpty())emit message(vault.error(),true);if(restoreTabs()){QVariantList urls;for(const auto& value:preferences["openTabs"].toArray()){if(QFileInfo(value.toString()).isFile())urls.append(QUrl::fromLocalFile(value.toString()));else emit message(translate("openFailed","Missing saved archive")+": "+value.toString(),true);}openUrls(urls);}});
 }
 AppController::~AppController(){QObject::disconnect(&jobs,nullptr,this,nullptr);QObject::disconnect(&model,nullptr,this,nullptr);QJsonArray paths;for(const auto& t:documents)paths.append(t.path);settings.set("openTabs",restoreTabs()?paths:QJsonArray{});}
 const AppController::Tab* AppController::tab()const{for(const auto& t:documents)if(t.id==current)return &t;return nullptr;}
@@ -117,11 +118,24 @@ void AppController::setPreference(QString key,QVariant value){if((key=="extractD
 void AppController::openExternal(QString path){if(!QDesktopServices::openUrl(QUrl::fromLocalFile(path)))emit message(translate("openFailed","Cannot open")+": "+path,true);}
 void AppController::openThemeDirectory(){const auto folder=settings.directory()+"/themes";if(QDir().mkpath(folder))openExternal(folder);else emit message(translate("settingsWriteFailed","Directory is not writable")+": "+folder,true);}
 void AppController::rescanThemes(){themeService.load(settings.directory()+"/themes",json(":/data/themes/builtin.json").array());skins=themeService.all();for(const auto& notice:themeService.notices())emit message(notice,false);++epoch;emit changed();}
-void AppController::applyAssociations(){const auto error=platform::registerApplication(QCoreApplication::applicationFilePath());if(!error.isEmpty())emit message(error,true);else {
+void AppController::applyAssociations(){const auto error=platform::registerApplication(QCoreApplication::applicationFilePath());associationDirty=true;++epoch;
+  if(!error.isEmpty()){emit message(error,true);emit changed();return;}
 #ifdef Q_OS_WIN
   QDesktopServices::openUrl(QUrl("ms-settings:defaultapps"));
+  emit message(translate("registeredChooseDefault","REAzip registered; choose default apps in system settings"),false);
+#elif defined(Q_OS_MACOS)
+  emit message(translate("registeredMac","Archive types are declared by the app bundle. Set the default in Finder: Get Info -> Open With -> Change All"),false);
+#else
+  emit message(translate("registeredLinux","Desktop entry installed and selected as the default handler for supported archive types"),false);
 #endif
-  emit message(translate("registeredChooseDefault","REAzip registered; choose default apps in system settings"),false);}}
+  emit changed();}
+QString AppController::associationStatus()const{if(associationDirty){associationText=platform::associationSummary(QCoreApplication::applicationFilePath());associationDirty=false;}return associationText;}
+void AppController::refreshAssociations(){associationDirty=true;++epoch;emit changed();}
+bool AppController::savePassword(QString name,QString secret){
+  auto label=name.trimmed();if(label.isEmpty())label=translate("archivePassword","Archive password");
+  if(!vault.add(label,secret)){emit message(translate("vaultWriteFailed","Cannot save the password")+(vault.error().isEmpty()?QString():": "+vault.error()),true);return false;}
+  ++epoch;emit changed();return true;}
+bool AppController::forgetPassword(QString id){if(!vault.remove(id)){if(!vault.error().isEmpty())emit message(vault.error(),true);return false;}++epoch;emit changed();return true;}
 void AppController::handleLaunch(QJsonObject request){if(!platform::Instance::valid(request))return;QVariantList urls;for(const auto& v:request["paths"].toArray())urls.append(QUrl::fromLocalFile(v.toString()));const auto action=request["action"].toString();if(action=="add"){emit createRequested(urls);return;}for(const auto& v:request["paths"].toArray())if(action!="open")launchActions[QFileInfo(v.toString()).canonicalFilePath()]=action;openUrls(urls);}
 void AppController::prepareDrag(){if(!tab()||!hasSelection()||busy())return;auto temp=std::make_unique<QTemporaryDir>(settings.directory()+"/temporary/drag-XXXXXX");if(!temp->isValid())return;const auto path=temp->path();temporary.push_back(std::move(temp));submit({{"operation","extract"},{"archive",tab()->path},{"destination",path},{"entryIds",QJsonArray::fromStringList(model.selection())},{"overwrite","ask"},{"codepage",codepage()}},{current,tab()->path,{},false,false,true});}
 void AppController::beginPreparedDrag(){if(dragUrls.isEmpty())return;QDrag drag(this);auto mime=new QMimeData;mime->setUrls(dragUrls);drag.setMimeData(mime);drag.exec(Qt::CopyAction,Qt::CopyAction);}
