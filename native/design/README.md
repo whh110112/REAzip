@@ -1,10 +1,7 @@
 # Screenshot and visual evidence policy
 
-The English and Chinese project READMEs each show one real application screenshot in the matching UI language. Keep previews small in number, label their captured version, and do not present old captures as proof of current acceptance.
+The current source tree keeps one real preview per README language in `docs/screenshots/`, with its source/hash manifest. Capture the compiled application, inspect it, and record its version. Do not synthesize translated interface text.
 
-- `native-reference/`: native application captures and their SHA-256 manifest. These are verification evidence, not a homepage gallery. Existing captures predate the settings layout fix; recapture before claiming visual acceptance.
-- `reference/`: legacy design baselines used by migration and visual comparison. Keep them while acceptance tasks reference them.
-- Root-level `shots-*.png`: obsolete Electron captures removed from the current tree. They remain available in Git history and the old release tags.
-- New ad-hoc captures and full scale/theme/language matrices: put them under ignored `.native-build/` locally and attach review evidence to Actions artifacts or releases when needed. Only commit a deliberate baseline or the small set needed for documentation.
+Complete theme/language/scale matrices and tab-layout captures belong in ignored `.native-build/` output and Actions artifacts. Historical design/reference images remain in [Git history](https://github.com/whh110112/ZENzip/tree/601e6048824c0b36fa28267970833494f98a137d/native/design); they are not current interface evidence and are not shipped with current source packages.
 
-When replacing a README preview, capture the real application in the corresponding language, check it visually, update its manifest, and state the version. Do not translate or synthesize interface text in an image editor.
+`tokens.json` and `controls.json` retain the machine-readable design definitions. The current runtime palette is defined in `native/themes/builtin.json`.
