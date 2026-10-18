@@ -145,6 +145,12 @@ bool Vault::save(){
   file.setPermissions(QFileDevice::ReadOwner|QFileDevice::WriteOwner);
   const auto bytes=QJsonDocument(object).toJson(QJsonDocument::Compact);
   if(file.write(bytes)!=bytes.size()||!file.commit()){report("Password vault cannot be written: "+file.errorString());return false;}
+#ifndef Q_OS_WIN
+  // No system keyring on this platform: the file is plain text and its only protection is the
+  // owner-only mode. QSaveFile already creates its temporary file as 0600, but enforce it on the
+  // committed path as well so a permissive umask can never widen it.
+  QFile::setPermissions(root+"/vault.json",QFileDevice::ReadOwner|QFileDevice::WriteOwner);
+#endif
   mode=object["protection"].toString();
   return true;
 }

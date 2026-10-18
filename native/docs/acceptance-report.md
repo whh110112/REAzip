@@ -8,7 +8,7 @@
 
 | 编号 | 项目 | 实现 | 覆盖 |
 |---|---|---|---|
-| V01 | 密码库（设置 → 密码；创建/解压弹窗可选用）| Windows 用 DPAPI（`CryptProtectData` + 固定应用熵）加密整个条目列表；macOS/Linux 以 0600 权限保存明文并在界面标注"未加密"；损坏文件保留为 `.corrupt-<ms>`；便携格式在 Windows 上首次保存即升级为 DPAPI；无法解密的 DPAPI 库在其他平台置为只读，拒绝覆盖 | `native-vault` 测试：校验拒绝、加密/权限断言、二次加载、删除、损坏保留、便携导入、跨平台拒写 |
+| V01 | 密码库（设置 → 密码；创建/解压弹窗可选用）| Windows 用 DPAPI（`CryptProtectData` + 固定应用熵）加密整个条目列表；macOS/Linux 以 0600 权限保存明文并在界面标注"未加密"；损坏文件保留为 `.corrupt-<ms>`；便携格式在 Windows 上首次保存即升级为 DPAPI；无法解密的 DPAPI 库在其他平台置为只读，拒绝覆盖 | `native-vault` 测试：校验拒绝、Windows 密文断言 / 非 Windows「声明 permissions + 明文 + 0600」断言、二次加载、删除、损坏保留、便携导入、跨平台拒写；每条断言带独立返回码与 stderr 定位|
 | V02 | Windows 右键菜单 | 每个 `SystemFileAssociations\<ext>\shell\REAzip.extract_here/extract_to` 增加 `Icon`、`MultiSelectModel`（解压到此处可多选）、`OwnerExecutable`；`*` 与 `Directory` 的"添加到压缩包"同样带图标与多选；新增 `Applications\reazip.exe`（`FriendlyAppName`/`DefaultIcon`/`SupportedTypes`）让"打开方式"列表可见；扩展名从 11 个扩到 22 个（zipx/cab/lz/lzma/zst/zstd/arj/lzh/tbz/txz 等） | `native-platform`：断言图标、MultiSelectModel、Applications/SupportedTypes、摘要含"modern menu"说明；卸载后不残留 |
 | V03 | 三平台文件关联 | Windows：ProgID + `Capabilities\FileAssociations` + `RegisteredApplications` + `OpenWithProgids`，注册后打开系统默认应用设置；macOS：`Info.plist` 增加 `CFBundleTypeExtensions`、`LSHandlerRank=Default`、`LSSupportsOpeningDocumentsInPlace` 与 9 个 UTI；Linux：`.desktop` 补 `TryExec`/`Actions`/15 个 MIME 类型，并调用 `update-desktop-database` 与 `xdg-mime default`。设置页"文件关联"显示真实状态（程序 ID、动词数量、默认应用项、Win11 说明 / xdg-mime 查询结果） | `native-platform`：Windows 注册表断言；Linux 断言 `%F`、`MimeType=application/zip;`、`Actions=ExtractHere;ExtractTo;`、`--extract-here %f` 与摘要；macOS 由打包后的 plist 结构保证（CI 打包步骤校验） |
 
