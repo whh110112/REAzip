@@ -22,6 +22,9 @@ ApplicationWindow {
     function token(key, fallback) { return colors[key] || fallback }
     Component.onCompleted:if(fatalStartup){errorText=fatalStartup;errorDialog.open()}
     function openDesignScene(scene) {
+        const pages = ["settings", "vault", "appearance", "associations", "language", "about"]
+        const page = pages.indexOf(scene)
+        if (page >= 0) { settingsPages.currentIndex = page; settingsDialog.open(); return }
         if(scene==="create")createDialog.open();else if(scene==="extract")extractDialog.open();else if(scene==="settings")settingsDialog.open();else if(scene==="appearance"){settingsPages.currentIndex=2;settingsDialog.open()}else if(scene==="vault"){settingsPages.currentIndex=1;settingsDialog.open()}else if(scene==="password")passwordDialog.open();else if(scene==="conflict"){window.currentChallenge={path:"example.txt"};conflictDialog.open()}else if(scene==="progress")progressDialog.open()
     }
     readonly property color paper: token("--bg", "#FFFFFF")
@@ -43,6 +46,8 @@ ApplicationWindow {
     palette.accent: accent
     palette.highlightedText: (accent.r * 0.2126 + accent.g * 0.7152 + accent.b * 0.0722) > 0.6 ? "#202622" : "#FFFFFF"
     palette.mid: edge
+    palette.dark: muted
+    palette.light: surface
     palette.placeholderText: muted
     LayoutMirroring.enabled: api ? api.rtl : false
     LayoutMirroring.childrenInherit: true
@@ -55,10 +60,27 @@ ApplicationWindow {
         contentItem: RowLayout { id: footerActions; spacing: 8 }
     }
     component Field: TextField {
-        color: window.ink; selectByMouse: true; implicitHeight: 36; font.pixelSize: 13
-        background: Rectangle { radius: 8; color: window.card; border.color: window.edge }
+        color: window.ink; selectByMouse: true; font.pixelSize: 13
+        // Keep Qt's implicitHeight binding: it includes both entered text and
+        // placeholder fallback metrics. A fixed height clips taller scripts.
+        background: Rectangle { implicitHeight: 36; radius: 8; color: window.card; border.color: window.edge }
     }
     component Caption: SafeLabel { color: window.muted; font.pixelSize: 13 }
+    component SettingsLabel: Caption {
+        Layout.fillWidth: true; wrapMode: Text.Wrap
+        // Fallback scripts can be taller than the base font's line metrics.
+        Layout.minimumHeight: Math.ceil(contentHeight + topPadding + bottomPadding)
+    }
+    component SettingsAction: Action { Layout.fillWidth: true; wrapText: true }
+    component SettingsPage: ScrollView {
+        id: page
+        default property alias contents: pageBody.data
+        contentWidth: availableWidth
+        clip: true
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        // Reserve room for the vertical scrollbar even with long translations.
+        ColumnLayout { id: pageBody; objectName: "settingsPageBody"; width: page.availableWidth - 16; spacing: 10 }
+    }
     ListModel { id: previewEntries
         ListElement { entryId: "demo:dir:assets"; name: "assets"; directory: true; displaySize: "—"; displayPacked: "—"; kind: "DIR"; modified: "—"; selected: false }
         ListElement { entryId: "demo:dir:docs"; name: "docs"; directory: true; displaySize: "—"; displayPacked: "—"; kind: "DIR"; modified: "—"; selected: false }
@@ -244,67 +266,121 @@ ApplicationWindow {
         onRejected:if(window.fatalStartup)Qt.quit()
     }
     Sheet { id:renameDialog;title:window.t("rename","重命名");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Field { id:renameText;width:parent.width;text:window.api?window.api.selectedName:"" } onAccepted:if(window.api)window.api.renameSelected(renameText.text) }
-    Sheet { id:settingsDialog;title:window.t("settings","设置");width:Math.min(780,window.width-40);paper:window.card;ink:window.ink;edge:window.edge
-        RowLayout { width:parent.width;spacing:18
-            ColumnLayout { Layout.preferredWidth:135;Layout.alignment:Qt.AlignTop;Repeater { model:[window.t("tabGeneral","常规"),window.t("tabPassword","密码"),window.t("tabAppearance","外观皮肤"),window.t("tabAssoc","文件关联"),window.t("tabLanguage","语言"),window.t("tabAbout","关于")];delegate:Action { required property int index;required property string modelData;text:modelData;Layout.fillWidth:true;primary:settingsPages.currentIndex===index;soft:true;onClicked:settingsPages.currentIndex=index } } }
-            StackLayout { id:settingsPages;Layout.fillWidth:true;Layout.preferredHeight:300
-                ColumnLayout { spacing:0
-                    RowLayout { Layout.fillWidth:true;Layout.topMargin:6;Layout.bottomMargin:12;spacing:12
-                        Caption { text:window.t("defaultExtractDir","默认解压位置");color:window.ink }
-                        Item { Layout.fillWidth:true }
-                        Field { objectName:"prefExtractDir";Layout.preferredWidth:260;text:window.api?window.api.defaultExtractDir:"";onEditingFinished:if(window.api)window.api.setPreference("extractDir",text) } }
-                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
-                    RowLayout { Layout.fillWidth:true;Layout.topMargin:12;Layout.bottomMargin:12;spacing:12
-                        Caption { text:window.t("defaultArchiveDir","默认压缩位置");color:window.ink }
-                        Item { Layout.fillWidth:true }
-                        Field { objectName:"prefArchiveDir";Layout.preferredWidth:260;text:window.api?window.api.defaultArchiveDir:"";onEditingFinished:if(window.api)window.api.setPreference("archiveDir",text) } }
-                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
-                    RowLayout { Layout.fillWidth:true;Layout.topMargin:12;Layout.bottomMargin:12;spacing:12
-                        ColumnLayout { spacing:2
-                            Caption { text:window.t("restoreTabs","启动时恢复上次标签");color:window.ink }
-                            Caption { text:window.t("restoreTabsDesc","重新打开上次浏览的压缩包");font.pixelSize:12 } }
-                        Item { Layout.fillWidth:true }
-                        CheckBox { objectName:"prefRestoreTabs";checked:window.api?window.api.restoreTabs:false;palette.text:window.ink;onToggled:if(window.api)window.api.setPreference("restoreTabs",checked) } }
-                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
-                    RowLayout { Layout.fillWidth:true;Layout.topMargin:12;Layout.bottomMargin:12;spacing:12
-                        ColumnLayout { spacing:2
-                            Caption { text:window.t("legacyCodepage","旧 ZIP 文件名编码");color:window.ink }
-                            Caption { text:window.t("legacyCodepageDesc","解决中文/日文老压缩包乱码");font.pixelSize:12 } }
-                        Item { Layout.fillWidth:true }
-                        ComboBox { objectName:"prefCodepage";textRole:"label";valueRole:"value";implicitWidth:150;model:[{label:window.t("cpAuto","自动"),value:""},{label:"GBK (936)",value:"936"},{label:"Big5 (950)",value:"950"},{label:"Shift-JIS (932)",value:"932"},{label:"UTF-8 (65001)",value:"65001"}];onActivated:if(window.api)window.api.setPreference("codepage",currentValue) } }
-                    Item { Layout.fillHeight:true } }
-                ColumnLayout { spacing:0
-                    RowLayout { Layout.fillWidth:true;Layout.topMargin:6;Layout.bottomMargin:10;spacing:12
-                        Caption { text:window.t("savedPasswords","已保存的密码");color:window.ink }
-                        Item { Layout.fillWidth:true }
-                        Caption { text:window.api?(window.api.vaultProtection==="dpapi"?window.t("vaultProtectionDpapi","使用当前 Windows 账户加密（DPAPI）"):window.t("vaultProtectionFile","未加密，仅受文件权限保护")):"";font.pixelSize:12;wrapMode:Text.Wrap;horizontalAlignment:Text.AlignRight } }
-                    RowLayout { Layout.fillWidth:true;Layout.bottomMargin:10;spacing:8
-                        Field { id:vaultName;objectName:"vaultName";placeholderText:window.t("vaultName","名称");Layout.preferredWidth:150 }
-                        Field { id:vaultSecret;objectName:"vaultSecret";placeholderText:window.t("vaultSecret","密码");echoMode:TextInput.Password;Layout.fillWidth:true }
-                        Action { objectName:"vaultAdd";text:window.t("vaultAdd","保存");primary:true;enabled:!!window.api&&vaultName.text.trim().length>0&&vaultSecret.text.length>0
-                            onClicked:{if(window.api&&window.api.savePassword(vaultName.text,vaultSecret.text)){vaultName.clear();vaultSecret.clear()}} } }
-                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
-                    ListView { objectName:"vaultList";Layout.fillWidth:true;Layout.preferredHeight:132;clip:true;model:window.api?window.api.passwords:[]
-                        delegate:RowLayout { required property var modelData;width:ListView.view?ListView.view.width:0;spacing:8
-                            SafeLabel { text:modelData.name;color:window.ink;elide:Text.ElideRight;Layout.fillWidth:true }
-                            Caption { text:"••••••••";font.pixelSize:12 }
-                            Action { text:window.t("vaultRemove","移除");onClicked:if(window.api)window.api.forgetPassword(modelData.id) } } }
-                    Caption { text:window.t("vaultEmptyHint","没有保存的密码时显示为空。密码只在本机使用，解压弹窗里可直接选用。");wrapMode:Text.Wrap;Layout.fillWidth:true;font.pixelSize:12;Layout.topMargin:8 }
-                    Item { Layout.fillHeight:true } }
-                ColumnLayout { GridLayout { columns:2;Repeater { model:window.api?window.api.themeList:[];delegate:Action { required property var modelData;text:modelData.name;Layout.fillWidth:true;onClicked:if(window.api)window.api.setPreference("skin",modelData.id) } } } Action { text:window.t("openSkinDir","打开皮肤目录");onClicked:if(window.api)window.api.openThemeDirectory() } Action { text:window.t("rescan","重新扫描");onClicked:if(window.api)window.api.rescanThemes() } Caption { text:window.t("themeCompatibility","JSON 颜色变量兼容；追加 CSS 不执行");wrapMode:Text.Wrap;Layout.fillWidth:true } Item { Layout.fillHeight:true } }
-                ColumnLayout { spacing:8
-                    SafeLabel { text:window.t("assocSummary","关联状态");color:window.ink }
-                    SafeLabel { objectName:"assocStatus";text:window.api?window.api.associationStatus:"";wrapMode:Text.WrapAnywhere;Layout.fillWidth:true;color:window.muted;font.pixelSize:12 }
-                    RowLayout { spacing:8
-                        Action { objectName:"applyAssociations";text:window.t("applyDefault","注册关联并打开默认应用设置");enabled:!!window.api;onClicked:window.api.applyAssociations() }
-                        Action { objectName:"refreshAssociations";text:window.t("refresh","刷新");enabled:!!window.api;onClicked:window.api.refreshAssociations() } }
-                    Caption { text:window.t("assocHint","Windows 11 的现代右键菜单需要签名 COM 组件；本版本提供经典右键菜单（在「显示更多选项」中）。");wrapMode:Text.Wrap;Layout.fillWidth:true;font.pixelSize:12 }
-                    Item { Layout.fillHeight:true } }
-                ColumnLayout { Caption { text:window.t("uiLanguage","界面语言") } ComboBox { model:window.api?window.api.languages:[];textRole:"name";onActivated:if(window.api)window.api.setPreference("language",model[currentIndex].code) } Caption { text:window.t("langHint","支持18种语言") } Item { Layout.fillHeight:true } }
-                ColumnLayout { SafeLabel { text:"ZENzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/ZENzip" } Item { Layout.fillHeight:true } }
+    Sheet {
+        id: settingsDialog; objectName: "settingsDialog"
+        title: window.t("settings", "设置")
+        width: Math.min(780, window.width - 40)
+        height: Math.min(550, window.height - 40)
+        paper: window.card; ink: window.ink; edge: window.edge
+        contentItem: RowLayout {
+            spacing: 18
+            ColumnLayout {
+                objectName: "settingsNavigation"
+                Layout.preferredWidth: 156; Layout.minimumWidth: 156; Layout.maximumWidth: 156
+                Layout.alignment: Qt.AlignTop
+                Repeater {
+                    model: [window.t("tabGeneral", "常规"), window.t("tabPassword", "密码"), window.t("tabAppearance", "外观皮肤"), window.t("tabAssoc", "文件关联"), window.t("tabLanguage", "语言"), window.t("tabAbout", "关于")]
+                    delegate: SettingsAction {
+                        required property int index; required property string modelData
+                        objectName: "settingsNav" + index
+                        text: modelData; primary: settingsPages.currentIndex === index; soft: true
+                        onClicked: settingsPages.currentIndex = index
+                    }
+                }
+            }
+            StackLayout {
+                id: settingsPages; objectName: "settingsPages"; Layout.fillWidth: true; Layout.fillHeight: true
+                SettingsPage {
+                    SettingsLabel { text: window.t("defaultExtractDir", "默认解压位置"); color: window.ink }
+                    Field { objectName: "prefExtractDir"; Layout.fillWidth: true; text: window.api ? window.api.defaultExtractDir : ""; onEditingFinished: if(window.api) window.api.setPreference("extractDir", text) }
+                    SettingsLabel { text: window.t("defaultArchiveDir", "默认压缩位置"); color: window.ink }
+                    Field { objectName: "prefArchiveDir"; Layout.fillWidth: true; text: window.api ? window.api.defaultArchiveDir : ""; onEditingFinished: if(window.api) window.api.setPreference("archiveDir", text) }
+                    CheckBox {
+                        id: restoreTabsToggle
+                        objectName: "prefRestoreTabs"; Layout.fillWidth: true
+                        text: window.t("restoreTabs", "启动时恢复上次标签")
+                        checked: window.api ? window.api.restoreTabs : false
+                        contentItem: Text {
+                            text: restoreTabsToggle.text; font: restoreTabsToggle.font; color: window.ink; wrapMode: Text.Wrap
+                            leftPadding: restoreTabsToggle.mirrored ? 0 : restoreTabsToggle.indicator.width + restoreTabsToggle.spacing
+                            rightPadding: restoreTabsToggle.mirrored ? restoreTabsToggle.indicator.width + restoreTabsToggle.spacing : 0
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onToggled: if(window.api) window.api.setPreference("restoreTabs", checked)
+                    }
+                    SettingsLabel { text: window.t("restoreTabsDesc", "重新打开上次浏览的压缩包"); font.pixelSize: 12 }
+                    SettingsLabel { text: window.t("legacyCodepage", "旧 ZIP 文件名编码"); color: window.ink }
+                    ComboBox {
+                        id: codepagePick; objectName: "prefCodepage"; Layout.fillWidth: true
+                        textRole: "label"; valueRole: "value"
+                        model: [{label:window.t("cpAuto","自动"),value:""},{label:"GBK (936)",value:"936"},{label:"Big5 (950)",value:"950"},{label:"Shift-JIS (932)",value:"932"},{label:"UTF-8 (65001)",value:"65001"}]
+                        currentIndex: { const saved = window.api ? window.api.filenameCodepage : ""; return model.findIndex(entry => entry.value === saved) }
+                        onActivated: if(window.api) window.api.setPreference("codepage", currentValue)
+                    }
+                    SettingsLabel { text: window.t("legacyCodepageDesc", "解决中文/日文老压缩包乱码"); font.pixelSize: 12 }
+                }
+                SettingsPage {
+                    SettingsLabel { text: window.t("savedPasswords", "已保存的密码"); color: window.ink }
+                    SettingsLabel { text: window.api ? (window.api.vaultProtection === "dpapi" ? window.t("vaultProtectionDpapi", "使用当前 Windows 账户加密（DPAPI）") : window.t("vaultProtectionFile", "未加密，仅受文件权限保护")) : ""; font.pixelSize: 12 }
+                    Field { id: vaultName; objectName: "vaultName"; placeholderText: window.t("vaultName", "名称"); Layout.fillWidth: true }
+                    Field { id: vaultSecret; objectName: "vaultSecret"; placeholderText: window.t("vaultSecret", "密码"); echoMode: TextInput.Password; Layout.fillWidth: true }
+                    SettingsAction {
+                        objectName: "vaultAdd"; text: window.t("vaultAdd", "保存"); primary: true
+                        enabled: !!window.api && vaultName.text.trim().length > 0 && vaultSecret.text.length > 0
+                        onClicked: if(window.api && window.api.savePassword(vaultName.text, vaultSecret.text)) { vaultName.clear(); vaultSecret.clear() }
+                    }
+                    Repeater {
+                        model: window.api ? window.api.passwords : []
+                        delegate: RowLayout {
+                            required property var modelData; Layout.fillWidth: true; spacing: 8
+                            SafeLabel { text: modelData.name; color: window.ink; elide: Text.ElideRight; Layout.fillWidth: true; ToolTip.visible: hovered; property bool hovered: vaultHover.hovered; HoverHandler { id: vaultHover } ToolTip.text: text }
+                            Caption { text: "••••••••"; font.pixelSize: 12 }
+                            Action { text: window.t("vaultRemove", "移除"); onClicked: if(window.api) window.api.forgetPassword(modelData.id) }
+                        }
+                    }
+                    SettingsLabel { text: window.t("vaultEmptyHint", "没有保存的密码时显示为空。密码只在本机使用，解压弹窗里可直接选用。"); font.pixelSize: 12 }
+                }
+                SettingsPage {
+                    GridLayout {
+                        Layout.fillWidth: true; columns: 2; uniformCellWidths: true
+                        Repeater {
+                            model: window.api ? window.api.themeList : []
+                            delegate: SettingsAction {
+                                required property var modelData; text: modelData.name
+                                primary: window.api ? window.api.themeId === modelData.id : false; soft: true
+                                onClicked: if(window.api) window.api.setPreference("skin", modelData.id)
+                            }
+                        }
+                    }
+                    SettingsAction { text: window.t("openSkinDir", "打开皮肤目录"); onClicked: if(window.api) window.api.openThemeDirectory() }
+                    SettingsAction { text: window.t("rescan", "重新扫描"); onClicked: if(window.api) window.api.rescanThemes() }
+                    SettingsLabel { text: window.t("themeCompatibility", "JSON 颜色变量兼容；追加 CSS 不执行") }
+                }
+                SettingsPage {
+                    SettingsLabel { text: window.t("assocSummary", "关联状态"); color: window.ink }
+                    SettingsLabel { objectName: "assocStatus"; text: window.api ? window.api.associationStatus : ""; wrapMode: Text.WrapAnywhere; font.pixelSize: 12 }
+                    SettingsAction { objectName: "applyAssociations"; text: window.t("applyDefault", "注册关联并打开默认应用设置"); enabled: !!window.api; onClicked: window.api.applyAssociations() }
+                    SettingsAction { objectName: "refreshAssociations"; text: window.t("refresh", "刷新"); enabled: !!window.api; onClicked: window.api.refreshAssociations() }
+                    SettingsLabel { text: window.t("assocHint", "Windows 11 的现代右键菜单需要签名 COM 组件；本版本提供经典右键菜单（在「显示更多选项」中）。"); font.pixelSize: 12 }
+                }
+                SettingsPage {
+                    SettingsLabel { text: window.t("uiLanguage", "界面语言") }
+                    ComboBox {
+                        objectName: "prefLanguage"; Layout.fillWidth: true
+                        model: window.api ? window.api.languages : []; textRole: "name"; valueRole: "code"
+                        currentIndex: { const saved = window.api ? window.api.languageCode : ""; return model.findIndex(entry => entry.code === saved) }
+                        onActivated: if(window.api) window.api.setPreference("language", currentValue)
+                    }
+                    SettingsLabel { text: window.t("langHint", "支持18种语言") }
+                }
+                SettingsPage {
+                    SettingsLabel { text: "ZENzip " + (window.api ? window.api.version : "design preview"); color: window.ink; font.pixelSize: 20 }
+                    SettingsLabel { text: window.api ? window.api.engineIdentity : "C++17 · Qt Quick · 7-Zip native library" }
+                    SettingsLabel { text: "github.com/whh110112/ZENzip"; wrapMode: Text.WrapAnywhere }
+                }
             }
         }
-        footer:FooterBar { Item { Layout.fillWidth:true } Action { objectName:"settingsDone";text:window.t("done","完成");primary:true;onClicked:settingsDialog.close() } }
+        footer: FooterBar { Item { Layout.fillWidth: true } Action { objectName: "settingsDone"; text: window.t("done", "完成"); primary: true; onClicked: settingsDialog.close() } }
     }
     Popup { id:toast;anchors.centerIn:parent;width:Math.min(600,window.width-40);background:Rectangle{color:window.ink;radius:10} Label{width:parent.width;text:window.toastText;color:window.paper;wrapMode:Text.Wrap} Timer{id:toastTimer;interval:4000;onTriggered:toast.close()} }
     Connections { target:window.api;ignoreUnknownSignals:true

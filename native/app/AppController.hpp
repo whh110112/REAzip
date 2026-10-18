@@ -35,6 +35,9 @@ class AppController : public QObject {
   Q_PROPERTY(QVariantList themeList READ themeList NOTIFY changed)
   Q_PROPERTY(QVariantList languages READ languages NOTIFY changed)
   Q_PROPERTY(bool rtl READ rtl NOTIFY changed)
+  Q_PROPERTY(QString languageCode READ languageCode NOTIFY changed)
+  Q_PROPERTY(QString filenameCodepage READ codepage NOTIFY changed)
+  Q_PROPERTY(QString themeId READ themeId NOTIFY changed)
   Q_PROPERTY(bool restoreTabs READ restoreTabs NOTIFY changed)
   Q_PROPERTY(QVariantList passwords READ passwords NOTIFY changed)
   Q_PROPERTY(QString vaultProtection READ vaultProtection NOTIFY changed)
@@ -53,6 +56,8 @@ class AppController : public QObject {
   bool busy()const{return jobs.busy();}double progress()const{return jobs.progress();}QString jobState()const{return jobs.state();}QString engineIdentity()const{return identity;}
   QVariantMap colors()const;QVariantList themeList()const;QVariantList languages()const;
   bool rtl()const;bool restoreTabs()const{return preferences["restoreTabs"].toBool(true);}int revision()const{return epoch;}
+  QString languageCode()const{return preferences["language"].toString();}
+  QString themeId()const{return preferences["skin"].toString();}
   QVariantList passwords()const{return vault.entries();}QString vaultProtection()const{return vault.protection();}
   QString associationStatus()const;
   Q_INVOKABLE QString translate(QString key,QString fallback)const;
