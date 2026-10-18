@@ -14,12 +14,17 @@
 #include <QElapsedTimer>
 #include <QJsonDocument>
 #include <QSaveFile>
+#include <QPainter>
+#include <QIcon>
 int main(int argc, char** argv) {
   QElapsedTimer startup;startup.start();qint64 firstFrame=-1,archiveReady=-1;
   QGuiApplication app(argc, argv);
   QGuiApplication::setOrganizationName("ZENzip");
   QGuiApplication::setApplicationName("ZENzip");
   QCoreApplication::setApplicationVersion(ZENZIP_VERSION_FULL);
+  QPixmap mark(256,256);mark.fill(Qt::transparent);
+  {QPainter painter(&mark);painter.setRenderHint(QPainter::Antialiasing);painter.setBrush(QColor("#FAF9F6"));painter.setPen(Qt::NoPen);painter.drawRoundedRect(mark.rect(),48,48);painter.setBrush(Qt::NoBrush);painter.setPen(QPen(QColor("#486451"),18,Qt::SolidLine,Qt::RoundCap));painter.drawArc(QRectF(46,46,164,164),-18*16,310*16);}
+  app.setWindowIcon(QIcon(mark));
   QQuickStyle::setStyle("Basic");
   const auto arguments=app.arguments();
   if(arguments.contains("--register"))return platform::registerApplication(app.applicationFilePath()).isEmpty()?0:2;

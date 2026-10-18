@@ -22,3 +22,5 @@ BEGIN
   VALUE "Translation", 0x0409, 1200
  END
 END
+
+101 ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/zenzip.ico"

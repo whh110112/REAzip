@@ -111,6 +111,13 @@ def main():
     (resources/'acceptance.json').write_text(json.dumps({'coreTests':'see CI LastTest.log','guiSmoke':'must pass isolated stage check','systemIntegration':'manual desktop acceptance pending','publicRelease':'blocked pending T10'},indent=2)+'\n')
     (resources/'README.txt').write_text('ZENzip native development candidate '+version+'\n\nOpen zenzip to use the application. No Node.js, Qt SDK, or separately installed 7-Zip is required.\nWindows portable ZIP: portable.flag keeps settings/themes under adjacent data. Installer: standard user data directory.\nRead NOTICE.md and acceptance.json for licenses, signing and acceptance status.\n')
     if system=='Darwin':
+        iconset=build/'zenzip.iconset';iconset.mkdir(exist_ok=True)
+        for size in [16,32,128,256,512]:
+            for scale in [1,2]:
+                filename=f'icon_{size}x{size}'+('@2x' if scale==2 else '')+'.png'
+                run('sips','-z',size*scale,size*scale,ROOT/'assets/zenzip.png','--out',iconset/filename,stdout=subprocess.DEVNULL)
+        run('iconutil','-c','icns',iconset,'-o',resources/'zenzip.icns')
+    if system=='Darwin':
         run('codesign','--force','--deep','--sign','-','--timestamp=none',bundle)
         run('codesign','--verify','--deep','--strict',bundle)
     for binary in binaries:binary['sha256']=sha(stage/binary['path'])
@@ -134,13 +141,15 @@ def main():
             artifacts.append(output/(name+'-Setup.exe'))
             if os.environ.get('GITHUB_ACTIONS')=='true':
                 installed=build/('installed-'+uuid.uuid4().hex)
-                run(artifacts[-1],'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/NOICONS','/TASKS=','/DIR='+str(installed))
+                run(artifacts[-1],'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/NOICONS','/TASKS=register','/DIR='+str(installed))
                 if (installed/'portable.flag').exists():raise RuntimeError('Installer incorrectly enabled portable mode')
                 run(installed/'zenzip.exe','--smoke',ROOT/'tests/fixtures/sample.iso',env=env)
+                run(sys.executable,ROOT/'tools/check-windows-desktop.py',installed/'zenzip.exe',output/(name+'-desktop.json'),env=env)
                 run(installed/'unins000.exe','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')
                 deadline=time.monotonic()+15
                 while (installed/'zenzip.exe').exists() and time.monotonic()<deadline:time.sleep(.2)
                 if (installed/'zenzip.exe').exists():raise RuntimeError('Uninstall did not remove application payload')
+                run(sys.executable,ROOT/'tools/check-windows-desktop.py',installed/'zenzip.exe',output/(name+'-desktop.json'),'--uninstalled',env=env)
     elif system=='Darwin':
         archive=output/(name+'.zip');run('ditto','-c','-k','--sequesterRsrc','--keepParent',bundle,archive);artifacts.append(archive)
         dmgroot=build/('dmg-'+uuid.uuid4().hex);dmgroot.mkdir();shutil.copytree(bundle,dmgroot/'ZENzip.app',symlinks=True);(dmgroot/'Applications').symlink_to('/Applications')
@@ -163,7 +172,7 @@ def main():
                  '\n[Desktop Action ExtractTo]\nName=Extract to folder...\nExec=AppRun --extract-to %f\n')
         (stage/'zenzip.desktop').write_text(desktop)
         # Code-native SVG icon, matching the existing two-square app mark.
-        (stage/'zenzip.svg').write_text('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect x="20" y="20" width="170" height="170" rx="42" fill="#378add"/><rect x="134" y="134" width="98" height="98" rx="24" fill="white" stroke="#378add" stroke-width="12"/></svg>')
+        shutil.copy2(ROOT/'assets/zenzip.svg', stage/'zenzip.svg')
         archive=output/(name+'.tar.gz')
         with tarfile.open(archive,'w:gz') as tar:tar.add(stage,arcname=name)
         artifacts.append(archive)

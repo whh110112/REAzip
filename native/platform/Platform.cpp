@@ -102,6 +102,29 @@ QString registerApplication(QString executable,QString prefix){
 #ifdef Q_OS_WIN
   const auto classes=prefix+"Software\\Classes\\",capabilities=prefix+"Software\\ZENzip\\Capabilities";const auto command='"'+QDir::toNativeSeparators(executable)+'"';bool ok=true;
   auto put=[&](QString path,QString name,QString value){ok=set(path,name,value)&&ok;};
+  // Upgrade only the legacy installation in this same directory. Keep its ProgID as an
+  // alias so a Windows UserChoice pointing at REAzip.Archive continues to open archives.
+  const auto legacyExe=QFileInfo(executable).dir().filePath("reazip.exe");
+  const auto legacyProgram=classes+"REAzip.Archive";
+  if(get(legacyProgram,"OwnerExecutable")==legacyExe){
+    put(legacyProgram,"","ZENzip Archive");put(legacyProgram,"OwnerExecutable",executable);
+    put(legacyProgram+"\\DefaultIcon","",command+",0");
+    put(legacyProgram+"\\shell\\open\\command","",command+" \"%1\"");
+    for(const auto& ext:extensions)for(const auto& action:{QString("extract_here"),QString("extract_to")}){
+      const auto key=classes+"SystemFileAssociations\\"+ext+"\\shell\\REAzip."+action;
+      if(get(key,"OwnerExecutable")==legacyExe)removeTree(key);
+    }
+    for(const auto& type:{QString("*"),QString("Directory")}){
+      const auto key=classes+type+"\\shell\\REAzip.Add";if(get(key,"OwnerExecutable")==legacyExe)removeTree(key);
+    }
+    const auto app=classes+"Applications\\reazip.exe";if(get(app,"OwnerExecutable")==legacyExe)removeTree(app);
+    const auto caps=prefix+"Software\\REAzip\\Capabilities";
+    if(get(caps,"OwnerExecutable")==legacyExe){
+      removeTree(caps);auto path=wide(prefix+"Software\\RegisteredApplications");HKEY key{};
+      if(RegOpenKeyExW(HKEY_CURRENT_USER,path.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"REAzip");RegCloseKey(key);}
+    }
+  }
+
   put(classes+"ZENzip.Archive","","ZENzip Archive");put(classes+"ZENzip.Archive","OwnerExecutable",executable);put(classes+"ZENzip.Archive","FriendlyTypeName","ZENzip Archive");put(classes+"ZENzip.Archive\\DefaultIcon","",command+",0");put(classes+"ZENzip.Archive\\shell\\open\\command","",command+" \"%1\"");
   put(capabilities,"ApplicationName","ZENzip");put(capabilities,"ApplicationDescription","ZENzip native archive manager");put(capabilities,"ApplicationIcon",command+",0");put(capabilities,"OwnerExecutable",executable);
   put(prefix+"Software\\RegisteredApplications","ZENzip","Software\\ZENzip\\Capabilities");
@@ -141,6 +164,7 @@ QString unregisterApplication(QString executable,QString prefix){
 #ifdef Q_OS_WIN
   const auto classes=prefix+"Software\\Classes\\",capabilities=prefix+"Software\\ZENzip\\Capabilities";
   if(get(classes+"ZENzip.Archive","OwnerExecutable")!=executable)return {};
+  if(get(classes+"REAzip.Archive","OwnerExecutable")==executable)removeTree(classes+"REAzip.Archive");
   removeTree(classes+"ZENzip.Archive");if(get(capabilities,"OwnerExecutable")==executable){removeTree(capabilities);if(get(prefix+"Software\\RegisteredApplications","ZENzip")=="Software\\ZENzip\\Capabilities"){auto p=wide(prefix+"Software\\RegisteredApplications");HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,p.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"ZENzip");RegCloseKey(key);}}}
   const auto application=classes+"Applications\\"+QFileInfo(executable).fileName();if(get(application,"OwnerExecutable")==executable)removeTree(application);
   for(const auto& ext:extensions){auto p=wide(classes+ext+"\\OpenWithProgids");HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,p.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"ZENzip.Archive");RegCloseKey(key);}for(const auto& action:{QString("extract_here"),QString("extract_to")}){const auto k=classes+"SystemFileAssociations\\"+ext+"\\shell\\ZENzip."+action;if(get(k,"OwnerExecutable")==executable)removeTree(k);}}

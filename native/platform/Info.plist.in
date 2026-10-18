@@ -5,6 +5,7 @@
 <key>CFBundleIdentifier</key><string>com.zenzip.app</string>
 <key>CFBundleName</key><string>ZENzip</string>
 <key>CFBundleDisplayName</key><string>ZENzip</string>
+<key>CFBundleIconFile</key><string>zenzip.icns</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
 <key>CFBundleVersion</key><string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
