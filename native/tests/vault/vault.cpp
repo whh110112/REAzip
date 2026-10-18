@@ -40,7 +40,7 @@ int main(int argc,char** argv){
   // Generate a legacy REAzip DPAPI payload independently of Vault::save().
   const auto legacyRoot=work.path()+"/legacy";QDir().mkpath(legacyRoot);
   const QJsonArray legacyEntries{QJsonObject{{"id","old-id"},{"name","old-name"},{"secret","old-test-secret"},{"updated","2026-10-18"},{"stamp",1}}};
-  auto legacyPlain=QJsonDocument(legacyEntries).toJson(QJsonDocument::Compact);
+  auto legacyPlain=QJsonDocument(QJsonObject{{"entries",legacyEntries}}).toJson(QJsonDocument::Compact);
   auto legacySalt=QByteArrayLiteral("REAzip/password-vault/v1");
   DATA_BLOB legacyInput{static_cast<DWORD>(legacyPlain.size()),reinterpret_cast<BYTE*>(legacyPlain.data())};
   DATA_BLOB legacyEntropy{static_cast<DWORD>(legacySalt.size()),reinterpret_cast<BYTE*>(legacySalt.data())},legacyOutput{};
@@ -48,7 +48,7 @@ int main(int argc,char** argv){
   const auto legacyPayload=QByteArray(reinterpret_cast<const char*>(legacyOutput.pbData),static_cast<int>(legacyOutput.cbData)).toBase64();
   SecureZeroMemory(legacyOutput.pbData,legacyOutput.cbData);LocalFree(legacyOutput.pbData);
   if(!writeFile(legacyRoot+"/vault.json",QJsonDocument(QJsonObject{{"schemaVersion",1},{"protection","dpapi"},{"payload",QString::fromLatin1(legacyPayload)}}).toJson()))FAIL(35,"cannot write legacy payload");
-  Vault old(legacyRoot);if(!old.load()||old.secret("old-id")!="old-test-secret")FAIL(36,"legacy DPAPI vault did not survive rename");
+  Vault old(legacyRoot);if(!old.load()||old.secret("old-id")!="old-test-secret")FAIL(36,"legacy DPAPI vault did not survive rename: "+old.error().toStdString());
 #endif
   // Rejected input must never reach the file.
   if(vault.add("","value"))FAIL(5,"an empty name was accepted");
