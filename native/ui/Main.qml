@@ -53,6 +53,34 @@ ApplicationWindow {
     LayoutMirroring.childrenInherit: true
     component SafeLabel: Label { textFormat: Text.PlainText }
     component Action: Pill { accent: window.accent; ink: window.muted; paper: window.card; edge: window.edge }
+    component TabIconButton: ToolButton {
+        id: tabButton
+        property bool closeIcon: false
+        implicitWidth: 26; implicitHeight: 26; padding: 0
+        contentItem: Item {
+            // Draw both symbols on the same grid instead of relying on font
+            // fallback metrics for the multiplication and plus characters.
+            Canvas {
+                id: tabGlyph
+                anchors.centerIn: parent; width: 12; height: 12
+                onPaint: {
+                    const c = getContext("2d"); c.reset()
+                    c.strokeStyle = window.muted; c.lineWidth = 1.5; c.lineCap = "round"
+                    c.beginPath()
+                    if (tabButton.closeIcon) { c.moveTo(3, 3); c.lineTo(9, 9); c.moveTo(9, 3); c.lineTo(3, 9) }
+                    else { c.moveTo(6, 2); c.lineTo(6, 10); c.moveTo(2, 6); c.lineTo(10, 6) }
+                    c.stroke()
+                }
+                Connections { target: window; function onMutedChanged() { tabGlyph.requestPaint() } }
+                Connections { target: tabButton; function onCloseIconChanged() { tabGlyph.requestPaint() } }
+            }
+        }
+        background: Rectangle {
+            radius: 6
+            color: tabButton.down ? window.edge : (tabButton.hovered ? window.surface : (tabButton.closeIcon ? "transparent" : window.card))
+            border.color: tabButton.activeFocus ? window.accent : (tabButton.closeIcon ? "transparent" : window.edge)
+        }
+    }
     component FooterBar: Pane {
         default property alias actions: footerActions.data
         leftPadding: 22; rightPadding: 22; topPadding: 10; bottomPadding: 14
@@ -102,19 +130,44 @@ ApplicationWindow {
                 ToolButton { width: 46; height: parent.height; text: "×"; onClicked: window.close(); Accessible.name: "Close" }
             }
         }
-        Rectangle { Layout.fillWidth: true; implicitHeight: 36; color: window.surface
-            RowLayout { anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10; spacing: 3
-                ListView { Layout.preferredWidth: Math.min(contentWidth, window.width - 60); Layout.fillHeight: true; orientation: ListView.Horizontal; spacing: 3; clip: true
+        Rectangle { objectName: "archiveTabBar"; Layout.fillWidth: true; implicitHeight: Math.max(40, archiveTabs.implicitHeight + 8); color: window.surface
+            RowLayout { anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10; spacing: 6
+                ListView {
+                    id: archiveTabs; objectName: "archiveTabs"
+                    Layout.preferredWidth: Math.min(contentWidth, window.width - 80); Layout.alignment: Qt.AlignVCenter
+                    // Fit the tallest filename, including script fallback fonts.
+                    implicitHeight: {
+                        let tallest = 32
+                        for (const item of contentItem.children) tallest = Math.max(tallest, item.implicitHeight || 0)
+                        return tallest
+                    }
+                    orientation: ListView.Horizontal; spacing: 3; clip: true
                     model: window.api ? window.api.tabs : (window.preview ? [{id:"demo",name:"demo.zip"}] : [])
-                    delegate: Rectangle { required property var modelData; width: Math.min(220, tabName.implicitWidth + 52); height: 30; y: 6; radius: 9; color: window.api && window.api.activeTab !== modelData.id ? window.surface : window.paper; border.color: window.edge
-                        RowLayout { anchors.fill: parent; anchors.leftMargin: 10
-                            SafeLabel { id: tabName; text: modelData.name; color: window.ink; elide: Text.ElideRight; Layout.fillWidth: true }
-                            ToolButton { text:"×"; implicitWidth:24; onClicked:if(window.api)window.api.closeTab(modelData.id); Accessible.name:"Close archive" }
+                    delegate: Rectangle {
+                        required property var modelData
+                        objectName: "archiveTab"
+                        width: Math.min(220, Math.max(80, tabName.implicitWidth + 50))
+                        implicitHeight: Math.max(34, Math.ceil(tabName.contentHeight) + 12)
+                        height: archiveTabs.height; radius: 9
+                        color: window.api && window.api.activeTab !== modelData.id ? window.surface : window.paper; border.color: window.edge
+                        MouseArea { anchors.fill: parent; onClicked: if(window.api) window.api.activateTab(modelData.id) }
+                        RowLayout { anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 4; anchors.topMargin: 4; anchors.bottomMargin: 4; spacing: 6
+                            SafeLabel {
+                                id: tabName; objectName: "archiveTabName"
+                                text: modelData.name; color: window.ink; font.pixelSize: 13
+                                elide: Text.ElideRight; verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignHCenter
+                                Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumWidth: 0
+                                ToolTip.visible: tabHover.hovered && truncated; ToolTip.text: text
+                                HoverHandler { id: tabHover }
+                            }
+                            TabIconButton {
+                                objectName: "archiveTabClose"; closeIcon: true; Layout.alignment: Qt.AlignVCenter
+                                onClicked: if(window.api) window.api.closeTab(modelData.id); Accessible.name: "Close archive"
+                            }
                         }
-                        TapHandler { onTapped: if(window.api)window.api.activateTab(modelData.id) }
                     }
                 }
-                Action { text:"+";implicitWidth:28;implicitHeight:24;onClicked:openDialog.open() }
+                TabIconButton { objectName: "archiveTabAdd"; Layout.alignment: Qt.AlignVCenter; onClicked: openDialog.open(); Accessible.name: window.t("openArchive", "打开压缩包") }
                 Item { Layout.fillWidth: true }
             }
         }

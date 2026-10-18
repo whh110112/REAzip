@@ -19,6 +19,78 @@ class GuiFlow : public QObject {
   Q_OBJECT
  public:QString worker,library,archive,qml;QTemporaryDir work;
  private slots:
+  void archiveTabLayoutAndInteraction(){
+    AppController api(worker,library,nullptr,work.path()+"/tab-layout");
+    QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
+    QVERIFY(!engine.rootObjects().isEmpty());auto root=engine.rootObjects().first();auto window=qobject_cast<QQuickWindow*>(root);QVERIFY(window);
+    window->resize(880,560);QSignalSpy warnings(&engine,&QQmlEngine::warnings);
+    const auto fixture=QFileInfo(qml).absoluteDir().filePath("../tests/fixtures/sample.iso");
+    const auto sample=work.path()+"/sample.iso";QVERIFY(QFile::copy(fixture,sample));
+    api.openUrls({QUrl::fromLocalFile(sample)});QTRY_VERIFY_WITH_TIMEOUT(!api.busy()&&api.archiveFormat()=="iso",12000);
+    const auto firstId=api.activeTab();
+    const QHash<QString,QString> names={
+      {"en","Archive with a long filename"},{"zh-CN","中文归档文件"},{"zh-TW","繁體中文歸檔"},
+      {"ja","日本語のアーカイブ"},{"ko","한국어 압축 파일"},{"de","Ausführlicher Archivname"},
+      {"fr","Français — été"},{"es","Español — compresión"},{"pt-BR","Português — extração"},
+      {"it","Archivio italiano"},{"ru","Русский архив"},{"pl","Polskie archiwum"},
+      {"tr","Türkçe arşiv"},{"id","Arsip Indonesia"},{"vi","Tệp lưu trữ tiếng Việt"},
+      {"ar","ملف أرشيف عربي"},{"hi","हिन्दी संग्रह फ़ाइल"},{"th","ไฟล์บีบอัดภาษาไทย"}
+    };
+    std::function<QQuickItem*(QQuickItem*,QString)> find;
+    find=[&](QQuickItem* item,QString name)->QQuickItem*{if(item->objectName()==name)return item;for(auto child:item->childItems())if(auto found=find(child,name))return found;return nullptr;};
+    auto click=[&](QQuickItem* item){QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,item->mapToScene(item->boundingRect().center()).toPoint());};
+    auto labelFor=[&](QString text)->QQuickItem*{
+      auto tabs=find(window->contentItem(),"archiveTabs");if(!tabs)return nullptr;
+      auto content=qvariant_cast<QQuickItem*>(tabs->property("contentItem"));if(!content)return nullptr;
+      for(auto tab:content->childItems())if(auto label=find(tab,"archiveTabName"))if(label->property("text").toString()==text)return label;
+      return nullptr;
+    };
+    int checked=0;
+    for(const auto& locale:api.languages()){
+      const auto code=locale.toMap()["code"].toString();QVERIFY2(names.contains(code),qPrintable(code));
+      const auto filename=names[code]+" — 0123456789 0123456789 0123456789.iso";
+      const auto path=work.path()+'/'+filename;QVERIFY(QFile::copy(fixture,path));
+      api.setPreference("language",code);api.openUrls({QUrl::fromLocalFile(path)});
+      QTRY_VERIFY_WITH_TIMEOUT(!api.busy()&&api.archiveFormat()=="iso",12000);QCOMPARE(api.tabs().size(),2);
+      const auto secondId=api.activeTab();QVERIFY(secondId!=firstId);
+      for(const auto& theme:api.themeList()){
+        const auto themeId=theme.toMap()["id"].toString();api.setPreference("skin",themeId);QTest::qWait(30);
+        auto tabs=find(window->contentItem(),"archiveTabs");auto add=find(window->contentItem(),"archiveTabAdd");QVERIFY(tabs);QVERIFY(add);
+        auto content=qvariant_cast<QQuickItem*>(tabs->property("contentItem"));QVERIFY(content);
+        QList<QQuickItem*> delegates;for(auto item:content->childItems())if(item->objectName()=="archiveTab")delegates.append(item);
+        QTRY_COMPARE(delegates.size(),2);
+        for(auto tab:delegates){
+          auto label=find(tab,"archiveTabName");auto close=find(tab,"archiveTabClose");QVERIFY(label);QVERIFY(close);
+          tab->ensurePolished();QTRY_VERIFY(label->height()+1>=label->property("contentHeight").toDouble());
+          const auto center=tab->mapToScene(tab->boundingRect().center()).y();
+          const auto context=themeId+'/'+code+'/'+label->property("text").toString();
+          QVERIFY2(qAbs(label->mapToScene(label->boundingRect().center()).y()-center)<=1,qPrintable(context));
+          QVERIFY2(qAbs(close->mapToScene(close->boundingRect().center()).y()-center)<=1,qPrintable(context));
+          QVERIFY2(qAbs(add->mapToScene(add->boundingRect().center()).y()-center)<=1,qPrintable(context));
+          const auto labelBounds=label->mapRectToItem(tab,label->boundingRect()),closeBounds=close->mapRectToItem(tab,close->boundingRect());
+          QVERIFY2(!labelBounds.intersects(closeBounds),qPrintable(context));
+          QVERIFY2(labelBounds.top()>=0&&labelBounds.bottom()<=tab->height()+1,qPrintable(context));
+          QVERIFY2(closeBounds.top()>=0&&closeBounds.bottom()<=tab->height()+1,qPrintable(context));
+          QVERIFY2(label->property("verticalAlignment").toInt()==Qt::AlignVCenter,qPrintable(context));
+          if(label->property("text").toString()!="sample.iso"){QCOMPARE(label->property("text").toString(),filename);QVERIFY(label->property("truncated").toBool());}
+        }
+        if(QStringList{"en","zh-CN","ar","hi","th"}.contains(code)){
+          QVERIFY(QDir().mkpath("tab-layout-captures"));
+          QVERIFY(window->grabWindow().save("tab-layout-captures/"+themeId+'-'+code+".png"));
+        }
+        ++checked;
+      }
+      // Exercise the real hit targets in both left-to-right and mirrored layouts.
+      QTRY_VERIFY(labelFor("sample.iso"));click(labelFor("sample.iso"));QTRY_COMPARE(api.activeTab(),firstId);
+      // changed() refreshes the ListView model, so reacquire delegate pointers.
+      QTest::qWait(20);QTRY_VERIFY(labelFor(filename));click(labelFor(filename));QTRY_COMPARE(api.activeTab(),secondId);
+      QTest::qWait(20);QTRY_VERIFY(labelFor(filename));
+      auto secondClose=find(labelFor(filename)->parentItem()->parentItem(),"archiveTabClose");
+      QVERIFY(secondClose);click(secondClose);QTRY_COMPARE(api.tabs().size(),1);QCOMPARE(api.activeTab(),firstId);
+    }
+    QCOMPARE(checked,108);QVERIFY2(warnings.isEmpty(),"QML diagnostics emitted during archive tab layout/interaction checks");
+    qInfo()<<"108 archive tab layouts: six themes x eighteen languages, mixed-script long filenames, select and close hit targets";
+  }
   void settingsLayoutAndSavedSelections(){
     const auto data=work.path()+"/settings-layout";
     { AppController saved(worker,library,nullptr,data); saved.setPreference("language","de"); saved.setPreference("codepage","936"); saved.setPreference("skin","sleep"); }

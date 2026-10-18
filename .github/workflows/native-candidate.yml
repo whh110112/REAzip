@@ -92,6 +92,7 @@ jobs:
           name: native-checks-${{ runner.os }}-${{ matrix.arch }}
           path: |
             .native-build/candidate/Testing/Temporary/LastTest.log
+            .native-build/candidate/**/tab-layout-captures/*
             .native-build/native-smoke.png
             .native-build/artifacts/*
             .native-build/screenshots/*
