@@ -1,0 +1,26 @@
+{
+  "version": "0.4.0",
+  "sourceCommit": "30726b4d67dfdb74422a44221fd379ab7bb22320",
+  "captureFontSha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+  "captureRun": "https://github.com/whh110112/ZENzip/actions/runs/39125212344",
+  "captures": [
+    {
+      "theme": "light",
+      "language": "en",
+      "scene": "archive",
+      "scale": "1",
+      "file": "en.png",
+      "sha256": "31e042d7451d25ccd67e3872cdb30aa9300fda92e58a57f29ae34ab0d70f4836",
+      "sourceFile": "light-en-archive.png"
+    },
+    {
+      "theme": "light",
+      "language": "zh-CN",
+      "scene": "archive",
+      "scale": "1",
+      "file": "zh-CN.png",
+      "sha256": "35c5c2ab3d635a1cd2571d6c8ea069095a85be1e84345b18aad1d2881d3a324b",
+      "sourceFile": "light-zh-CN-archive.png"
+    }
+  ]
+}
