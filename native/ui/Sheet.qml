@@ -21,9 +21,12 @@ Dialog {
     Overlay.modal: Rectangle { color: "#6130302C" }
     footer: DialogButtonBox {
         standardButtons: sheet.standardButtons
+        alignment: Qt.AlignRight
+        padding: 14; spacing: 10
         onAccepted: sheet.accept()
         onRejected: sheet.reject()
         delegate: Button {
+            implicitWidth: 96; implicitHeight: 34
             text: { if(sheet.api){let epoch=sheet.api.revision;return DialogButtonBox.buttonRole===DialogButtonBox.AcceptRole?sheet.api.translate("confirm","OK"):sheet.api.translate("cancel","Cancel")}return DialogButtonBox.buttonRole===DialogButtonBox.AcceptRole?"OK":"Cancel" }
         }
     }

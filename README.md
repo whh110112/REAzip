@@ -1,61 +1,83 @@
 # REAzip
 
-参考 Bandizip 行为、使用完整 7-Zip 原生库的跨平台归档管理器。界面沿用本项目原有设计，核心与程序独立实现；不包含 Bandizip 程序、代码或专有资源，不声称已还原其内核。
+[中文](README.zh-CN.md) | English
 
-当前开发分支 `native-migration`：**C++17 + Qt Quick 6.8.3 + bit7z 4.1.0 + 7-Zip 26.04**。QML 是 Qt 原生界面描述，发行包不包含 Electron、WebEngine、Node 或 7z 命令行运行依赖。根目录旧 JS/HTML 仍保留作 v0.2.1 基线，新实现位于 `native/`。
+A cross-platform archive manager with a native 7-Zip core and a tabbed, themeable Qt Quick interface. REAzip pairs the proven 7-Zip 26.04 engine with the everyday workflow Bandizip popularized — tabs, queues, smart extraction and per-entry conflict control — while keeping the whole feature surface honest: nothing in the UI is a fake button.
 
-原生版本 **0.3.0-dev 是候选版本**。公开 v0.2.1 仍是旧 Electron 版；当前没有公开原生 Release。候选只由 CI 上传，具体执行 SHA、验收范围和未验证项目见 [验收报告](native/docs/acceptance-report.md)。
+> **Status: 0.3.0-dev candidate.** The published v0.2.1 is the previous Electron build. Native releases are gated on a full six-target acceptance run; see the [acceptance report](native/docs/acceptance-report.md) for exactly what has been verified and what has not.
 
-## 原生功能
-
-- 多标签、目录导航、全包搜索、自然排序、虚拟文件列表。
-- ZIP / 7Z / TAR / TAR.GZ 创建、列表、测试与解压；选中条目解压；询问、覆盖、跳过、重命名冲突策略。
-- ZIP AES / 旧 ZipCrypto 读取、7z 文件头加密、密码挑战与重试、分卷、ZIP64。
-- 添加、删除和重命名；条目ID随归档元数据变化，拒绝过期选择。
-- RAR / RAR5 / ISO / WIM 等只读浏览和解压；写入能力按真实格式限制。
-- GBK / Big5 / Shift-JIS 显式编码；六套主题、18种语言和 RTL；旧设置及颜色 token 的保守迁移。
-- 原生 worker 隔离、任务排队与取消、安全解压、提交日志和中断恢复。
-- Windows 每用户关联与经典菜单、macOS bundle 文件类型、Linux desktop MIME；系统默认应用由用户选择。
-
-完整支持边界见 [已知限制](native/docs/known-limitations.md) 和 [功能对照](native/docs/feature-parity.md)。Win11现代菜单、Finder/Nautilus扩展、SFX、密码恢复、复杂损坏修复、密码管理器和自动更新客户端未实现。
-
-## 获取候选
-
-[Native candidate 构建记录](https://github.com/whh110112/REAzip/actions/workflows/native-candidate.yml) 的成功运行提供六种目标：
-
-| 系统 | CPU | 产物 |
+| Main window (light) | Create archive | Extract |
 |---|---|---|
-| Windows | x64、ARM64 | 安装 EXE、便携 ZIP |
-| macOS | x64、ARM64 | DMG、ZIP |
-| Linux | x64、ARM64 | AppImage、tar.gz、deb |
+| ![Main window](native/design/native-reference/light-en-archive.png) | ![Create](native/design/native-reference/light-en-create.png) | ![Extract](native/design/native-reference/light-en-extract.png) |
 
-GitHub artifacts 下载需要登录，属于限期候选附件。每包附版本、源码 SHA、CPU、SHA256、签名状态、许可证和对应源码。Windows 未签名；macOS ad-hoc 签名、未公证。安装和旧设置迁移见 [安装指南](native/docs/installation-guide.md)。
+| Password challenge | Name conflict | Settings |
+|---|---|---|
+| ![Password](native/design/native-reference/light-en-password.png) | ![Conflict](native/design/native-reference/light-en-conflict.png) | ![Settings](native/design/native-reference/light-de-settings.png) |
 
-## 原生构建
+| Glass theme | macOS dark theme | Material theme | Sleep theme |
+|---|---|---|---|
+| ![Glass](native/design/native-reference/glass-en-archive.png) | ![macOS dark](native/design/native-reference/mac-dark-en-archive.png) | ![Material](native/design/native-reference/material-en-archive.png) | ![Sleep](native/design/native-reference/sleep-en-archive.png) |
 
-先安装 Python 3.12、平台 C++17 工具链、CMake 和 Ninja。Windows ARM runner 使用 VS2026/CMake4.2；Windows x64 使用 VS2022；macOS 使用 Xcode，Linux 使用 GCC。依赖版本与摘要锁在 `native/deps.lock.json`，完整复现以 CI workflow 为准。
+RTL (Arabic) and Simplified Chinese previews: ![RTL](native/design/native-reference/light-ar-archive.png) ![zh-CN](native/design/native-reference/light-zh-CN-empty.png)
+
+<sub>All screenshots are real captures of the 0.3.0-dev candidate running at 0.5 scale; each file is pinned by SHA-256 in [`native/design/native-reference/manifest.json`](native/design/native-reference/manifest.json). They were taken before the settings-layout fix in this change set, so the Settings/Appearance shots still show the old footer alignment and will be recaptured once the next build is green.</sub>
+
+## Highlights
+
+- **Native engine, no runtime baggage** — C++17 + Qt Quick 6.8.3 + bit7z 4.1.0 + the complete 7-Zip 26.04 library. No Electron, no Node, no bundled browser. The x64 installer is ~26 MB versus ~121 MB for v0.2.1.
+- **Tabs, queues, cancellation** — multi-tab browsing, a background task queue with real cancellation, and a worker process that keeps the GUI alive when an archive misbehaves.
+- **Format coverage** — create/list/test/extract for ZIP, 7Z, TAR and TAR.GZ; read/extract for RAR, RAR5, ISO and WIM; ZIP AES-256 and legacy ZipCrypto; 7z header encryption; split volumes; ZIP64 above 4 GiB.
+- **Legacy filename encodings** — explicit GBK / Big5 / Shift-JIS decoding for old ZIP files, with an automatic policy.
+- **Safe by construction** — path-escape, symlink and reparse-point attacks are blocked during extraction; every write lands through a committed temporary file with journal recovery, so a crash or a full disk never corrupts the original archive.
+- **Six themes, 18 languages, full RTL** — with conservative migration of old custom color tokens.
+- **Desktop integration where the OS allows it** — per-user file associations on Windows (classic Explorer menu), bundle type registration on macOS, MIME/desktop entries on Linux. The system default application always stays under your control.
+
+## Feature comparison
+
+Comparison is limited to publicly documented capabilities and REAzip's own acceptance scope; “–” means not implemented in this version.
+
+| Capability | REAzip 0.3.0-dev | 7-Zip | NanaZip | Bandizip |
+|---|---|---|---|---|
+| ZIP / 7Z / TAR / GZ create + extract | ✓ | ✓ | ✓ | ✓ |
+| RAR / RAR5 / ISO / WIM extract | ✓ | ✓ | ✓ | ✓ |
+| ZIP AES-256 write, 7z header encryption | ✓ | ✓ | ✓ | ✓ |
+| Split volumes, ZIP64 > 4 GiB | ✓ | ✓ | ✓ | ✓ |
+| Legacy ZIP code pages (GBK/Big5/Shift-JIS) | ✓ | ✓ | ✓ | ✓ |
+| Tabbed browsing | ✓ | – | – | ✓ |
+| Task queue with cancellation | ✓ | – | – | ✓ |
+| Themes / 18 languages / RTL | ✓ | – | partial | partial |
+| Per-user install without admin | ✓ | ✓ | ✓ (MSIX) | ✓ |
+| Windows 11 modern context menu | – | – | ✓ | ✓ |
+| SFX creation, password recovery, archive repair | – | – | – | ✓ |
+
+## Downloads
+
+Candidate packages (Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + tar.gz + deb) are produced by the [native candidate workflow](https://github.com/whh110112/REAzip/actions/workflows/native-candidate.yml); every package ships with its version, source SHA, architecture, SHA-256, signature status and license notices.
+
+- Windows binaries are **unsigned**; macOS builds are ad-hoc signed and **not notarized**.
+- Linux `deb` requires glibc ≥ 2.39 (built on Ubuntu 24.04); macOS deployment target is 13.0.
+- Installation, portable mode and old-setting migration are described in the [installation guide](native/docs/installation-guide.md).
+
+## Building from source
+
+Requirements: Python 3.12+, a C++17 toolchain, CMake and Ninja. Dependency versions and hashes are pinned in `native/deps.lock.json`; the CI workflows are the authoritative recipe.
 
 ```sh
 python -m pip install aqtinstall==3.3.0 ninja==1.11.1.4 cmake==3.31.6
 python native/bootstrap/dependencies.py --arch x64
 python native/bootstrap/qt-sdk.py --arch x64 --output .native-build/Qt
-```
-
-将生成的 Qt SDK 加入 PATH/CMAKE_PREFIX_PATH，指定当前目标实际引擎目录后配置：
-
-```sh
+# add the generated Qt SDK to PATH / CMAKE_PREFIX_PATH, then:
 cmake -S native -B .native-build/release -DREAZIP_ENGINE_DIR=/absolute/path/to/native/.deps/engine/x64 -DREAZIP_HEAVY_TESTS=ON
 cmake --build .native-build/release --config Release --parallel 3
 ctest --test-dir .native-build/release -C Release --output-on-failure
-python native/packaging/package.py --build .native-build/release --arch x64 --qt-prefix /absolute/path/to/Qt/6.8.3/target-kit --output .native-build/artifacts
 ```
 
-ARM64 将架构参数改为 `arm64`，使用对应原生 runner 和 Qt SDK；Windows ARM 还需 target Qt 的 QT_HOST_PATH。首次下载和完整7-Zip编译需要网络，发行包离线运行无需安装这些开发依赖。大文件测试会读取4GiB可压缩稀疏数据。磁盘满测试仅在Linux CI临时挂载2MiB tmpfs。
+Replace `x64` with `arm64` for ARM targets (Windows ARM additionally needs `QT_HOST_PATH`). First setup downloads Qt and compiles the full 7-Zip core; the released packages run fully offline.
 
-旧 Electron 基线可用 `npm ci`、`npm start` 运行，不用于原生打包。不要通过推送标签触发原生公开发布；当前候选 workflow 没有发布权限。
+## What is deliberately not in this version
 
-## 资料与许可
+Win11 modern context menus, Finder/Nautilus extensions, SFX creation, password recovery, complex archive repair, a password manager, image preview and an auto-updater are **not implemented** and are never shown as clickable stubs. RAR writing, TAR/TGZ encryption and TGZ volumes are explicitly rejected with an explanation rather than silently ignored. The full boundary is documented in [known limitations](native/docs/known-limitations.md) and the [feature matrix](native/docs/feature-parity.md).
 
-[任务进度](native/docs/task-status.md)、[发布说明草稿](native/docs/release-notes.md)、[体积与性能原始测量](native/docs/size-and-performance.md)、[T00–T10交接](native/docs/handoffs/)。
+## License
 
-本项目自有代码采用 MIT；发行包包含 Qt LGPL、bit7z MPL、7-Zip LGPL/unRAR限制等第三方许可，**整个发行包不能简写成“全部MIT”**。第三方声明、许可文本及对应源码随候选提供，见 [打包声明](native/packaging/NOTICE.md)。Bandizip 为其权利人商标，本项目与其无关联。
+REAzip's own code is MIT. Distributed packages also contain Qt (LGPL), bit7z (MPL) and 7-Zip (LGPL, unRAR restriction) — the bundles as a whole are **not** “just MIT”. Third-party notices and corresponding source links ship with every package; see [packaging NOTICE](native/packaging/NOTICE.md). Bandizip is a trademark of its respective owner; this project is not affiliated with it.

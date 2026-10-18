@@ -22,11 +22,13 @@
 #endif
 namespace reazip {
 namespace {
-[[noreturn]] void io(){
+[[noreturn]] void io(int code=0){
 #ifdef _WIN32
-  const auto code=GetLastError();
+  if(!code)code=static_cast<int>(GetLastError());
+  if(!code)code=29; // ERROR_WRITE_FAULT
 #else
-  const auto code=errno;
+  if(!code)code=errno;
+  if(!code)code=EIO;
 #endif
   throw Error(ErrorCode::IoError,"Destination write or commit failed (OS "+std::to_string(code)+"); existing file retained");
 }
@@ -54,13 +56,38 @@ Owned child(Handle parent,const fs::path& name,bool directory,bool create){
   if(code<0){if(static_cast<ULONG>(code)==0xC000050BUL||static_cast<ULONG>(code)==0xC0000279UL)unsafe();io();}
   Owned owned(result);if(reparse(result))unsafe();return owned;
 }
+// The 7-Zip/bit7z output adapter (CStdOutStream::Write) computes the number of bytes it reports back
+// to 7-Zip as `tellp() - oldPos`. std::ostream::tellp() returns -1 without consulting the streambuf as
+// soon as the stream has badbit set, which is exactly what a short write produces. 7-Zip then receives
+// a near-4GiB unsigned value, underflows its remaining-size counter and re-enters Write with a bogus
+// length, which segfaults. To keep 7-Zip on its success path we never report a short write: the first
+// real failure is recorded, subsequent data is absorbed, and the caller inspects writeFailed() after
+// the 7-Zip call returns normally.
 class FileBuffer : public std::streambuf {
  public:Handle handle;explicit FileBuffer(Handle h):handle(h){}
- protected:std::streamsize xsputn(const char* p,std::streamsize n)override{std::streamsize count=0;while(count<n){DWORD written{};const auto amount=static_cast<DWORD>(std::min<std::streamsize>(n-count,0x7fffffff));if(!WriteFile(handle,p+count,amount,&written,nullptr)||!written)break;count+=written;}return count;}
+  bool writeFailed()const{return failed;}
+  int writeError()const{return error;}
+ protected:std::streamsize xsputn(const char* p,std::streamsize n)override{
+   if(n<=0)return 0;
+   if(failed){position+=n;return n;}
+   std::streamsize count=0;
+   while(count<n){
+     DWORD written{};const auto amount=static_cast<DWORD>(std::min<std::streamsize>(n-count,0x7fffffff));
+     if(!WriteFile(handle,p+count,amount,&written,nullptr)||!written){failed=true;error=static_cast<int>(GetLastError());position+=n;return n;}
+     count+=written;
+   }
+   position+=count;return count;
+ }
  int overflow(int ch)override{if(ch==traits_type::eof())return traits_type::not_eof(ch);const char c=static_cast<char>(ch);return xsputn(&c,1)==1?ch:traits_type::eof();}
- pos_type seekoff(off_type offset,std::ios_base::seekdir direction,std::ios_base::openmode)override{LARGE_INTEGER distance{},position{};distance.QuadPart=offset;return SetFilePointerEx(handle,distance,&position,direction==std::ios_base::beg?FILE_BEGIN:direction==std::ios_base::cur?FILE_CURRENT:FILE_END)?pos_type(position.QuadPart):pos_type(off_type(-1));}
+ pos_type seekoff(off_type offset,std::ios_base::seekdir direction,std::ios_base::openmode)override{
+   if(failed){if(direction==std::ios_base::beg)position=offset;else if(direction==std::ios_base::cur)position+=offset;return position;}
+   LARGE_INTEGER distance{},actual{};distance.QuadPart=offset;
+   if(!SetFilePointerEx(handle,distance,&actual,direction==std::ios_base::beg?FILE_BEGIN:direction==std::ios_base::cur?FILE_CURRENT:FILE_END)){failed=true;error=static_cast<int>(GetLastError());if(direction==std::ios_base::beg)position=offset;else if(direction==std::ios_base::cur)position+=offset;return position;}
+   position=actual.QuadPart;return position;
+ }
  pos_type seekpos(pos_type position,std::ios_base::openmode mode)override{return seekoff(off_type(position),std::ios_base::beg,mode);}
  int sync()override{return 0;}
+ private:bool failed=false;int error=0;off_type position=0;
 };
 #else
 using Handle=int;constexpr Handle invalid=-1;void closeHandle(Handle h){if(h>=0)::close(h);}
@@ -72,13 +99,34 @@ Owned child(Handle parent,const fs::path& name,bool directory,bool create){
   if(directory){struct stat attributes{};if(fstat(fd,&attributes)<0)io();if((attributes.st_uid!=geteuid()&&attributes.st_uid!=0)||((attributes.st_mode&(S_IWGRP|S_IWOTH))&&!(attributes.st_mode&S_ISVTX)))unsafe();}
   return result;
 }
+// See the Windows counterpart above: on ENOSPC we absorb the remaining bytes instead of reporting a
+// short write, so 7-Zip never sees a processedSize that it would turn into an unsigned underflow.
 class FileBuffer : public std::streambuf {
  public:int handle;explicit FileBuffer(int h):handle(h){}
- protected:std::streamsize xsputn(const char* p,std::streamsize n)override{std::streamsize count=0;while(count<n){const auto size=::write(handle,p+count,static_cast<std::size_t>(n-count));if(size<0&&errno==EINTR)continue;if(size<=0)break;count+=size;}return count;}
+  bool writeFailed()const{return failed;}
+  int writeError()const{return error;}
+ protected:std::streamsize xsputn(const char* p,std::streamsize n)override{
+   if(n<=0)return 0;
+   if(failed){position+=n;return n;}
+   std::streamsize count=0;
+   while(count<n){
+     const auto size=::write(handle,p+count,static_cast<std::size_t>(n-count));
+     if(size<0&&errno==EINTR)continue;
+     if(size<=0){failed=true;error=size<0?errno:EIO;position+=n;return n;}
+     count+=size;
+   }
+   position+=count;return count;
+ }
  int overflow(int ch)override{if(ch==traits_type::eof())return traits_type::not_eof(ch);const char c=static_cast<char>(ch);return xsputn(&c,1)==1?ch:traits_type::eof();}
- pos_type seekoff(off_type offset,std::ios_base::seekdir direction,std::ios_base::openmode)override{const auto position=lseek(handle,offset,direction==std::ios_base::beg?SEEK_SET:direction==std::ios_base::cur?SEEK_CUR:SEEK_END);return position<0?pos_type(off_type(-1)):pos_type(position);}
+ pos_type seekoff(off_type offset,std::ios_base::seekdir direction,std::ios_base::openmode)override{
+   if(failed){if(direction==std::ios_base::beg)position=offset;else if(direction==std::ios_base::cur)position+=offset;return position;}
+   const auto actual=lseek(handle,offset,direction==std::ios_base::beg?SEEK_SET:direction==std::ios_base::cur?SEEK_CUR:SEEK_END);
+   if(actual<0){failed=true;error=errno;if(direction==std::ios_base::beg)position=offset;else if(direction==std::ios_base::cur)position+=offset;return position;}
+   position=actual;return position;
+ }
  pos_type seekpos(pos_type position,std::ios_base::openmode mode)override{return seekoff(off_type(position),std::ios_base::beg,mode);}
  int sync()override{return 0;}
+ private:bool failed=false;int error=0;off_type position=0;
 };
 #endif
 }
@@ -113,7 +161,8 @@ void SecureOutput::file(const fs::path& relative,bool replace,const std::functio
   }};
   try{
     FileBuffer buffer(file.value);std::ostream stream(&buffer);
-    try{writer(stream);}catch(...){if(!stream)io();throw;}
+    try{writer(stream);}catch(...){if(buffer.writeFailed())io(buffer.writeError());if(!stream)io();throw;}
+    if(buffer.writeFailed())io(buffer.writeError());
     if(!stream)io();
 #ifdef _WIN32
     if(!FlushFileBuffers(file.value))io();

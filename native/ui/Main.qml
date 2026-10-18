@@ -206,7 +206,7 @@ ApplicationWindow {
     Sheet { id:progressDialog;title:window.t("loading","处理中");paper:window.card;ink:window.ink;edge:window.edge;closePolicy:Popup.NoAutoClose
         onRejected:if(window.api)window.api.cancelTask()
         ColumnLayout { width:parent.width;SafeLabel { text:Math.round(window.api?window.api.progress:0)+"%";color:window.ink;font.pixelSize:32;Layout.alignment:Qt.AlignHCenter } ProgressBar { Layout.fillWidth:true;value:window.api?window.api.progress/100:0 } Caption { text:window.api?window.t("state"+window.api.jobState,window.api.jobState):"" } }
-        footer:Action { text:window.t("cancelTask","取消任务");onClicked:if(window.api)window.api.cancelTask() }
+        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancelTask","取消任务");onClicked:if(window.api)window.api.cancelTask() } }
     }
     Sheet { id:deleteDialog;title:window.t("delete","删除");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Caption { text:window.t("deleteConfirm","确认删除所选归档条目？") } onAccepted:if(window.api)window.api.deleteSelected() }
     Sheet { id:errorDialog;title:window.t("failed","操作失败");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok
@@ -217,16 +217,40 @@ ApplicationWindow {
     Sheet { id:renameDialog;title:window.t("rename","重命名");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Field { id:renameText;width:parent.width;text:window.api?window.api.selectedName:"" } onAccepted:if(window.api)window.api.renameSelected(renameText.text) }
     Sheet { id:settingsDialog;title:window.t("settings","设置");width:Math.min(780,window.width-40);paper:window.card;ink:window.ink;edge:window.edge
         RowLayout { width:parent.width;spacing:18
-            ColumnLayout { Layout.preferredWidth:135;Layout.alignment:Qt.AlignTop;Repeater { model:[window.t("tabGeneral","常规"),window.t("tabAppearance","外观皮肤"),window.t("tabAssoc","文件关联"),window.t("tabLanguage","语言"),window.t("tabAbout","关于")];delegate:Action { required property int index;required property string modelData;text:modelData;Layout.fillWidth:true;primary:settingsPages.currentIndex===index;onClicked:settingsPages.currentIndex=index } } }
+            ColumnLayout { Layout.preferredWidth:135;Layout.alignment:Qt.AlignTop;Repeater { model:[window.t("tabGeneral","常规"),window.t("tabAppearance","外观皮肤"),window.t("tabAssoc","文件关联"),window.t("tabLanguage","语言"),window.t("tabAbout","关于")];delegate:Action { required property int index;required property string modelData;text:modelData;Layout.fillWidth:true;primary:settingsPages.currentIndex===index;soft:true;onClicked:settingsPages.currentIndex=index } } }
             StackLayout { id:settingsPages;Layout.fillWidth:true;Layout.preferredHeight:300
-                ColumnLayout { Caption { text:window.t("defaultExtractDir","默认解压位置") } Field { text:window.api?window.api.defaultExtractDir:"";Layout.fillWidth:true;onEditingFinished:if(window.api)window.api.setPreference("extractDir",text) } Caption { text:window.t("defaultArchiveDir","默认压缩位置") } Field { text:window.api?window.api.defaultArchiveDir:"";Layout.fillWidth:true;onEditingFinished:if(window.api)window.api.setPreference("archiveDir",text) } CheckBox { text:window.t("restoreTabs","启动时恢复上次标签");checked:window.api?window.api.restoreTabs:false;palette.text:window.ink;onToggled:if(window.api)window.api.setPreference("restoreTabs",checked) } ComboBox { model:["Auto","936","950","932","65001"];onActivated:if(window.api)window.api.setPreference("codepage",currentIndex===0?"":currentText) } Item { Layout.fillHeight:true } }
+                ColumnLayout { spacing:0
+                    RowLayout { Layout.fillWidth:true;Layout.topMargin:6;Layout.bottomMargin:12;spacing:12
+                        Caption { text:window.t("defaultExtractDir","默认解压位置");color:window.ink }
+                        Item { Layout.fillWidth:true }
+                        Field { objectName:"prefExtractDir";Layout.preferredWidth:260;text:window.api?window.api.defaultExtractDir:"";onEditingFinished:if(window.api)window.api.setPreference("extractDir",text) } }
+                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
+                    RowLayout { Layout.fillWidth:true;Layout.topMargin:12;Layout.bottomMargin:12;spacing:12
+                        Caption { text:window.t("defaultArchiveDir","默认压缩位置");color:window.ink }
+                        Item { Layout.fillWidth:true }
+                        Field { objectName:"prefArchiveDir";Layout.preferredWidth:260;text:window.api?window.api.defaultArchiveDir:"";onEditingFinished:if(window.api)window.api.setPreference("archiveDir",text) } }
+                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
+                    RowLayout { Layout.fillWidth:true;Layout.topMargin:12;Layout.bottomMargin:12;spacing:12
+                        ColumnLayout { spacing:2
+                            Caption { text:window.t("restoreTabs","启动时恢复上次标签");color:window.ink }
+                            Caption { text:window.t("restoreTabsDesc","重新打开上次浏览的压缩包");font.pixelSize:12 } }
+                        Item { Layout.fillWidth:true }
+                        CheckBox { objectName:"prefRestoreTabs";checked:window.api?window.api.restoreTabs:false;palette.text:window.ink;onToggled:if(window.api)window.api.setPreference("restoreTabs",checked) } }
+                    Rectangle { Layout.fillWidth:true;height:1;color:window.edge }
+                    RowLayout { Layout.fillWidth:true;Layout.topMargin:12;Layout.bottomMargin:12;spacing:12
+                        ColumnLayout { spacing:2
+                            Caption { text:window.t("legacyCodepage","旧 ZIP 文件名编码");color:window.ink }
+                            Caption { text:window.t("legacyCodepageDesc","解决中文/日文老压缩包乱码");font.pixelSize:12 } }
+                        Item { Layout.fillWidth:true }
+                        ComboBox { objectName:"prefCodepage";textRole:"label";valueRole:"value";implicitWidth:150;model:[{label:window.t("cpAuto","自动"),value:""},{label:"GBK (936)",value:"936"},{label:"Big5 (950)",value:"950"},{label:"Shift-JIS (932)",value:"932"},{label:"UTF-8 (65001)",value:"65001"}];onActivated:if(window.api)window.api.setPreference("codepage",currentValue) } }
+                    Item { Layout.fillHeight:true } }
                 ColumnLayout { GridLayout { columns:2;Repeater { model:window.api?window.api.themeList:[];delegate:Action { required property var modelData;text:modelData.name;Layout.fillWidth:true;onClicked:if(window.api)window.api.setPreference("skin",modelData.id) } } } Action { text:window.t("openSkinDir","打开皮肤目录");onClicked:if(window.api)window.api.openThemeDirectory() } Action { text:window.t("rescan","重新扫描");onClicked:if(window.api)window.api.rescanThemes() } Caption { text:window.t("themeCompatibility","JSON 颜色变量兼容；追加 CSS 不执行");wrapMode:Text.Wrap;Layout.fillWidth:true } Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:"ZIP · 7Z · RAR · TAR · GZ · ISO" } Caption { text:window.t("platformIntegration","系统集成状态以平台实现为准");wrapMode:Text.Wrap;Layout.fillWidth:true } Action { text:window.t("applyDefault","注册关联并打开默认应用设置");enabled:!!window.api;onClicked:window.api.applyAssociations() } Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:window.t("uiLanguage","界面语言") } ComboBox { model:window.api?window.api.languages:[];textRole:"name";onActivated:if(window.api)window.api.setPreference("language",model[currentIndex].code) } Caption { text:window.t("langHint","支持18种语言") } Item { Layout.fillHeight:true } }
                 ColumnLayout { SafeLabel { text:"REAzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/REAzip" } Item { Layout.fillHeight:true } }
             }
         }
-        footer:Action { text:window.t("done","完成");onClicked:settingsDialog.close() }
+        footer:RowLayout { Item { Layout.fillWidth:true } Action { objectName:"settingsDone";text:window.t("done","完成");primary:true;onClicked:settingsDialog.close() } }
     }
     Popup { id:toast;anchors.centerIn:parent;width:Math.min(600,window.width-40);background:Rectangle{color:window.ink;radius:10} Label{width:parent.width;text:window.toastText;color:window.paper;wrapMode:Text.Wrap} Timer{id:toastTimer;interval:4000;onTriggered:toast.close()} }
     Connections { target:window.api;ignoreUnknownSignals:true
