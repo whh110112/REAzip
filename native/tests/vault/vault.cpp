@@ -37,7 +37,7 @@ int main(int argc,char** argv){
   if(vault.protection()!="permissions")FAIL(4,"non-Windows vault protection is not permissions");
 #endif
 #ifdef Q_OS_WIN
-  // Generate a legacy REAzip DPAPI payload independently of Vault::save().
+  // Generate a legacy DPAPI payload independently of Vault::save().
   const auto legacyRoot=work.path()+"/legacy";QDir().mkpath(legacyRoot);
   const QJsonArray legacyEntries{QJsonObject{{"id","old-id"},{"name","old-name"},{"secret","old-test-secret"},{"updated","2026-10-18"},{"stamp",1}}};
   auto legacyPlain=QJsonDocument(QJsonObject{{"entries",legacyEntries}}).toJson(QJsonDocument::Compact);

@@ -1,7 +1,7 @@
 name: Native foundation
 on:
   push:
-    branches: [main, native-migration, codex/zenzip-0.4.0]
+    branches: [main, native-migration]
     paths: ['native/**', '.github/workflows/native-foundation.yml']
   workflow_dispatch:
 permissions:
@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Check current branding and compatibility inventory
+        run: python native/tools/check-branding.py
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

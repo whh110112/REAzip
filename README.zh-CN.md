@@ -4,11 +4,11 @@
 
 一款安静、简洁的跨平台压缩包管理器。以原生 7-Zip 为核心，用清晰的 Qt Quick 界面完成打开、压缩与解压。
 
-**版本 0.4.0** · Windows、macOS、Linux · x64 与 ARM64
+**版本 0.4.1** · Windows、macOS、Linux · x64 与 ARM64
 
-[下载](https://github.com/whh110112/ZENzip/releases/tag/v0.4.0) · [安装指南](native/docs/installation-guide.md) · [已知限制](native/docs/known-limitations.md)
+[下载](https://github.com/whh110112/ZENzip/releases/tag/v0.4.1) · [安装指南](native/docs/installation-guide.md) · [已知限制](native/docs/known-limitations.md)
 
-![ZENzip 0.4.0 简体中文界面](docs/screenshots/zh-CN.png)
+![ZENzip 简体中文界面](docs/screenshots/zh-CN.png)
 
 ## 少一点纷扰
 
@@ -18,7 +18,7 @@
 - 六款素雅皮肤：素纸、夜墨、砂庭、青石、薄雾、竹影。支持 18 种界面语言与 RTL。
 - 常用密码保存与桌面集成。Windows 密码库由 DPAPI 加密；macOS/Linux 仅靠文件权限保护，**不加密**。
 
-使用 C++17、Qt 6.8.3 和 7-Zip 26.04，可离线运行，无需 Electron 或 Node.js。原名 REAzip，兼容已有原生配置及 Windows 加密密码库。
+使用 C++17、Qt 6.8.3 和 7-Zip 26.04，可离线运行，无需 Electron 或 Node.js。兼容已有原生配置及 Windows 加密密码库。
 
 ## 18 种界面语言
 
@@ -30,7 +30,7 @@
 
 Windows 安装包未代码签名；macOS 为 ad-hoc 签名、未公证。Linux deb 需要 glibc 2.39 或更新版本；macOS 需要 13 或更新版本。
 
-Windows 使用经典右键菜单，在 Windows 11 中位于“显示更多选项”。本版不包含 Windows 11 现代菜单、Finder/Nautilus 扩展、自解压包创建、损坏修复和自动更新。功能边界见[功能矩阵](native/docs/feature-parity.md)，实测范围见 [0.4.0 验证报告](docs/verification-0.4.0.md)。
+Windows 使用经典右键菜单，在 Windows 11 中位于“显示更多选项”。本版不包含 Windows 11 现代菜单、Finder/Nautilus 扩展、自解压包创建、损坏修复和自动更新。功能边界见[功能矩阵](native/docs/feature-parity.md)，实测范围见 [0.4.1 验证报告](docs/verification-0.4.1.md)。
 
 ## 构建与参与
 

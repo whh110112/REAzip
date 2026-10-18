@@ -1,0 +1,54 @@
+name: Publish verified native release
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_run_id:
+        description: Successful Native candidate run on main
+        required: true
+        type: string
+      source_commit:
+        description: Exact source SHA of the verified main build
+        required: true
+        type: string
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: native-stable-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test release promotion rejection paths
+        run: python native/tests/release/promotion.py
+      - name: Download candidate artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.candidate_run_id }}
+          github-token: ${{ github.token }}
+          pattern: native-checks-*
+          path: .native-build/release-candidates
+      - name: Verify and publish stable packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
+        run: python native/tools/publish-native.py --candidate-dir .native-build/release-candidates --run-id "$CANDIDATE_RUN_ID" --output .native-build/promotion
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-release-verification
+          path: |
+            .native-build/promotion/promotion-verification.json
+            .native-build/promotion/SHA256SUMS.txt
+            .native-build/promotion/RELEASE-NOTES.md
+          if-no-files-found: ignore

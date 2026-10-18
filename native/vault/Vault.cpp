@@ -28,7 +28,7 @@ QString defaultMode(){
 QString now(){return QDateTime::currentDateTimeUtc().toString(Qt::ISODate);}
 bool text(const QString& value,int limit){if(value.isEmpty()||value.size()>limit)return false;for(const auto c:value)if(c.unicode()<0x20||c.unicode()==0x7f)return false;return true;}
 #ifdef Q_OS_WIN
-// Keep REAzip v0.3.1 entropy for existing encrypted vaults.
+// Keep the original native entropy for existing encrypted vaults.
 // Fixed application entropy: a DPAPI blob copied out of the vault file cannot be decrypted by
 // another program that merely calls CryptUnprotectData with no entropy.
 DATA_BLOB entropy(){

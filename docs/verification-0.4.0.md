@@ -4,7 +4,7 @@ This report separates automated acceptance from interactive desktop testing. Ver
 
 ## Release changes
 
-- REAzip is now ZENzip: executable names, QML module, package names, desktop identifiers and visible branding are updated.
+- ZENzip branding is applied consistently: executable names, QML module, package names, desktop identifiers and visible branding are updated.
 - Paper / Ink / Sand / Slate / Mist / Bamboo use restrained neutral colors and readable controls. Saved theme IDs remain compatible.
 - Existing native profiles are reused in place. Windows DPAPI entropy and installer upgrade identity are deliberately preserved.
 - Legacy recovery journals are accepted. Owned legacy Windows archive handlers are redirected to ZENzip without changing the user's default-app choice.
@@ -16,7 +16,7 @@ Source checkpoint: `30726b4d67dfdb74422a44221fd379ab7bb22320`.
 - [Native candidate 39125212344](https://github.com/whh110112/ZENzip/actions/runs/39125212344): Windows, macOS and Linux, each x64/ARM64, all successful; **15/15 CTest per target**, isolated packaged application/worker smoke checks and package-format aggregation.
 - [Native foundation 39125212364](https://github.com/whh110112/ZENzip/actions/runs/39125212364): six native engine targets successful.
 - Windows x64 and ARM64: actual installer registration under HKCU, ProgID/open-with/icons/classic verbs, opening an archive and extracting via the registered command, followed by uninstall registration cleanup. The test discovered and fixed an existing `extract_here` request that omitted `entryIds` and therefore opened the archive without extracting it.
-- Linux x64: install the published REAzip 0.3.1-dev deb into an isolated dpkg root, replace it with ZENzip 0.4.0, confirm old executable/desktop entry/payload removal, run the installed application, then uninstall. Dependency checks are intentionally disabled in this isolated metadata/transition test; ordinary package smoke checks run separately.
+- Linux x64: install the published 0.3.1 development deb into an isolated dpkg root, replace it with ZENzip 0.4.0, confirm old executable/desktop entry/payload removal, run the installed application, then uninstall. Dependency checks are intentionally disabled in this isolated metadata/transition test; ordinary package smoke checks run separately.
 - Legacy Windows DPAPI vaults, owned Windows handler aliases, and old interrupted archive journals have explicit regression checks. The journal check uses a real interrupted transaction before converting its name/header to the legacy representation.
 
 The final public packages are rebuilt on `main`; their manifests identify the exact release source commit and per-file hashes. This candidate checkpoint and the README capture checkpoint are retained as traceable review evidence.
