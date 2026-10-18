@@ -4,23 +4,11 @@
 
 一款以完整 7-Zip 原生库为核心的跨平台压缩包管理器，提供多标签、六主题的 Qt Quick 界面。REAzip 把久经考验的 7-Zip 26.04 引擎和 Bandizip 普及的日常操作流——多标签、任务队列、智能解压、逐条目冲突处理——结合在一起，同时保持功能面诚实：界面上没有假按钮。
 
-> **状态：0.3.1-dev 预发布（pre-release）。** 六个原生目标在同一提交上构建并测试；哪些已验证、哪些未验证，见[验收报告](native/docs/acceptance-report.md)。v0.2.1 是旧 Electron 版。
+> **状态：0.3.1-dev 开发版。** 六个原生目标在同一提交上构建并测试；哪些已验证、哪些未验证，见[验收报告](native/docs/acceptance-report.md)。v0.2.1 是旧 Electron 版。
 
-| 主窗口（浅色） | 新建压缩 | 解压 |
-|---|---|---|
-| ![主窗口](native/design/native-reference/light-en-archive.png) | ![新建压缩](native/design/native-reference/light-en-create.png) | ![解压](native/design/native-reference/light-en-extract.png) |
+![REAzip 中文界面](native/design/native-reference/light-zh-CN-empty.png)
 
-| 密码挑战 | 同名冲突 | 设置 |
-|---|---|---|
-| ![密码](native/design/native-reference/light-en-password.png) | ![冲突](native/design/native-reference/light-en-conflict.png) | ![设置](native/design/native-reference/light-de-settings.png) |
-
-| Glass 主题 | macOS 深色主题 | Material 主题 | Sleep 主题 |
-|---|---|---|---|
-| ![Glass](native/design/native-reference/glass-en-archive.png) | ![macOS 深色](native/design/native-reference/mac-dark-en-archive.png) | ![Material](native/design/native-reference/material-en-archive.png) | ![Sleep](native/design/native-reference/sleep-en-archive.png) |
-
-RTL（阿拉伯语）与简体中文预览：![RTL](native/design/native-reference/light-ar-archive.png) ![中文](native/design/native-reference/light-zh-CN-empty.png)
-
-<sub>所有截图均为 0.3.0-dev 候选版以 0.5 缩放运行时的真实抓图，每张的 SHA-256 记录在 [`native/design/native-reference/manifest.json`](native/design/native-reference/manifest.json)。它们拍摄于本次设置页布局修复之前，因此设置/外观两张仍是旧的底部按钮对齐方式，将于下一个通过验收的构建重新抓取。</sub>
+<sub>截图为 0.3.0-dev 的简体中文界面，并非 0.3.1-dev 的完整功能展示。当前验证范围与待验项目见[验收报告](native/docs/acceptance-report.md)。</sub>
 
 ## 特性
 
@@ -55,9 +43,9 @@ RTL（阿拉伯语）与简体中文预览：![RTL](native/design/native-referen
 
 ## 下载
 
-预发布 [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) 提供六目标安装包：Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + deb + tar.gz。每个包附带版本、源码 SHA、CPU 架构、逐文件 SHA-256、签名状态与许可声明，另有 `SHA256SUMS.txt` 覆盖全部附件。
+开发版 [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) 提供六目标安装包：Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + deb + tar.gz。每个包附带版本、源码 SHA、CPU 架构、逐文件 SHA-256、签名状态与许可声明，另有 `SHA256SUMS.txt` 覆盖全部附件。
 
-标为**预发布**是有意的：自动化六目标门禁会在每个目标上构建并测试，但[验收报告](native/docs/acceptance-report.md)里的人工项（并排视觉比对、真实桌面关联与菜单、拖出、大包压力）尚未执行。
+请按**开发版**试用：自动化六目标门禁会在每个目标上构建并测试，但[验收报告](native/docs/acceptance-report.md)里的人工项（并排视觉比对、真实桌面关联与菜单、拖出、大包压力）尚未执行。
 
 - Windows 未代码签名；macOS 为 ad-hoc 签名、未公证。
 - Linux deb 需要 glibc ≥ 2.39（Ubuntu 24.04 构建）；macOS 部署目标 13.0。

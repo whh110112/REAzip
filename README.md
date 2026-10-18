@@ -4,23 +4,11 @@
 
 A cross-platform archive manager with a native 7-Zip core and a tabbed, themeable Qt Quick interface. REAzip pairs the proven 7-Zip 26.04 engine with the everyday workflow Bandizip popularized — tabs, queues, smart extraction and per-entry conflict control — while keeping the whole feature surface honest: nothing in the UI is a fake button.
 
-> **Status: 0.3.0-dev pre-release.** Six native targets build and pass 14/14 tests each on the same commit; the [acceptance report](native/docs/acceptance-report.md) states exactly what is verified and what is not. v0.2.1 is the previous Electron build.
+> **Status: 0.3.1-dev development build.** Six native targets build and pass 15/15 tests each on the same commit; the [acceptance report](native/docs/acceptance-report.md) states exactly what is verified and what is not. v0.2.1 is the previous Electron build.
 
-| Main window (light) | Create archive | Extract |
-|---|---|---|
-| ![Main window](native/design/native-reference/light-en-archive.png) | ![Create](native/design/native-reference/light-en-create.png) | ![Extract](native/design/native-reference/light-en-extract.png) |
+![REAzip English interface](native/design/native-reference/light-en-archive.png)
 
-| Password challenge | Name conflict | Settings |
-|---|---|---|
-| ![Password](native/design/native-reference/light-en-password.png) | ![Conflict](native/design/native-reference/light-en-conflict.png) | ![Settings](native/design/native-reference/light-de-settings.png) |
-
-| Glass theme | macOS dark theme | Material theme | Sleep theme |
-|---|---|---|---|
-| ![Glass](native/design/native-reference/glass-en-archive.png) | ![macOS dark](native/design/native-reference/mac-dark-en-archive.png) | ![Material](native/design/native-reference/material-en-archive.png) | ![Sleep](native/design/native-reference/sleep-en-archive.png) |
-
-RTL (Arabic) and Simplified Chinese previews: ![RTL](native/design/native-reference/light-ar-archive.png) ![zh-CN](native/design/native-reference/light-zh-CN-empty.png)
-
-<sub>All screenshots are real captures of the 0.3.0-dev candidate running at 0.5 scale; each file is pinned by SHA-256 in [`native/design/native-reference/manifest.json`](native/design/native-reference/manifest.json). They were taken before the settings-layout fix in this change set, so the Settings/Appearance shots still show the old footer alignment and will be recaptured once the next build is green.</sub>
+<sub>English interface captured from 0.3.0-dev. This preview predates 0.3.1-dev; see the [acceptance report](native/docs/acceptance-report.md) for current verification and remaining checks.</sub>
 
 ## Highlights
 
@@ -55,9 +43,9 @@ Comparison is limited to publicly documented capabilities and REAzip's own accep
 
 ## Downloads
 
-The pre-release [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) carries the six-target builds: Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + deb + tar.gz. Every package ships with its version, source SHA, architecture, per-binary SHA-256, signature status and license notices; `SHA256SUMS.txt` covers the release assets.
+The development release [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) carries the six-target builds: Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + deb + tar.gz. Every package ships with its version, source SHA, architecture, per-binary SHA-256, signature status and license notices; `SHA256SUMS.txt` covers the release assets.
 
-It is flagged **pre-release** on purpose: the automated six-target gate builds and tests every target, but the manual acceptance items listed in the [acceptance report](native/docs/acceptance-report.md) (side-by-side visual review, real desktop association and menus, drag-out, large-archive stress) have not been run yet.
+Treat this as a **development build**: the automated six-target gate builds and tests every target, but the manual acceptance items listed in the [acceptance report](native/docs/acceptance-report.md) (side-by-side visual review, real desktop association and menus, drag-out, large-archive stress) have not been run yet.
 
 - Windows binaries are **unsigned**; macOS builds are ad-hoc signed and **not notarized**.
 - Linux `deb` requires glibc ≥ 2.39 (built on Ubuntu 24.04); macOS deployment target is 13.0.
