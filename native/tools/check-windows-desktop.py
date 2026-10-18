@@ -10,8 +10,8 @@ def value(path,name=''):
 
 classes='Software\\Classes\\'
 if a.uninstalled:
-    assert value(classes+'ZENzip.Archive','OwnerExecutable') != str(exe)
-    assert value(classes+'SystemFileAssociations\\.zip\\shell\\ZENzip.extract_here','OwnerExecutable') != str(exe)
+    assert value(classes+'ZENzip.Archive','OwnerExecutable') is None
+    assert value(classes+'SystemFileAssociations\\.zip\\shell\\ZENzip.extract_here','OwnerExecutable') is None
     assert value('Software\\RegisteredApplications','ZENzip') is None
     print('Owned per-user registration removed after uninstall PASS')
 else:

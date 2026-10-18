@@ -2,7 +2,7 @@
   "name": "zenzip",
   "productName": "ZENzip",
   "version": "0.2.1",
-  "description": "Modern open-source archive manager (Bandizip-inspired)",
+  "description": "Legacy Electron implementation of ZENzip; the native application is built from native/",
   "main": "main.js",
   "author": "whh110112",
   "license": "MIT",
@@ -19,7 +19,7 @@
   "build": {
     "appId": "com.zenzip.app",
     "productName": "ZENzip",
-    "copyright": "Copyright © 2026 whh110112",
+    "copyright": "Copyright 漏 2026 whh110112",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -39,8 +39,19 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64", "arm64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
@@ -56,8 +67,20 @@
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] },
-        { "target": "zip", "arch": ["x64", "arm64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
     },
@@ -66,9 +89,25 @@
       "synopsis": "Modern open-source archive manager",
       "maintainer": "whh110112",
       "target": [
-        { "target": "AppImage", "arch": ["x64", "arm64"] },
-        { "target": "deb", "arch": ["x64"] },
-        { "target": "tar.gz", "arch": ["x64"] }
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     },

@@ -24,7 +24,7 @@
 
 Windows 安装包未代码签名；macOS 为 ad-hoc 签名、未公证。Linux deb 需要 glibc 2.39 或更新版本；macOS 需要 13 或更新版本。
 
-Windows 使用经典右键菜单，在 Windows 11 中位于“显示更多选项”。本版不包含 Windows 11 现代菜单、Finder/Nautilus 扩展、自解压包创建、损坏修复和自动更新。功能边界见[功能矩阵](native/docs/feature-parity.md)，实测范围见 [0.4.0 验证报告](native/docs/verification-0.4.0.md)。
+Windows 使用经典右键菜单，在 Windows 11 中位于“显示更多选项”。本版不包含 Windows 11 现代菜单、Finder/Nautilus 扩展、自解压包创建、损坏修复和自动更新。功能边界见[功能矩阵](native/docs/feature-parity.md)，实测范围见 [0.4.0 验证报告](docs/verification-0.4.0.md)。
 
 ## 构建与参与
 

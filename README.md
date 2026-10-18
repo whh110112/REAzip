@@ -24,7 +24,7 @@ C++17, Qt 6.8.3 and 7-Zip 26.04. Runs offline without Electron or Node.js. Previ
 
 Windows packages are unsigned. macOS packages are ad-hoc signed and not notarized. Linux deb requires glibc 2.39 or later; macOS requires 13 or later.
 
-Windows uses the classic context menu, under “Show more options” on Windows 11. Modern Windows 11 menus, Finder/Nautilus extensions, SFX creation, archive repair and an auto-updater are not included. See the [feature matrix](native/docs/feature-parity.md) and [0.4.0 verification report](native/docs/verification-0.4.0.md) for the tested scope.
+Windows uses the classic context menu, under “Show more options” on Windows 11. Modern Windows 11 menus, Finder/Nautilus extensions, SFX creation, archive repair and an auto-updater are not included. See the [feature matrix](native/docs/feature-parity.md) and [0.4.0 verification report](docs/verification-0.4.0.md) for the tested scope.
 
 ## Build and contribute
 
