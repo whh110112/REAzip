@@ -28,6 +28,7 @@ QString defaultMode(){
 QString now(){return QDateTime::currentDateTimeUtc().toString(Qt::ISODate);}
 bool text(const QString& value,int limit){if(value.isEmpty()||value.size()>limit)return false;for(const auto c:value)if(c.unicode()<0x20||c.unicode()==0x7f)return false;return true;}
 #ifdef Q_OS_WIN
+// Keep REAzip v0.3.1 entropy for existing encrypted vaults.
 // Fixed application entropy: a DPAPI blob copied out of the vault file cannot be decrypted by
 // another program that merely calls CryptUnprotectData with no entropy.
 DATA_BLOB entropy(){
@@ -38,7 +39,7 @@ bool transform(const QByteArray& input,bool protect,QByteArray& output){
   DATA_BLOB in{static_cast<DWORD>(input.size()),reinterpret_cast<BYTE*>(const_cast<char*>(input.constData()))};
   auto salt=entropy();DATA_BLOB out{};
   const auto ok=protect
-    ?CryptProtectData(&in,L"REAzip password vault",&salt,nullptr,nullptr,CRYPTPROTECT_UI_FORBIDDEN,&out)
+    ?CryptProtectData(&in,L"ZENzip password vault",&salt,nullptr,nullptr,CRYPTPROTECT_UI_FORBIDDEN,&out)
     :CryptUnprotectData(&in,nullptr,&salt,nullptr,nullptr,CRYPTPROTECT_UI_FORBIDDEN,&out);
   if(!ok)return false;
   output=QByteArray(reinterpret_cast<const char*>(out.pbData),static_cast<int>(out.cbData));

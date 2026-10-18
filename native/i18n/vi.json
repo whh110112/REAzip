@@ -164,5 +164,6 @@
   "registeredMac": "Loại tệp được khai báo trong gói ứng dụng. Đặt mặc định trong Finder: Get Info → Open With → Change All.",
   "registeredLinux": "Đã cài mục desktop và đặt làm trình xử lý mặc định cho các loại tệp hỗ trợ.",
   "vaultWriteFailed": "Không lưu được mật khẩu",
-  "archivePassword": "Mật khẩu tệp nén"
+  "archivePassword": "Mật khẩu tệp nén",
+  "encryptionNone": "Không"
 }

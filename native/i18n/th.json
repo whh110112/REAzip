@@ -164,5 +164,6 @@
   "registeredMac": "ชนิดไฟล์ประกาศไว้ในชุดแอป ตั้งค่าเริ่มต้นใน Finder: Get Info → Open With → Change All",
   "registeredLinux": "ติดตั้งรายการเดสก์ท็อปและตั้งเป็นตัวจัดการเริ่มต้นสำหรับชนิดไฟล์ที่รองรับแล้ว",
   "vaultWriteFailed": "บันทึกรหัสผ่านไม่ได้",
-  "archivePassword": "รหัสผ่านของไฟล์"
+  "archivePassword": "รหัสผ่านของไฟล์",
+  "encryptionNone": "ไม่มี"
 }

@@ -1,4 +1,4 @@
-# REAzip 0.3.1-dev 原生候选发布说明
+# ZENzip 0.3.1-dev 原生候选发布说明
 
 **这是 pre-release（候选预发布），不是 T10 正式验收通过版本。** 自动化门禁在本次提交上跑六目标；人工项仍未运行：设置页并排截图与缩放/长译文目视签收、真实桌面文件关联与右键菜单点击、跨应用拖出、大包压力与干净物理机冷启动。详见[验收报告](acceptance-report.md)与[已知限制](known-limitations.md)。
 
@@ -10,11 +10,11 @@
 - macOS / Linux：没有免依赖的系统密钥库接入，因此以 `0600` 保存并在界面显示"未加密，仅受文件权限保护"——不把权限保护说成加密。
 - 文件是原子写入；损坏文件改名为 `vault.json.corrupt-<ms>` 保留；其他平台写入的 DPAPI 库在本机不可解密时整库置为只读，拒绝覆盖；便携格式（`protection: permissions`）在 Windows 上首次保存即升级为 DPAPI。
 
-**Windows 经典右键菜单。** 每个受支持扩展名的 `SystemFileAssociations` 下注册"解压到此处"和"解压到…"，带图标、`MultiSelectModel`（前者可多选）与所有权标记；`*` 与 `Directory` 下注册"添加到压缩包"，同样带图标与多选。扩展名从 11 个扩到 22 个（zipx/cab/lz/lzma/zst/zstd/arj/lzh/tbz/txz 等）。另注册 `Applications\reazip.exe`（`FriendlyAppName`、`DefaultIcon`、`SupportedTypes`），让"打开方式"列表里能看到 REAzip。**Windows 11 的现代右键菜单未实现**：它需要 `IExplorerCommand` COM 服务器 + 包标识 + 代码签名，本轮不塞假入口，动词出现在"显示更多选项"里。
+**Windows 经典右键菜单。** 每个受支持扩展名的 `SystemFileAssociations` 下注册"解压到此处"和"解压到…"，带图标、`MultiSelectModel`（前者可多选）与所有权标记；`*` 与 `Directory` 下注册"添加到压缩包"，同样带图标与多选。扩展名从 11 个扩到 22 个（zipx/cab/lz/lzma/zst/zstd/arj/lzh/tbz/txz 等）。另注册 `Applications\zenzip.exe`（`FriendlyAppName`、`DefaultIcon`、`SupportedTypes`），让"打开方式"列表里能看到 ZENzip。**Windows 11 的现代右键菜单未实现**：它需要 `IExplorerCommand` COM 服务器 + 包标识 + 代码签名，本轮不塞假入口，动词出现在"显示更多选项"里。
 
 **三平台文件关联。**
 
-- Windows：ProgID `REAzip.Archive` + `Capabilities\FileAssociations` + `RegisteredApplications` + 每扩展名 `OpenWithProgids`；注册后打开系统"默认应用"设置，不代用户改默认值。
+- Windows：ProgID `ZENzip.Archive` + `Capabilities\FileAssociations` + `RegisteredApplications` + 每扩展名 `OpenWithProgids`；注册后打开系统"默认应用"设置，不代用户改默认值。
 - macOS：`Info.plist` 增加 `CFBundleTypeExtensions`、`LSHandlerRank=Default`、`LSSupportsOpeningDocumentsInPlace`，UTI 扩到 9 个（zip/7z/rar/tar/gz/bz2/xz/iso/wim）。默认处理程序只能由用户在 Finder「显示简介 → 打开方式 → 全部更改」确认。
 - Linux：`.desktop` 增加 `TryExec`、`Actions`（解压到此处 / 解压到…）、15 个 MIME 类型，并在写入后调用 `update-desktop-database` 与 `xdg-mime default`，所以是"已选中"而不只是"已安装"。
 - 设置页"文件关联"现在显示真实状态（ProgID、动词数量与图标数、默认应用项、Win11 说明；Linux 上为 desktop 项状态与 `xdg-mime` 查询结果），可随时刷新。

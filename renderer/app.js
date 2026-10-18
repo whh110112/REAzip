@@ -2,7 +2,7 @@
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
-const T = (k, f) => (window.REAzipI18n ? REAzipI18n.t(k, f) : (f || k));
+const T = (k, f) => (window.ZENzipI18n ? ZENzipI18n.t(k, f) : (f || k));
 
 const ASSOC_ALL = ['zip', '7z', 'rar', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'cab', 'iso', 'lzh', 'arj', 'jar', 'apk', 'deb', 'rpm', 'wim', 'msi', '001'];
 
@@ -111,8 +111,8 @@ function closeTab(id) {
 /* ---------- 渲染 ---------- */
 function render() {
   const t = activeTab();
-  document.title = t ? `${t.name} — REAzip` : 'REAzip';
-  $('#win-title').textContent = t ? t.name : 'REAzip';
+  document.title = t ? `${t.name} — ZENzip` : 'ZENzip';
+  $('#win-title').textContent = t ? t.name : 'ZENzip';
   renderTabs();
   renderCrumbs(t);
   renderTable(t);
@@ -560,14 +560,14 @@ function showSettingsTab(tab) {
 
 function renderSkinGrid() {
   const grid = $('#skin-grid');
-  const skins = window.REAzipSkins.allSkins();
+  const skins = window.ZENzipSkins.allSkins();
   const current = S.settings.skin || 'light';
   grid.innerHTML = skins.map((s) => {
     const v = s.vars || {};
     const bg = v['--bg'] || '#fff';
     const surf = v['--surface'] || '#eee';
     const accent = v['--accent'] || '#378ADD';
-    const isCustom = !window.REAzipSkins.BUILTIN_SKINS.some((b) => b.id === s.id);
+    const isCustom = !window.ZENzipSkins.BUILTIN_SKINS.some((b) => b.id === s.id);
     return `<button class="skin-card ${s.id === current ? 'on' : ''}" data-skin="${escapeAttr(s.id)}">
       <span class="skin-swatch">
         <i style="background:${escapeAttr(bg)}"></i>
@@ -582,7 +582,7 @@ function renderSkinGrid() {
 
 function renderLanguageSelect() {
   const sel = $('#s-language');
-  sel.innerHTML = REAzipI18n.languageList().map(([code, label]) => `<option value="${code}">${label}</option>`).join('');
+  sel.innerHTML = ZENzipI18n.languageList().map(([code, label]) => `<option value="${code}">${label}</option>`).join('');
   sel.value = S.settings.language || 'zh-CN';
 }
 
@@ -608,11 +608,11 @@ async function init() {
 
   try {
     const custom = await api.listSkins();
-    window.REAzipSkins.setCustomSkins(custom);
+    window.ZENzipSkins.setCustomSkins(custom);
   } catch (e) { /* ignore */ }
 
-  REAzipI18n.applyLanguage(S.settings.language || 'zh-CN');
-  window.REAzipSkins.applySkin(S.settings.skin || 'light');
+  ZENzipI18n.applyLanguage(S.settings.language || 'zh-CN');
+  window.ZENzipSkins.applySkin(S.settings.skin || 'light');
 
   bindProgress();
 
@@ -731,7 +731,7 @@ async function init() {
     const card = e.target.closest('.skin-card');
     if (!card) return;
     const id = card.dataset.skin;
-    const skin = window.REAzipSkins.applySkin(id);
+    const skin = window.ZENzipSkins.applySkin(id);
     S.settings.skin = id;
     await api.setSettings({ skin: id, theme: skin.base === 'dark' ? 'sleep' : 'light' });
     renderSkinGrid();
@@ -740,7 +740,7 @@ async function init() {
   $('#s-open-skins').onclick = async () => { await api.openSkinDir(); };
   $('#s-rescan-skins').onclick = async () => {
     const custom = await api.listSkins();
-    window.REAzipSkins.setCustomSkins(custom);
+    window.ZENzipSkins.setCustomSkins(custom);
     renderSkinGrid();
     toast('↻');
   };
@@ -748,7 +748,7 @@ async function init() {
   $('#s-language').addEventListener('change', async (e) => {
     const lang = e.target.value;
     S.settings.language = lang;
-    REAzipI18n.applyLanguage(lang);
+    ZENzipI18n.applyLanguage(lang);
     await api.setSettings({ language: lang });
     render();
     renderSkinGrid();

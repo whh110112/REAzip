@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * REAzip 皮肤接口
+ * ZENzip 皮肤接口
  * ------------------------------------------------------------
  * 内置皮肤 + 自定义皮肤（用户目录 skins/*.json）。
  *
@@ -162,4 +162,4 @@ function allSkins() {
   return BUILTIN_SKINS.concat(customSkins);
 }
 
-window.REAzipSkins = { BUILTIN_SKINS, SKIN_VARS, applySkin, setCustomSkins, allSkins, skinById, get current() { return currentSkin; } };
+window.ZENzipSkins = { BUILTIN_SKINS, SKIN_VARS, applySkin, setCustomSkins, allSkins, skinById, get current() { return currentSkin; } };

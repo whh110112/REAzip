@@ -17,8 +17,8 @@ jobs:
           python-version: '3.12'
       - run: sudo apt-get update && sudo apt-get install -y gdb
       - run: python native/bootstrap/dependencies.py --arch x64
-      - run: cmake -S native -B .native-build/diagnostics -DCMAKE_BUILD_TYPE=Debug -DREAZIP_BUILD_GUI=OFF -DREAZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/x64"
-      - run: cmake --build .native-build/diagnostics --target reazip-disk-test --parallel 3
+      - run: cmake -S native -B .native-build/diagnostics -DCMAKE_BUILD_TYPE=Debug -DZENZIP_BUILD_GUI=OFF -DZENZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/x64"
+      - run: cmake --build .native-build/diagnostics --target zenzip-disk-test --parallel 3
       - run: ctest --test-dir .native-build/diagnostics -R native-disk-errors --output-on-failure
       - uses: actions/upload-artifact@v4
         if: always()

@@ -11,10 +11,10 @@ BEGIN
   BLOCK "040904b0"
   BEGIN
    VALUE "CompanyName", "whh110112"
-   VALUE "FileDescription", "REAzip Native"
-   VALUE "FileVersion", "@REAZIP_VERSION_FULL@"
-   VALUE "ProductName", "REAzip"
-   VALUE "ProductVersion", "@REAZIP_VERSION_FULL@"
+   VALUE "FileDescription", "ZENzip Native"
+   VALUE "FileVersion", "@ZENZIP_VERSION_FULL@"
+   VALUE "ProductName", "ZENzip"
+   VALUE "ProductVersion", "@ZENZIP_VERSION_FULL@"
   END
  END
  BLOCK "VarFileInfo"
@@ -22,3 +22,5 @@ BEGIN
   VALUE "Translation", 0x0409, 1200
  END
 END
+
+101 ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/zenzip.ico"

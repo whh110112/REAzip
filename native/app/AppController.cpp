@@ -29,7 +29,7 @@ AppController::AppController(QString worker,QString engine,QObject* parent,QStri
 #else
     const auto base=QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
 #endif
-    for(const auto& name:{"reazip","REAzip"})if(QFileInfo::exists(base+'/'+name+"/settings.json")){legacy=base+'/'+name;break;}
+    for(const auto& name:{"reazip","REAzip","zenzip","ZENzip"})if(QFileInfo::exists(base+'/'+name+"/settings.json")){legacy=base+'/'+name;break;}
   }
   settings.load(legacy);vault.load();preferences=settings.values();themeService.load(settings.directory()+"/themes",json(":/data/themes/builtin.json").array());skins=themeService.all();
   english=json(":/data/i18n/en.json").object();translations=json(":/data/i18n/"+preferences["language"].toString()+".json").object();
@@ -62,7 +62,7 @@ QVariantList AppController::details()const{
   if(!tab()||tab()->format.isEmpty())return {};quint64 bytes{};int files{},dirs{},encrypted{};QSet<QString> methods;
   for(const auto& v:tab()->entries){auto e=v.toObject();bytes+=e["size"].toString().toULongLong();e["directory"].toBool()?++dirs:++files;if(e["encrypted"].toBool()){++encrypted;methods.insert(e["encryption"].toString("unknown"));}}
   QVariantList result;auto add=[&](QString label,QString value){result.append(QVariantMap{{"label",label},{"value",value}});};
-  add(translate("size",QString::fromUtf8("大小")),EntryModel::bytes(bytes));add(translate("packed",QString::fromUtf8("压缩后")),EntryModel::bytes(tab()->physical));add(translate("files",QString::fromUtf8("文件")),QString::number(files));add(translate("folders",QString::fromUtf8("文件夹")),QString::number(dirs));add(translate("encryption",QString::fromUtf8("加密")),encrypted?QStringList(methods.values()).join(", "):"none");return result;
+  add(translate("size",QString::fromUtf8("大小")),EntryModel::bytes(bytes));add(translate("packed",QString::fromUtf8("压缩后")),EntryModel::bytes(tab()->physical));add(translate("files",QString::fromUtf8("文件")),QString::number(files));add(translate("folders",QString::fromUtf8("文件夹")),QString::number(dirs));add(translate("encryption",QString::fromUtf8("加密")),encrypted?QStringList(methods.values()).join(", "):translate("encryptionNone","None"));return result;
 }
 QString AppController::translate(QString key,QString fallback)const{return translations[key].toString(english[key].toString(fallback));}
 QVariantMap AppController::colors()const{for(const auto& value:skins){auto item=value.toObject();if(item["id"]==preferences["skin"]){QVariantMap result;const auto vars=item["vars"].toObject();for(auto it=vars.begin();it!=vars.end();++it)if(QColor(it.value().toString()).isValid())result[it.key()]=it.value().toString();return result;}}return {};}
@@ -104,10 +104,10 @@ void AppController::activateEntry(QString id){if(model.enter(id)||!tab())return;
 void AppController::completed(QString id,QString op,QJsonObject payload){
   const auto context=contexts.take(id);
   if(op=="identity")identity=payload["identity"].toString();
-  else if(op=="list"){if(auto t=find(context.tabId)){t->format=payload["format"].toString();t->revision=payload["revision"].toString();t->entries=payload["entries"].toArray();t->physical=payload["physicalSize"].toString().toULongLong();if(current==t->id)showTab();const auto action=launchActions.take(t->path);if(action=="extract_here")submit({{"operation","extract"},{"archive",t->path},{"destination",QFileInfo(t->path).absolutePath()},{"overwrite","ask"},{"codepage",codepage()}},{t->id,t->path});else if(action=="extract_to")emit extractRequested();}}
+  else if(op=="list"){if(auto t=find(context.tabId)){t->format=payload["format"].toString();t->revision=payload["revision"].toString();t->entries=payload["entries"].toArray();t->physical=payload["physicalSize"].toString().toULongLong();if(current==t->id)showTab();const auto action=launchActions.take(t->path);if(action=="extract_here")submit({{"operation","extract"},{"archive",t->path},{"entryIds",QJsonArray{}},{"destination",QFileInfo(t->path).absolutePath()},{"overwrite","ask"},{"codepage",codepage()}},{t->id,t->path});else if(action=="extract_to")emit extractRequested();}}
   else if(op=="create"){const auto outputs=payload["outputs"].toArray();if(!outputs.isEmpty())openUrls({QUrl::fromLocalFile(outputs.first().toString())});emit message(translate("compressDone",QString::fromUtf8("压缩完成并已校验")),false);}
   else if(op=="extract"){
-    const auto destination=payload["destination"].toString();if(context.drag){dragUrls.clear();for(const auto& name:QDir(destination).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot))if(!name.startsWith(".reazip-"))dragUrls.append(QUrl::fromLocalFile(QDir(destination).filePath(name)));}else if(context.temporary){const auto file=QDir(destination).filePath(context.openEntry);if(executable(file))emit executableRequested(file);else openExternal(file);}else if(context.openAfter)openExternal(destination);
+    const auto destination=payload["destination"].toString();if(context.drag){dragUrls.clear();for(const auto& name:QDir(destination).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot))if(!name.startsWith(".zenzip-"))dragUrls.append(QUrl::fromLocalFile(QDir(destination).filePath(name)));}else if(context.temporary){const auto file=QDir(destination).filePath(context.openEntry);if(executable(file))emit executableRequested(file);else openExternal(file);}else if(context.openAfter)openExternal(destination);
     emit message(translate("extractDone",QString::fromUtf8("解压完成")),false);
   }else if(op=="test")emit message(translate("testPassed",QString::fromUtf8("完整性测试通过")),false);
   else refresh(context.tabId);
@@ -122,7 +122,7 @@ void AppController::applyAssociations(){const auto error=platform::registerAppli
   if(!error.isEmpty()){emit message(error,true);emit changed();return;}
 #ifdef Q_OS_WIN
   QDesktopServices::openUrl(QUrl("ms-settings:defaultapps"));
-  emit message(translate("registeredChooseDefault","REAzip registered; choose default apps in system settings"),false);
+  emit message(translate("registeredChooseDefault","ZENzip registered; choose default apps in system settings"),false);
 #elif defined(Q_OS_MACOS)
   emit message(translate("registeredMac","Archive types are declared by the app bundle. Set the default in Finder: Get Info -> Open With -> Change All"),false);
 #else

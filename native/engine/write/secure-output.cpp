@@ -20,7 +20,7 @@
 #include <linux/fs.h>
 #endif
 #endif
-namespace reazip {
+namespace zenzip {
 namespace {
 [[noreturn]] void io(int code=0){
 #ifdef _WIN32
@@ -33,7 +33,7 @@ namespace {
   throw Error(ErrorCode::IoError,"Destination write or commit failed (OS "+std::to_string(code)+"); existing file retained");
 }
 [[noreturn]] void unsafe(){throw Error(ErrorCode::UnsafeEntry,"Destination contains a link or reparse point");}
-std::string unique(){std::random_device random;return ".reazip-output-"+std::to_string(random())+"-"+std::to_string(random())+".tmp";}
+std::string unique(){std::random_device random;return ".zenzip-output-"+std::to_string(random())+"-"+std::to_string(random())+".tmp";}
 #ifdef _WIN32
 using Handle=HANDLE;
 const Handle invalid=INVALID_HANDLE_VALUE;

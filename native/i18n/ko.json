@@ -164,5 +164,6 @@
   "registeredMac": "압축 파일 형식은 앱 번들에 선언되어 있습니다. Finder의 정보 가져오기 → 다음으로 열기 → 모두 변경에서 기본으로 지정하십시오.",
   "registeredLinux": "데스크톱 항목을 설치하고 지원되는 압축 형식의 기본 처리기로 지정했습니다.",
   "vaultWriteFailed": "비밀번호를 저장할 수 없습니다",
-  "archivePassword": "압축 파일 비밀번호"
+  "archivePassword": "압축 파일 비밀번호",
+  "encryptionNone": "없음"
 }

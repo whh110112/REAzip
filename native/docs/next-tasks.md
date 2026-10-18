@@ -29,7 +29,7 @@ bit7z 的 `CStdOutStream::Write` 把回写给 7-Zip 的 `processedSize` 算成 `
 ## N05 / P1：密码库与系统集成 —— **已完成（0.3.1-dev）**
 
 - 密码库 `native/vault`：Windows 用 DPAPI 加密整库（附加固定应用熵），macOS/Linux 以 0600 保存并在界面标注"未加密"；损坏文件保留为 `.corrupt-<ms>`；便携格式在 Windows 上首次保存升级为 DPAPI；无法解密的库在其他平台置只读、拒绝覆盖。界面入口：设置 → 密码、创建归档密码区（显示/隐藏、选用、保存）、解压密码弹窗（选用、保存）。
-- Windows 经典右键菜单：22 个扩展名的"解压到此处/解压到…"带图标与多选，`*`/`Directory` 的"添加到压缩包"同样；新增 `Applications\reazip.exe` 使"打开方式"可见。
+- Windows 经典右键菜单：22 个扩展名的"解压到此处/解压到…"带图标与多选，`*`/`Directory` 的"添加到压缩包"同样；新增 `Applications\zenzip.exe` 使"打开方式"可见。
 - 三平台关联：Windows ProgID+Capabilities+RegisteredApplications+OpenWithProgids；macOS `CFBundleTypeExtensions`/`LSHandlerRank`/`LSSupportsOpeningDocumentsInPlace` 与 9 个 UTI；Linux `.desktop` 15 MIME + Actions + `update-desktop-database` + `xdg-mime default`。设置页"文件关联"显示真实状态。
 
 **仍未完成**：Win11 现代菜单（IExplorerCommand + 包标识 + 签名）、Finder Quick Action、Nautilus/Dolphin 扩展、macOS Keychain / Linux Secret Service 接入。这些需要各自平台的扩展工程与签名，不在"补个注册表键"的范围里。
@@ -46,4 +46,4 @@ bit7z 的 `CStdOutStream::Write` 把回写给 7-Zip 的 `processedSize` 算成 `
 
 当前 CI 产物：Windows x64 Setup 24.9 MiB / Portable 34.1 MiB。可再降但各有代价：`windeployqt --no-translations` 只保留 18 种语言（几 MB，风险低）；MSVC 开 LTO `/GL` + `/OPT:REF,ICF`、`/Gy`（EXE 段几 MB，构建变慢）；Linux/macOS `--strip`（解包体积十几 MB，无副作用）。**不建议**自建去 ICU 的 Qt（放弃 `deps.lock.json` 可复现性）或 UPX 加壳（杀软误报 + 首启变慢）。
 
-接手提示词：请在 whh110112/REAzip 的 native-migration 分支上按 native/docs/next-tasks.md 顺序继续，从 N02 目视验收与 N03 桌面边界开始。先检查最新 CI，不回退现有原生实现，不删除失败测试。每个修复提交说明根因、行为变化、实测结果和仍缺的环境验收。
+接手提示词：请在 whh110112/ZENzip 的 native-migration 分支上按 native/docs/next-tasks.md 顺序继续，从 N02 目视验收与 N03 桌面边界开始。先检查最新 CI，不回退现有原生实现，不删除失败测试。每个修复提交说明根因、行为变化、实测结果和仍缺的环境验收。

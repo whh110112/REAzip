@@ -164,5 +164,6 @@
   "registeredMac": "تُعلن أنواع الأرشيف في حزمة التطبيق. عيّن الافتراضي في Finder: Get Info → Open With → Change All.",
   "registeredLinux": "تم تثبيت إدخال سطح المكتب وتعيينه المعالج الافتراضي للأنواع المدعومة.",
   "vaultWriteFailed": "تعذّر حفظ كلمة المرور",
-  "archivePassword": "كلمة مرور الأرشيف"
+  "archivePassword": "كلمة مرور الأرشيف",
+  "encryptionNone": "لا يوجد"
 }

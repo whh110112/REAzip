@@ -5,7 +5,7 @@ import QtQuick.Dialogs
 ApplicationWindow {
     id: window
     width: 1120; height: 740; minimumWidth: 880; minimumHeight: 560
-    visible: true; title: "REAzip"
+    visible: true; title: "ZENzip"
     flags: Qt.platform.os === "osx" ? Qt.Window : Qt.Window | Qt.FramelessWindowHint
     property var api: typeof backend !== "undefined" ? backend : null
     property bool preview: typeof designPreview !== "undefined" && designPreview
@@ -25,17 +25,35 @@ ApplicationWindow {
         if(scene==="create")createDialog.open();else if(scene==="extract")extractDialog.open();else if(scene==="settings")settingsDialog.open();else if(scene==="appearance"){settingsPages.currentIndex=2;settingsDialog.open()}else if(scene==="vault"){settingsPages.currentIndex=1;settingsDialog.open()}else if(scene==="password")passwordDialog.open();else if(scene==="conflict"){window.currentChallenge={path:"example.txt"};conflictDialog.open()}else if(scene==="progress")progressDialog.open()
     }
     readonly property color paper: token("--bg", "#FFFFFF")
-    readonly property color surface: token("--surface", "#F1EFE8")
+    readonly property color surface: token("--surface", "#F1F0EB")
     readonly property color card: token("--card", "#FFFFFF")
-    readonly property color ink: token("--text", "#2C2C2A")
-    readonly property color muted: token("--muted", "#5F5E5A")
-    readonly property color edge: token("--border", "#D3D1C7")
-    readonly property color accent: token("--accent", "#378ADD")
+    readonly property color ink: token("--text", "#292F2A")
+    readonly property color muted: token("--muted", "#59645C")
+    readonly property color edge: token("--border", "#D7D8CF")
+    readonly property color accent: token("--accent", "#486451")
     color: paper; font.pixelSize: 13
+    palette.window: paper
+    palette.base: card
+    palette.alternateBase: surface
+    palette.text: ink
+    palette.windowText: ink
+    palette.button: card
+    palette.buttonText: ink
+    palette.highlight: accent
+    palette.accent: accent
+    palette.highlightedText: (accent.r * 0.2126 + accent.g * 0.7152 + accent.b * 0.0722) > 0.6 ? "#202622" : "#FFFFFF"
+    palette.mid: edge
+    palette.placeholderText: muted
     LayoutMirroring.enabled: api ? api.rtl : false
     LayoutMirroring.childrenInherit: true
     component SafeLabel: Label { textFormat: Text.PlainText }
     component Action: Pill { accent: window.accent; ink: window.muted; paper: window.card; edge: window.edge }
+    component FooterBar: Pane {
+        default property alias actions: footerActions.data
+        leftPadding: 22; rightPadding: 22; topPadding: 10; bottomPadding: 14
+        background: Item {}
+        contentItem: RowLayout { id: footerActions; spacing: 8 }
+    }
     component Field: TextField {
         color: window.ink; selectByMouse: true; implicitHeight: 36; font.pixelSize: 13
         background: Rectangle { radius: 8; color: window.card; border.color: window.edge }
@@ -52,10 +70,10 @@ ApplicationWindow {
             Layout.fillWidth: true; implicitHeight: Qt.platform.os === "osx" ? 0 : 36; visible: height > 0; color: window.surface
             MouseArea { anchors.fill: parent; onPressed: window.startSystemMove(); onDoubleClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized() }
             Row { anchors.left: parent.left; anchors.leftMargin: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7
-                Rectangle { width: 14; height: 14; radius: 4; color: window.accent; Rectangle { x: 8; y: 8; width: 8; height: 8; radius: 2; border.color: window.accent; color: window.card } }
-                SafeLabel { text: "REAzip"; color: window.ink; font.pixelSize: 12 }
+                Canvas { id: zenMark; width: 18; height: 18; onPaint: { let c=getContext("2d"); c.reset(); c.strokeStyle=window.accent; c.lineWidth=2; c.lineCap="round"; c.beginPath(); c.arc(9,9,6,0.3,Math.PI*1.9); c.stroke() } Connections { target: window; function onAccentChanged() { zenMark.requestPaint() } } }
+                SafeLabel { text: "ZENzip"; color: window.ink; font.pixelSize: 12 }
             }
-            SafeLabel { anchors.centerIn: parent; text: window.hasArchive ? (window.api ? window.api.archiveName : "demo.zip · design preview") : "REAzip"; color: window.muted; font.pixelSize: 12 }
+            SafeLabel { anchors.centerIn: parent; text: window.hasArchive ? (window.api ? window.api.archiveName : "demo.zip · design preview") : "ZENzip"; color: window.muted; font.pixelSize: 12 }
             Row { anchors.right: parent.right; height: parent.height
                 ToolButton { width: 46; height: parent.height; text: "−"; onClicked: window.showMinimized(); Accessible.name: "Minimize" }
                 ToolButton { width: 46; height: parent.height; text: "□"; onClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized(); Accessible.name: "Maximize" }
@@ -180,7 +198,7 @@ ApplicationWindow {
             Caption { text:window.inputs.length+" "+window.t("files","文件/目录") }
             RowLayout { Action { text:window.t("addFiles","选择文件");onClicked:sourcesDialog.open() } Action { text:window.t("addFolder","选择目录");onClicked:{window.folderTarget="source";folders.open()} } }
         }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{if(saveCreatePassword.checked&&createPassword.text.length>0)window.api.savePassword(createName.text,createPassword.text);window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.enabled?volume.text:""});createPassword.clear();saveCreatePassword.checked=false;createDialog.close()} } }
+        footer:FooterBar { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{if(saveCreatePassword.checked&&createPassword.text.length>0)window.api.savePassword(createName.text,createPassword.text);window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.enabled?volume.text:""});createPassword.clear();saveCreatePassword.checked=false;createDialog.close()} } }
     }
     Sheet { id:extractDialog;objectName:"extractDialog";title:window.t("extractTo","解压到");paper:window.card;ink:window.ink;edge:window.edge
         ColumnLayout { width:parent.width;spacing:12
@@ -190,7 +208,7 @@ ApplicationWindow {
             ComboBox { id:overwrite;textRole:"label";valueRole:"value";model:[{label:window.t("ask","询问"),value:"ask"},{label:window.t("overwrite","覆盖"),value:"overwrite"},{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"}] }
             CheckBox { id:openAfter;objectName:"openAfter";text:window.t("openAfter","完成后打开目录");checked:true;palette.text:window.ink }
         }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:extractDialog.reject() } Action { objectName:"extractStart";text:window.t("startExtract","开始解压");primary:true;onClicked:{if(window.api)window.api.extractArchive({destination:extractDest.text,smart:smart.checked,overwrite:overwrite.currentValue,openAfter:openAfter.checked});extractDialog.close()} } }
+        footer:FooterBar { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:extractDialog.reject() } Action { objectName:"extractStart";text:window.t("startExtract","开始解压");primary:true;onClicked:{if(window.api)window.api.extractArchive({destination:extractDest.text,smart:smart.checked,overwrite:overwrite.currentValue,openAfter:openAfter.checked});extractDialog.close()} } }
     }
     Sheet { id:passwordDialog;objectName:"passwordDialog";title:window.t("needPassword","需要密码");paper:window.card;ink:window.ink;edge:window.edge
         ColumnLayout { width:parent.width;spacing:10
@@ -211,13 +229,13 @@ ApplicationWindow {
     }
     Sheet { id:conflictDialog;objectName:"conflictDialog";title:window.t("conflictTitle","目标位置已有同名文件");paper:window.card;ink:window.ink;edge:window.edge
         Caption { width:parent.width;text:window.currentChallenge.path||"";wrapMode:Text.WrapAnywhere }
-        footer:RowLayout { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"},{label:window.t("overwrite","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;objectName:"conflict-"+modelData.value;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
+        footer:FooterBar { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"},{label:window.t("overwrite","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;objectName:"conflict-"+modelData.value;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
         onRejected:if(window.api)window.api.cancelTask()
     }
     Sheet { id:progressDialog;title:window.t("loading","处理中");paper:window.card;ink:window.ink;edge:window.edge;closePolicy:Popup.NoAutoClose
         onRejected:if(window.api)window.api.cancelTask()
         ColumnLayout { width:parent.width;SafeLabel { text:Math.round(window.api?window.api.progress:0)+"%";color:window.ink;font.pixelSize:32;Layout.alignment:Qt.AlignHCenter } ProgressBar { Layout.fillWidth:true;value:window.api?window.api.progress/100:0 } Caption { text:window.api?window.t("state"+window.api.jobState,window.api.jobState):"" } }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { text:window.t("cancelTask","取消任务");onClicked:if(window.api)window.api.cancelTask() } }
+        footer:FooterBar { Item { Layout.fillWidth:true } Action { text:window.t("cancelTask","取消任务");onClicked:if(window.api)window.api.cancelTask() } }
     }
     Sheet { id:deleteDialog;title:window.t("delete","删除");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok|Dialog.Cancel;Caption { text:window.t("deleteConfirm","确认删除所选归档条目？") } onAccepted:if(window.api)window.api.deleteSelected() }
     Sheet { id:errorDialog;title:window.t("failed","操作失败");paper:window.card;ink:window.ink;edge:window.edge;standardButtons:Dialog.Ok
@@ -283,10 +301,10 @@ ApplicationWindow {
                     Caption { text:window.t("assocHint","Windows 11 的现代右键菜单需要签名 COM 组件；本版本提供经典右键菜单（在「显示更多选项」中）。");wrapMode:Text.Wrap;Layout.fillWidth:true;font.pixelSize:12 }
                     Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:window.t("uiLanguage","界面语言") } ComboBox { model:window.api?window.api.languages:[];textRole:"name";onActivated:if(window.api)window.api.setPreference("language",model[currentIndex].code) } Caption { text:window.t("langHint","支持18种语言") } Item { Layout.fillHeight:true } }
-                ColumnLayout { SafeLabel { text:"REAzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/REAzip" } Item { Layout.fillHeight:true } }
+                ColumnLayout { SafeLabel { text:"ZENzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/ZENzip" } Item { Layout.fillHeight:true } }
             }
         }
-        footer:RowLayout { Item { Layout.fillWidth:true } Action { objectName:"settingsDone";text:window.t("done","完成");primary:true;onClicked:settingsDialog.close() } }
+        footer:FooterBar { Item { Layout.fillWidth:true } Action { objectName:"settingsDone";text:window.t("done","完成");primary:true;onClicked:settingsDialog.close() } }
     }
     Popup { id:toast;anchors.centerIn:parent;width:Math.min(600,window.width-40);background:Rectangle{color:window.ink;radius:10} Label{width:parent.width;text:window.toastText;color:window.paper;wrapMode:Text.Wrap} Timer{id:toastTimer;interval:4000;onTriggered:toast.close()} }
     Connections { target:window.api;ignoreUnknownSignals:true

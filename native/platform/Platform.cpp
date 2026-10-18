@@ -35,12 +35,25 @@ quint64 residentBytes(){
   QFile file("/proc/self/statm");if(!file.open(QIODevice::ReadOnly))return 0;const auto parts=file.readAll().simplified().split(' ');return parts.size()>1?parts[1].toULongLong()*static_cast<quint64>(sysconf(_SC_PAGESIZE)):0;
 #endif
 }
-QString dataDirectory(QString directory){if(directory.isEmpty())directory=QCoreApplication::applicationDirPath();if(QFileInfo::exists(directory+"/portable.flag"))return directory+"/data";return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)+"/native";}
+QString dataDirectory(QString directory){if(directory.isEmpty())directory=QCoreApplication::applicationDirPath();if(QFileInfo::exists(directory+"/portable.flag"))return directory+"/data";const auto current=QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)+"/native";
+  if(QFileInfo::exists(current+"/settings.json")||QFileInfo::exists(current+"/vault/vault.json"))return current;
+#ifdef Q_OS_WIN
+  const auto base=qEnvironmentVariable("APPDATA");
+#elif defined(Q_OS_MACOS)
+  const auto base=QDir::homePath()+"/Library/Application Support";
+#else
+  const auto base=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+#endif
+  // Retain the existing profile in place; never copy secrets or overwrite a newer profile.
+  for(const auto& old:{QString("REAzip/REAzip/native"),QString("REAzip/native"),QString("reazip/native")}){
+    const auto path=base+'/'+old;if(QFileInfo::exists(path+"/settings.json")||QFileInfo::exists(path+"/vault/vault.json"))return path;
+  }
+  return current;}
 Instance::Instance(QString directory,QObject* parent):QObject(parent),server(this){
   storage=directory;const bool existed=QFileInfo::exists(directory);if(!QDir().mkpath(directory))diagnostic="Cannot write data directory: "+directory+". Move the portable package to a writable folder.";else if(!existed)QFile::setPermissions(directory,QFileDevice::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner);
   const auto hash=QCryptographicHash::hash(directory.toUtf8(),QCryptographicHash::Sha256).toHex().left(24);
 #ifdef Q_OS_WIN
-  name="REAzip-"+QString::fromLatin1(hash);
+  name="ZENzip-"+QString::fromLatin1(hash);
 #else
   name=directory+"/instance.sock";
 #endif
@@ -87,22 +100,45 @@ const QStringList extensions={".zip",".zipx",".7z",".rar",".tar",".gz",".tgz",".
 QString registerApplication(QString executable,QString prefix){
   if(!QFileInfo(executable).isAbsolute()||executable.contains('"'))return "Invalid application executable";
 #ifdef Q_OS_WIN
-  const auto classes=prefix+"Software\\Classes\\",capabilities=prefix+"Software\\REAzip\\Capabilities";const auto command='"'+QDir::toNativeSeparators(executable)+'"';bool ok=true;
+  const auto classes=prefix+"Software\\Classes\\",capabilities=prefix+"Software\\ZENzip\\Capabilities";const auto command='"'+QDir::toNativeSeparators(executable)+'"';bool ok=true;
   auto put=[&](QString path,QString name,QString value){ok=set(path,name,value)&&ok;};
-  put(classes+"REAzip.Archive","","REAzip Archive");put(classes+"REAzip.Archive","OwnerExecutable",executable);put(classes+"REAzip.Archive","FriendlyTypeName","REAzip Archive");put(classes+"REAzip.Archive\\DefaultIcon","",command+",0");put(classes+"REAzip.Archive\\shell\\open\\command","",command+" \"%1\"");
-  put(capabilities,"ApplicationName","REAzip");put(capabilities,"ApplicationDescription","REAzip native archive manager");put(capabilities,"ApplicationIcon",command+",0");put(capabilities,"OwnerExecutable",executable);
-  put(prefix+"Software\\RegisteredApplications","REAzip","Software\\REAzip\\Capabilities");
+  // Upgrade only the legacy installation in this same directory. Keep its ProgID as an
+  // alias so a Windows UserChoice pointing at REAzip.Archive continues to open archives.
+  const auto legacyExe=QFileInfo(executable).dir().filePath("reazip.exe");
+  const auto legacyProgram=classes+"REAzip.Archive";
+  if(get(legacyProgram,"OwnerExecutable")==legacyExe){
+    put(legacyProgram,"","ZENzip Archive");put(legacyProgram,"OwnerExecutable",executable);
+    put(legacyProgram+"\\DefaultIcon","",command+",0");
+    put(legacyProgram+"\\shell\\open\\command","",command+" \"%1\"");
+    for(const auto& ext:extensions)for(const auto& action:{QString("extract_here"),QString("extract_to")}){
+      const auto key=classes+"SystemFileAssociations\\"+ext+"\\shell\\REAzip."+action;
+      if(get(key,"OwnerExecutable")==legacyExe)removeTree(key);
+    }
+    for(const auto& type:{QString("*"),QString("Directory")}){
+      const auto key=classes+type+"\\shell\\REAzip.Add";if(get(key,"OwnerExecutable")==legacyExe)removeTree(key);
+    }
+    const auto app=classes+"Applications\\reazip.exe";if(get(app,"OwnerExecutable")==legacyExe)removeTree(app);
+    const auto caps=prefix+"Software\\REAzip\\Capabilities";
+    if(get(caps,"OwnerExecutable")==legacyExe){
+      removeTree(caps);auto path=wide(prefix+"Software\\RegisteredApplications");HKEY key{};
+      if(RegOpenKeyExW(HKEY_CURRENT_USER,path.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"REAzip");RegCloseKey(key);}
+    }
+  }
+
+  put(classes+"ZENzip.Archive","","ZENzip Archive");put(classes+"ZENzip.Archive","OwnerExecutable",executable);put(classes+"ZENzip.Archive","FriendlyTypeName","ZENzip Archive");put(classes+"ZENzip.Archive\\DefaultIcon","",command+",0");put(classes+"ZENzip.Archive\\shell\\open\\command","",command+" \"%1\"");
+  put(capabilities,"ApplicationName","ZENzip");put(capabilities,"ApplicationDescription","ZENzip native archive manager");put(capabilities,"ApplicationIcon",command+",0");put(capabilities,"OwnerExecutable",executable);
+  put(prefix+"Software\\RegisteredApplications","ZENzip","Software\\ZENzip\\Capabilities");
   // Classic shell verbs. Windows 11 lists them under "Show more options": the current menu requires a
   // signed IExplorerCommand COM server with package identity, which this build does not ship.
-  for(const auto& ext:extensions){put(capabilities+"\\FileAssociations",ext,"REAzip.Archive");put(classes+ext+"\\OpenWithProgids","REAzip.Archive","");
-    for(const auto& action:{QString("extract_here"),QString("extract_to")}){const auto key=classes+"SystemFileAssociations\\"+ext+"\\shell\\REAzip."+action;put(key,"",action=="extract_here"?"REAzip: Extract here":"REAzip: Extract to folder...");put(key,"Icon",command+",0");put(key,"OwnerExecutable",executable);
+  for(const auto& ext:extensions){put(capabilities+"\\FileAssociations",ext,"ZENzip.Archive");put(classes+ext+"\\OpenWithProgids","ZENzip.Archive","");
+    for(const auto& action:{QString("extract_here"),QString("extract_to")}){const auto key=classes+"SystemFileAssociations\\"+ext+"\\shell\\ZENzip."+action;put(key,"",action=="extract_here"?"ZENzip: Extract here":"ZENzip: Extract to folder...");put(key,"Icon",command+",0");put(key,"OwnerExecutable",executable);
       // Multi-select is only offered where every selected file is handled independently.
       put(key,"MultiSelectModel",action=="extract_here"?"Player":"Single");put(key+"\\command","",command+" --"+QString(action).replace('_','-')+" \"%1\"");}
   }
-  for(const auto& type:{QString("*"),QString("Directory")}){const auto key=classes+type+"\\shell\\REAzip.Add";put(key,"","REAzip: Add to archive...");put(key,"Icon",command+",0");put(key,"OwnerExecutable",executable);put(key,"MultiSelectModel",type=="*"?"Player":"Single");put(key+"\\command","",command+" --add \"%1\"");}
+  for(const auto& type:{QString("*"),QString("Directory")}){const auto key=classes+type+"\\shell\\ZENzip.Add";put(key,"","ZENzip: Add to archive...");put(key,"Icon",command+",0");put(key,"OwnerExecutable",executable);put(key,"MultiSelectModel",type=="*"?"Player":"Single");put(key+"\\command","",command+" --add \"%1\"");}
   // An entry in the "Open with" list for files whose extension is not tied to the ProgID.
   const auto application=classes+"Applications\\"+QFileInfo(executable).fileName();
-  put(application,"FriendlyAppName","REAzip");put(application,"OwnerExecutable",executable);put(application+"\\DefaultIcon","",command+",0");put(application+"\\shell\\open\\command","",command+" \"%1\"");
+  put(application,"FriendlyAppName","ZENzip");put(application,"OwnerExecutable",executable);put(application+"\\DefaultIcon","",command+",0");put(application+"\\shell\\open\\command","",command+" \"%1\"");
   for(const auto& ext:extensions)put(application+"\\SupportedTypes",ext,"");
   if(prefix.isEmpty())SHChangeNotify(SHCNE_ASSOCCHANGED,SHCNF_IDLIST,nullptr,nullptr);return ok?QString():"Could not write per-user association registration";
 #elif defined(Q_OS_MACOS)
@@ -114,27 +150,28 @@ QString registerApplication(QString executable,QString prefix){
   auto quoted=executable;quoted.replace('\\',"\\\\").replace('"',"\\\"").replace('`',"\\`").replace('$',"\\$").replace('%',"%%");
   const auto folder=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/applications";if(!QDir().mkpath(folder))return "Cannot create applications directory";
   const QStringList types={"application/zip","application/x-7z-compressed","application/vnd.rar","application/x-tar","application/gzip","application/x-bzip2","application/x-xz","application/zstd","application/x-lzma","application/x-cd-image","application/x-iso9660-image","application/x-ms-wim","application/x-archive","application/x-arj","application/x-lzh-compressed"};
-  QSaveFile file(folder+"/com.reazip.app.desktop");if(!file.open(QIODevice::WriteOnly))return file.errorString();
-  const auto data=QString("[Desktop Entry]\nType=Application\nName=REAzip\nGenericName=Archive Manager\nComment=Open, create and extract archives\nExec=\"")+quoted+"\" %F\nTryExec="+executable+"\nIcon=package-x-generic\nTerminal=false\nCategories=Utility;Archiving;\nMimeType="+types.join(';')+";\nActions=ExtractHere;ExtractTo;\nX-REAzip-Owner="+executable+"\n\n[Desktop Action ExtractHere]\nName=Extract here\nExec=\""+quoted+"\" --extract-here %f\n\n[Desktop Action ExtractTo]\nName=Extract to folder...\nExec=\""+quoted+"\" --extract-to %f\n";
+  QSaveFile file(folder+"/com.zenzip.app.desktop");if(!file.open(QIODevice::WriteOnly))return file.errorString();
+  const auto data=QString("[Desktop Entry]\nType=Application\nName=ZENzip\nGenericName=Archive Manager\nComment=Open, create and extract archives\nExec=\"")+quoted+"\" %F\nTryExec="+executable+"\nIcon=package-x-generic\nTerminal=false\nCategories=Utility;Archiving;\nMimeType="+types.join(';')+";\nActions=ExtractHere;ExtractTo;\nX-ZENzip-Owner="+executable+"\n\n[Desktop Action ExtractHere]\nName=Extract here\nExec=\""+quoted+"\" --extract-here %f\n\n[Desktop Action ExtractTo]\nName=Extract to folder...\nExec=\""+quoted+"\" --extract-to %f\n";
   file.write(data.toUtf8());if(!file.commit())return file.errorString();
   // update-desktop-database refreshes the MIME cache and xdg-mime writes mimeapps.list, so the handler
   // is selected rather than merely installed. A missing helper is not an error.
   const auto database=QStandardPaths::findExecutable("update-desktop-database");if(!database.isEmpty())QProcess::execute(database,{folder});
-  const auto xdg=QStandardPaths::findExecutable("xdg-mime");if(!xdg.isEmpty())for(const auto& type:types)QProcess::execute(xdg,{"default","com.reazip.app.desktop",type});
+  const auto xdg=QStandardPaths::findExecutable("xdg-mime");if(!xdg.isEmpty())for(const auto& type:types)QProcess::execute(xdg,{"default","com.zenzip.app.desktop",type});
   return {};
 #endif
 }
 QString unregisterApplication(QString executable,QString prefix){
 #ifdef Q_OS_WIN
-  const auto classes=prefix+"Software\\Classes\\",capabilities=prefix+"Software\\REAzip\\Capabilities";
-  if(get(classes+"REAzip.Archive","OwnerExecutable")!=executable)return {};
-  removeTree(classes+"REAzip.Archive");if(get(capabilities,"OwnerExecutable")==executable){removeTree(capabilities);if(get(prefix+"Software\\RegisteredApplications","REAzip")=="Software\\REAzip\\Capabilities"){auto p=wide(prefix+"Software\\RegisteredApplications");HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,p.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"REAzip");RegCloseKey(key);}}}
+  const auto classes=prefix+"Software\\Classes\\",capabilities=prefix+"Software\\ZENzip\\Capabilities";
+  if(get(classes+"ZENzip.Archive","OwnerExecutable")!=executable)return {};
+  if(get(classes+"REAzip.Archive","OwnerExecutable")==executable)removeTree(classes+"REAzip.Archive");
+  removeTree(classes+"ZENzip.Archive");if(get(capabilities,"OwnerExecutable")==executable){removeTree(capabilities);if(get(prefix+"Software\\RegisteredApplications","ZENzip")=="Software\\ZENzip\\Capabilities"){auto p=wide(prefix+"Software\\RegisteredApplications");HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,p.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"ZENzip");RegCloseKey(key);}}}
   const auto application=classes+"Applications\\"+QFileInfo(executable).fileName();if(get(application,"OwnerExecutable")==executable)removeTree(application);
-  for(const auto& ext:extensions){auto p=wide(classes+ext+"\\OpenWithProgids");HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,p.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"REAzip.Archive");RegCloseKey(key);}for(const auto& action:{QString("extract_here"),QString("extract_to")}){const auto k=classes+"SystemFileAssociations\\"+ext+"\\shell\\REAzip."+action;if(get(k,"OwnerExecutable")==executable)removeTree(k);}}
-  for(const auto& type:{QString("*"),QString("Directory")}){auto k=classes+type+"\\shell\\REAzip.Add";if(get(k,"OwnerExecutable")==executable)removeTree(k);}
+  for(const auto& ext:extensions){auto p=wide(classes+ext+"\\OpenWithProgids");HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,p.c_str(),0,KEY_SET_VALUE,&key)==ERROR_SUCCESS){RegDeleteValueW(key,L"ZENzip.Archive");RegCloseKey(key);}for(const auto& action:{QString("extract_here"),QString("extract_to")}){const auto k=classes+"SystemFileAssociations\\"+ext+"\\shell\\ZENzip."+action;if(get(k,"OwnerExecutable")==executable)removeTree(k);}}
+  for(const auto& type:{QString("*"),QString("Directory")}){auto k=classes+type+"\\shell\\ZENzip.Add";if(get(k,"OwnerExecutable")==executable)removeTree(k);}
   if(prefix.isEmpty())SHChangeNotify(SHCNE_ASSOCCHANGED,SHCNF_IDLIST,nullptr,nullptr);return {};
 #else
-  Q_UNUSED(prefix);const auto path=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/applications/com.reazip.app.desktop";QFile file(path);if(file.open(QIODevice::ReadOnly)&&file.readAll().contains(("X-REAzip-Owner="+executable+"\n").toUtf8())){file.close();if(!file.remove())return file.errorString();}return {};
+  Q_UNUSED(prefix);const auto path=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/applications/com.zenzip.app.desktop";QFile file(path);if(file.open(QIODevice::ReadOnly)&&file.readAll().contains(("X-ZENzip-Owner="+executable+"\n").toUtf8())){file.close();if(!file.remove())return file.errorString();}return {};
 #endif
 }
 bool propagateOrigin(QString archive,QString destination,QString* error){
@@ -150,14 +187,14 @@ bool propagateOrigin(QString archive,QString destination,QString* error){
 QString associationSummary(QString executable,QString prefix){
 #ifdef Q_OS_WIN
   const auto classes=prefix+"Software\\Classes\\";QStringList lines;
-  const auto program=defaultValue(classes+"REAzip.Archive");
+  const auto program=defaultValue(classes+"ZENzip.Archive");
   lines<<QString("Archive ProgID: %1").arg(program.isEmpty()?QString("not registered"):program);
   int verbs=0,icons=0;
-  for(const auto& ext:extensions){const auto key=classes+"SystemFileAssociations\\"+ext+"\\shell\\REAzip.extract_here";if(!get(key,"").isEmpty()){++verbs;if(!get(key,"Icon").isEmpty())++icons;}}
+  for(const auto& ext:extensions){const auto key=classes+"SystemFileAssociations\\"+ext+"\\shell\\ZENzip.extract_here";if(!get(key,"").isEmpty()){++verbs;if(!get(key,"Icon").isEmpty())++icons;}}
   lines<<QString("Context menu: %1 of %2 extensions (%3 with icon)").arg(verbs).arg(extensions.size()).arg(icons);
-  lines<<QString("Add to archive: %1").arg(get(classes+"*\\shell\\REAzip.Add","").isEmpty()?"missing":"files and folders");
+  lines<<QString("Add to archive: %1").arg(get(classes+"*\\shell\\ZENzip.Add","").isEmpty()?"missing":"files and folders");
   lines<<QString("Open with list: %1").arg(get(classes+"Applications\\"+QFileInfo(executable).fileName(),"FriendlyAppName").isEmpty()?"missing":"registered");
-  lines<<QString("Default programs entry: %1").arg(get(prefix+"Software\\RegisteredApplications","REAzip").isEmpty()?"missing":"registered");
+  lines<<QString("Default programs entry: %1").arg(get(prefix+"Software\\RegisteredApplications","ZENzip").isEmpty()?"missing":"registered");
   lines<<"Windows 11 modern menu: not available (needs a signed COM server)";
   return lines.join('\n');
 #elif defined(Q_OS_MACOS)
@@ -165,7 +202,7 @@ QString associationSummary(QString executable,QString prefix){
   return "Declared in Info.plist: zip, 7z, rar, tar, gz, bz2, xz, zst, iso, wim\nDefault handler: Finder -> Get Info -> Open With -> Change All";
 #else
   Q_UNUSED(executable);Q_UNUSED(prefix);QStringList lines;
-  const auto path=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/applications/com.reazip.app.desktop";
+  const auto path=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/applications/com.zenzip.app.desktop";
   lines<<QString("Desktop entry: %1").arg(QFileInfo::exists(path)?"installed":"missing");
   const auto xdg=QStandardPaths::findExecutable("xdg-mime");
   lines<<QString("xdg-mime: %1").arg(xdg.isEmpty()?"not installed":"available");

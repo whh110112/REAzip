@@ -164,5 +164,6 @@
   "registeredMac": "Archive types are declared by the app bundle. Set the default in Finder: Get Info -> Open With -> Change All",
   "registeredLinux": "Desktop entry installed and selected as the default handler for supported archive types",
   "vaultWriteFailed": "Cannot save the password",
-  "archivePassword": "Archive password"
+  "archivePassword": "Archive password",
+  "encryptionNone": "None"
 }

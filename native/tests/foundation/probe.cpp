@@ -10,14 +10,14 @@ static bit7z::tstring native(const fs::path& p) { return p.native(); }
 static void require(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
 int main(int argc, char** argv) {
   try {
-    require(argc == 4, "usage: reazip-probe LIBRARY TEST-DIRECTORY ISO-FIXTURE");
+    require(argc == 4, "usage: zenzip-probe LIBRARY TEST-DIRECTORY ISO-FIXTURE");
     const fs::path library = fs::absolute(fs::u8path(argv[1]));
     const fs::path work = fs::absolute(fs::u8path(argv[2]));
     fs::create_directories(work);
     bit7z::Bit7zLibrary engine(native(library));
     for (const auto& format : {std::make_pair("zip", &bit7z::BitFormat::Zip), std::make_pair("7z", &bit7z::BitFormat::SevenZip)}) {
       const auto source = work / fs::u8path(u8"测试 sample.txt");
-      const std::string contents = u8"REAzip 原生 library roundtrip\n";
+      const std::string contents = u8"ZENzip 原生 library roundtrip\n";
       std::ofstream(source, std::ios::binary) << contents;
       const auto output = work / (std::string("sample.") + format.first);
       fs::remove(output);

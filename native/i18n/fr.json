@@ -164,5 +164,6 @@
   "registeredMac": "Les types d'archives sont déclarés dans le bundle. Définissez le choix par défaut dans Finder : Lire les informations → Ouvrir avec → Tout modifier.",
   "registeredLinux": "Entrée de bureau installée et définie comme gestionnaire par défaut des types d'archives pris en charge.",
   "vaultWriteFailed": "Impossible d'enregistrer le mot de passe",
-  "archivePassword": "Mot de passe de l'archive"
+  "archivePassword": "Mot de passe de l'archive",
+  "encryptionNone": "Aucun"
 }

@@ -1,14 +1,14 @@
 {
-  "name": "reazip",
-  "productName": "REAzip",
+  "name": "zenzip",
+  "productName": "ZENzip",
   "version": "0.2.1",
-  "description": "Modern open-source archive manager (Bandizip-inspired)",
+  "description": "Legacy Electron implementation of ZENzip; the native application is built from native/",
   "main": "main.js",
   "author": "whh110112",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/whh110112/REAzip.git"
+    "url": "https://github.com/whh110112/ZENzip.git"
   },
   "scripts": {
     "start": "electron .",
@@ -17,9 +17,9 @@
     "dist:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.reazip.app",
-    "productName": "REAzip",
-    "copyright": "Copyright © 2026 whh110112",
+    "appId": "com.zenzip.app",
+    "productName": "ZENzip",
+    "copyright": "Copyright 漏 2026 whh110112",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -39,15 +39,26 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64", "arm64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "REAzip",
+      "shortcutName": "ZENzip",
       "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
     },
     "portable": {
@@ -56,8 +67,20 @@
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] },
-        { "target": "zip", "arch": ["x64", "arm64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
     },
@@ -66,16 +89,32 @@
       "synopsis": "Modern open-source archive manager",
       "maintainer": "whh110112",
       "target": [
-        { "target": "AppImage", "arch": ["x64", "arm64"] },
-        { "target": "deb", "arch": ["x64"] },
-        { "target": "tar.gz", "arch": ["x64"] }
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     },
     "publish": {
       "provider": "github",
       "owner": "whh110112",
-      "repo": "REAzip",
+      "repo": "ZENzip",
       "releaseType": "release"
     }
   },

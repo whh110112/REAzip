@@ -14,37 +14,51 @@
 #include <QElapsedTimer>
 #include <QJsonDocument>
 #include <QSaveFile>
+#include <QPainter>
+#include <QIcon>
+#include <QFontDatabase>
 int main(int argc, char** argv) {
   QElapsedTimer startup;startup.start();qint64 firstFrame=-1,archiveReady=-1;
   QGuiApplication app(argc, argv);
-  QGuiApplication::setOrganizationName("REAzip");
-  QGuiApplication::setApplicationName("REAzip");
-  QCoreApplication::setApplicationVersion(REAZIP_VERSION_FULL);
+  QGuiApplication::setOrganizationName("ZENzip");
+  QGuiApplication::setApplicationName("ZENzip");
+  QCoreApplication::setApplicationVersion(ZENZIP_VERSION_FULL);
+  QPixmap mark(256,256);mark.fill(Qt::transparent);
+  {QPainter painter(&mark);painter.setRenderHint(QPainter::Antialiasing);painter.setBrush(QColor("#FAF9F6"));painter.setPen(Qt::NoPen);painter.drawRoundedRect(mark.rect(),48,48);painter.setBrush(Qt::NoBrush);painter.setPen(QPen(QColor("#486451"),18,Qt::SolidLine,Qt::RoundCap));painter.drawArc(QRectF(46,46,164,164),-18*16,310*16);}
+  app.setWindowIcon(QIcon(mark));
   QQuickStyle::setStyle("Basic");
   const auto arguments=app.arguments();
+  const auto fontIndex=arguments.indexOf("--font-file");
+  if(arguments.contains("--smoke")&&fontIndex>=0&&fontIndex+1<arguments.size()){
+    const auto id=QFontDatabase::addApplicationFont(arguments[fontIndex+1]);
+    const auto families=QFontDatabase::applicationFontFamilies(id);
+    if(families.isEmpty()){qCritical()<<"Cannot load capture font";return 7;}
+    app.setFont(QFont(families.first()));
+  }
   if(arguments.contains("--register"))return platform::registerApplication(app.applicationFilePath()).isEmpty()?0:2;
   if(arguments.contains("--unregister"))return platform::unregisterApplication(app.applicationFilePath()).isEmpty()?0:2;
   QJsonArray launchPaths;QString action="open";
-  for(int i=1;i<arguments.size();++i){const auto arg=arguments[i];if(arg=="--screenshot"||arg=="--design-scene"||arg=="--theme"||arg=="--language"||arg=="--performance"){++i;continue;}if(arg=="--extract-here")action="extract_here";else if(arg=="--extract-to")action="extract_to";else if(arg=="--add")action="add";else if(!arg.startsWith('-')&&QFileInfo::exists(arg))launchPaths.append(QFileInfo(arg).absoluteFilePath());}
+  for(int i=1;i<arguments.size();++i){const auto arg=arguments[i];if(arg=="--font-file"||arg=="--screenshot"||arg=="--design-scene"||arg=="--theme"||arg=="--language"||arg=="--performance"){++i;continue;}if(arg=="--extract-here")action="extract_here";else if(arg=="--extract-to")action="extract_to";else if(arg=="--add")action="add";else if(!arg.startsWith('-')&&QFileInfo::exists(arg))launchPaths.append(QFileInfo(arg).absoluteFilePath());}
   QJsonObject launch{{"version",1},{"action",action},{"paths",launchPaths}};
   QTemporaryDir smokeData;const bool testing=arguments.contains("--smoke")||arguments.contains("--design-preview");QString startupFailure;
   platform::Instance instance(testing?smokeData.path()+"/instance":platform::dataDirectory());
   if(!testing){const auto state=instance.start(launch);if(state==1)return 0;if(state<0){startupFailure=instance.error();qCritical().noquote()<<startupFailure;}}
 #ifdef Q_OS_WIN
-  const auto worker=QCoreApplication::applicationDirPath()+"/reazip-worker.exe";
+  const auto worker=QCoreApplication::applicationDirPath()+"/zenzip-worker.exe";
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.dll";
 #else
-  const auto worker=QCoreApplication::applicationDirPath()+"/reazip-worker";
+  const auto worker=QCoreApplication::applicationDirPath()+"/zenzip-worker";
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.so";
 #endif
   AppController controller(worker,library,nullptr,testing||!startupFailure.isEmpty()?smokeData.path():QString());
+  if(arguments.contains("--smoke"))QObject::connect(&controller,&AppController::message,&app,[&](QString text,bool error){if(error){qCritical().noquote()<<text;app.exit(6);}});
   for(const auto& option:{QString("--theme"),QString("--language")}){const auto index=arguments.indexOf(option);if(index>=0&&index+1<arguments.size())controller.setPreference(option=="--theme"?"skin":"language",arguments[index+1]);}
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("backend",app.arguments().contains("--design-preview")||!startupFailure.isEmpty()?nullptr:static_cast<QObject*>(&controller));
   engine.rootContext()->setContextProperty("designPreview",app.arguments().contains("--design-preview"));
   engine.rootContext()->setContextProperty("startupFailure",startupFailure);
   QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
-  engine.loadFromModule("REAzip", "Main");
+  engine.loadFromModule("ZENzip", "Main");
   if(!engine.rootObjects().isEmpty())if(auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first()))QObject::connect(window,&QQuickWindow::frameSwapped,&app,[&]{if(firstFrame<0)firstFrame=startup.elapsed();});
   QObject::connect(&controller,&AppController::operationCompleted,&app,[&](QString operation,QJsonObject){if(operation=="list"&&archiveReady<0)archiveReady=startup.elapsed();});
   auto dispatch=[&](QJsonObject request){controller.handleLaunch(request);if(!engine.rootObjects().isEmpty())if(auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first())){window->show();window->raise();window->requestActivate();}};

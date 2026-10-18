@@ -164,5 +164,6 @@
   "registeredMac": "アーカイブの種類はアプリバンドルで宣言されています。Finder の「情報を見る → このアプリケーションで開く → すべてを変更」で既定に設定してください。",
   "registeredLinux": "デスクトップエントリをインストールし、対応するアーカイブ形式の既定のアプリに設定しました。",
   "vaultWriteFailed": "パスワードを保存できません",
-  "archivePassword": "アーカイブのパスワード"
+  "archivePassword": "アーカイブのパスワード",
+  "encryptionNone": "なし"
 }

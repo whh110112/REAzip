@@ -6,7 +6,7 @@
 #include <windows.h>
 #include <winioctl.h>
 #endif
-namespace fs=reazip::fs;
+namespace fs=zenzip::fs;
 void require(bool value,const char* text){if(!value)throw std::runtime_error(text);}
 void linkDirectory(const fs::path& target,const fs::path& path){
 #ifdef _WIN32
@@ -20,9 +20,9 @@ void linkDirectory(const fs::path& target,const fs::path& path){
 int main(int argc,char** argv){try{
   require(argc==2,"work directory required");const auto work=fs::absolute(fs::u8path(argv[1]))/std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());const auto root=work/"root",outside=work/"outside",moved=work/"moved";fs::create_directories(root);fs::create_directory(outside);
   {
-    reazip::SecureOutput output(root);output.directory("dir");bool movedParent=false;
-    reazip::Callbacks callbacks;callbacks.outputFileBeforeCommit=[&](const auto&){std::error_code error;fs::rename(root/"dir",moved,error);if(!error){movedParent=true;linkDirectory(outside,root/"dir");}};
-    bool blocked=false;try{output.file(fs::path("dir")/"data.txt",false,[](auto& stream){stream<<"archive bytes";},callbacks);}catch(const reazip::Error&){blocked=true;}
+    zenzip::SecureOutput output(root);output.directory("dir");bool movedParent=false;
+    zenzip::Callbacks callbacks;callbacks.outputFileBeforeCommit=[&](const auto&){std::error_code error;fs::rename(root/"dir",moved,error);if(!error){movedParent=true;linkDirectory(outside,root/"dir");}};
+    bool blocked=false;try{output.file(fs::path("dir")/"data.txt",false,[](auto& stream){stream<<"archive bytes";},callbacks);}catch(const zenzip::Error&){blocked=true;}
 #ifdef _WIN32
     require(!movedParent&&fs::is_regular_file(root/"dir/data.txt"),"directory handles must prevent parent rename on Windows");
 #else
@@ -31,8 +31,8 @@ int main(int argc,char** argv){try{
     require(fs::is_empty(outside),"directory replacement wrote outside destination");
   }
   const auto root2=work/"linked-root";fs::create_directory(root2);linkDirectory(outside,root2/"link");
-  {reazip::SecureOutput output(root2);bool blocked=false;try{output.file(fs::path("link")/"escape.txt",false,[](auto& stream){stream<<"not allowed";},{});}catch(const reazip::Error&){blocked=true;}require(blocked&&fs::is_empty(outside),"existing junction/symlink followed");}
+  {zenzip::SecureOutput output(root2);bool blocked=false;try{output.file(fs::path("link")/"escape.txt",false,[](auto& stream){stream<<"not allowed";},{});}catch(const zenzip::Error&){blocked=true;}require(blocked&&fs::is_empty(outside),"existing junction/symlink followed");}
   const auto root3=work/"collision";fs::create_directory(root3);
-  {reazip::SecureOutput output(root3);reazip::Callbacks cb;cb.outputFileBeforeCommit=[&](const auto&){std::ofstream(root3/"keep.txt")<<"external";};bool refused=false;try{output.file("keep.txt",false,[](auto& stream){stream<<"new";},cb);}catch(const reazip::Error&){refused=true;}require(refused,"late file collision must not overwrite without permission");std::ifstream file(root3/"keep.txt");std::string text;file>>text;require(text=="external","late collision destroyed external data");}
+  {zenzip::SecureOutput output(root3);zenzip::Callbacks cb;cb.outputFileBeforeCommit=[&](const auto&){std::ofstream(root3/"keep.txt")<<"external";};bool refused=false;try{output.file("keep.txt",false,[](auto& stream){stream<<"new";},cb);}catch(const zenzip::Error&){refused=true;}require(refused,"late file collision must not overwrite without permission");std::ifstream file(root3/"keep.txt");std::string text;file>>text;require(text=="external","late collision destroyed external data");}
   std::cout<<"anchored directory handles, concurrent parent replacement, links/junctions, late collision PASS\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

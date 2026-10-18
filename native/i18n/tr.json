@@ -164,5 +164,6 @@
   "registeredMac": "Arşiv türleri uygulama paketinde bildirilir. Varsayılanı Finder'da ayarlayın: Bilgi Al → Birlikte Aç → Tümünü Değiştir.",
   "registeredLinux": "Masaüstü girişi kuruldu ve desteklenen arşiv türleri için varsayılan işleyici seçildi.",
   "vaultWriteFailed": "Parola kaydedilemedi",
-  "archivePassword": "Arşiv parolası"
+  "archivePassword": "Arşiv parolası",
+  "encryptionNone": "Yok"
 }
