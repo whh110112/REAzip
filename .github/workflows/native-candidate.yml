@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: native-candidate-${{ github.ref }}
+  group: native-candidate-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 jobs:
   build:
