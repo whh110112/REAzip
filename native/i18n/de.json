@@ -164,5 +164,6 @@
   "registeredMac": "Archivtypen werden im App-Bundle deklariert. Standard in Finder festlegen: Informationen → Öffnen mit → Alle ändern.",
   "registeredLinux": "Desktop-Eintrag installiert und als Standard für unterstützte Archivtypen gesetzt.",
   "vaultWriteFailed": "Passwort kann nicht gespeichert werden",
-  "archivePassword": "Archivpasswort"
+  "archivePassword": "Archivpasswort",
+  "encryptionNone": "Keine"
 }

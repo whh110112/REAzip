@@ -164,5 +164,6 @@
   "registeredMac": "Jenis arsip dideklarasikan di bundel aplikasi. Atur default di Finder: Get Info → Open With → Change All.",
   "registeredLinux": "Entri desktop terpasang dan dipilih sebagai penangan default untuk jenis arsip yang didukung.",
   "vaultWriteFailed": "Tidak dapat menyimpan kata sandi",
-  "archivePassword": "Kata sandi arsip"
+  "archivePassword": "Kata sandi arsip",
+  "encryptionNone": "Tidak ada"
 }

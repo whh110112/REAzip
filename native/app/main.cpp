@@ -16,6 +16,7 @@
 #include <QSaveFile>
 #include <QPainter>
 #include <QIcon>
+#include <QFontDatabase>
 int main(int argc, char** argv) {
   QElapsedTimer startup;startup.start();qint64 firstFrame=-1,archiveReady=-1;
   QGuiApplication app(argc, argv);
@@ -27,10 +28,17 @@ int main(int argc, char** argv) {
   app.setWindowIcon(QIcon(mark));
   QQuickStyle::setStyle("Basic");
   const auto arguments=app.arguments();
+  const auto fontIndex=arguments.indexOf("--font-file");
+  if(arguments.contains("--smoke")&&fontIndex>=0&&fontIndex+1<arguments.size()){
+    const auto id=QFontDatabase::addApplicationFont(arguments[fontIndex+1]);
+    const auto families=QFontDatabase::applicationFontFamilies(id);
+    if(families.isEmpty()){qCritical()<<"Cannot load capture font";return 7;}
+    app.setFont(QFont(families.first()));
+  }
   if(arguments.contains("--register"))return platform::registerApplication(app.applicationFilePath()).isEmpty()?0:2;
   if(arguments.contains("--unregister"))return platform::unregisterApplication(app.applicationFilePath()).isEmpty()?0:2;
   QJsonArray launchPaths;QString action="open";
-  for(int i=1;i<arguments.size();++i){const auto arg=arguments[i];if(arg=="--screenshot"||arg=="--design-scene"||arg=="--theme"||arg=="--language"||arg=="--performance"){++i;continue;}if(arg=="--extract-here")action="extract_here";else if(arg=="--extract-to")action="extract_to";else if(arg=="--add")action="add";else if(!arg.startsWith('-')&&QFileInfo::exists(arg))launchPaths.append(QFileInfo(arg).absoluteFilePath());}
+  for(int i=1;i<arguments.size();++i){const auto arg=arguments[i];if(arg=="--font-file"||arg=="--screenshot"||arg=="--design-scene"||arg=="--theme"||arg=="--language"||arg=="--performance"){++i;continue;}if(arg=="--extract-here")action="extract_here";else if(arg=="--extract-to")action="extract_to";else if(arg=="--add")action="add";else if(!arg.startsWith('-')&&QFileInfo::exists(arg))launchPaths.append(QFileInfo(arg).absoluteFilePath());}
   QJsonObject launch{{"version",1},{"action",action},{"paths",launchPaths}};
   QTemporaryDir smokeData;const bool testing=arguments.contains("--smoke")||arguments.contains("--design-preview");QString startupFailure;
   platform::Instance instance(testing?smokeData.path()+"/instance":platform::dataDirectory());
@@ -43,6 +51,7 @@ int main(int argc, char** argv) {
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.so";
 #endif
   AppController controller(worker,library,nullptr,testing||!startupFailure.isEmpty()?smokeData.path():QString());
+  if(arguments.contains("--smoke"))QObject::connect(&controller,&AppController::message,&app,[&](QString text,bool error){if(error){qCritical().noquote()<<text;app.exit(6);}});
   for(const auto& option:{QString("--theme"),QString("--language")}){const auto index=arguments.indexOf(option);if(index>=0&&index+1<arguments.size())controller.setPreference(option=="--theme"?"skin":"language",arguments[index+1]);}
   QQmlApplicationEngine engine;
   engine.rootContext()->setContextProperty("backend",app.arguments().contains("--design-preview")||!startupFailure.isEmpty()?nullptr:static_cast<QObject*>(&controller));

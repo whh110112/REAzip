@@ -164,5 +164,6 @@
   "registeredMac": "Los tipos de archivo se declaran en el paquete. Define el predeterminado en Finder: Obtener información → Abrir con → Cambiar todo.",
   "registeredLinux": "Entrada de escritorio instalada y seleccionada como controlador predeterminado de los tipos compatibles.",
   "vaultWriteFailed": "No se puede guardar la contraseña",
-  "archivePassword": "Contraseña del archivo"
+  "archivePassword": "Contraseña del archivo",
+  "encryptionNone": "Ninguno"
 }

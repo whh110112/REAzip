@@ -74,7 +74,9 @@ jobs:
           "$app" --smoke native/tests/fixtures/sample.iso --screenshot .native-build/native-smoke.png
       - name: Capture paired languages and theme-scale acceptance matrix
         if: runner.os == 'Windows' && matrix.arch == 'x64'
-        run: python native/tools/capture-native.py .native-build/candidate/bin/Release/zenzip.exe .native-build/screenshots --full
+        run: |
+          python native/tools/prepare-capture-font.py .native-build/capture-font
+          python native/tools/capture-native.py .native-build/candidate/bin/Release/zenzip.exe .native-build/screenshots --full --font-file .native-build/capture-font/NotoSansCJKsc-Regular.otf
       - name: Build and isolate-test offline candidate packages
         run: python native/packaging/package.py --build .native-build/candidate --arch ${{ matrix.arch }} --qt-prefix "${{ env.QT_PREFIX }}" --output .native-build/artifacts
         env:

@@ -164,5 +164,6 @@
   "registeredMac": "Os tipos de arquivo são declarados no pacote do app. Defina o padrão no Finder: Obter informações → Abrir com → Alterar tudo.",
   "registeredLinux": "Entrada de desktop instalada e definida como manipulador padrão dos tipos suportados.",
   "vaultWriteFailed": "Não foi possível salvar a senha",
-  "archivePassword": "Senha do arquivo"
+  "archivePassword": "Senha do arquivo",
+  "encryptionNone": "Nenhuma"
 }

@@ -164,5 +164,6 @@
   "registeredMac": "संग्रह प्रकार ऐप बंडल में घोषित हैं। Finder में डिफ़ॉल्ट सेट करें: Get Info → Open With → Change All।",
   "registeredLinux": "डेस्कटॉप प्रविष्टि स्थापित और समर्थित प्रकारों के लिए डिफ़ॉल्ट हैंडलर चुना गया।",
   "vaultWriteFailed": "पासवर्ड सहेजा नहीं जा सका",
-  "archivePassword": "संग्रह पासवर्ड"
+  "archivePassword": "संग्रह पासवर्ड",
+  "encryptionNone": "कोई नहीं"
 }

@@ -164,5 +164,6 @@
   "registeredMac": "Typy archiwów są zadeklarowane w pakiecie aplikacji. Ustaw domyślne w Finderze: Informacje → Otwórz za pomocą → Zmień wszystko.",
   "registeredLinux": "Wpis pulpitu zainstalowany i ustawiony jako domyślna obsługa obsługiwanych typów.",
   "vaultWriteFailed": "Nie można zapisać hasła",
-  "archivePassword": "Hasło archiwum"
+  "archivePassword": "Hasło archiwum",
+  "encryptionNone": "Brak"
 }

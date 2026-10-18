@@ -2,7 +2,7 @@
 import argparse, hashlib, json, os, pathlib, subprocess
 p = argparse.ArgumentParser()
 p.add_argument('application'); p.add_argument('output')
-p.add_argument('--scale', default='1'); p.add_argument('--full', action='store_true')
+p.add_argument('--font-file'); p.add_argument('--scale', default='1'); p.add_argument('--full', action='store_true')
 a = p.parse_args()
 root = pathlib.Path(__file__).resolve().parents[1]
 out = pathlib.Path(a.output).resolve(); out.mkdir(parents=True, exist_ok=True)
@@ -20,6 +20,7 @@ for theme, language, scene, scale in scenes:
     path = out / (name + '.png')
     command = [str(pathlib.Path(a.application).resolve()), '--smoke', '--theme', theme,
                '--language', language, '--screenshot', str(path)]
+    if a.font_file: command += ['--font-file', str(pathlib.Path(a.font_file).resolve())]
     if scene == 'archive': command.append(str(root / 'tests/fixtures/sample.iso'))
     elif scene != 'empty': command += ['--design-scene', scene]
     env = dict(os.environ, QT_SCALE_FACTOR=scale)
@@ -31,5 +32,5 @@ for theme, language, scene, scale in scenes:
                         file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
 commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
 (out / 'manifest.json').write_text(json.dumps(dict(version=(root/'VERSION.txt').read_text().strip(),
-    sourceCommit=commit, captures=records), indent=2) + '\n', encoding='utf-8')
+    sourceCommit=commit, captureFontSha256=hashlib.sha256(pathlib.Path(a.font_file).read_bytes()).hexdigest() if a.font_file else None, captures=records), indent=2) + '\n', encoding='utf-8')
 print(f'{len(records)} native window captures, no QML diagnostics')

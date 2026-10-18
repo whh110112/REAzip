@@ -164,5 +164,6 @@
   "registeredMac": "I tipi di archivio sono dichiarati nel bundle. Imposta il predefinito in Finder: Ottieni informazioni → Apri con → Cambia tutto.",
   "registeredLinux": "Voce desktop installata e impostata come gestore predefinito dei tipi supportati.",
   "vaultWriteFailed": "Impossibile salvare la password",
-  "archivePassword": "Password dell'archivio"
+  "archivePassword": "Password dell'archivio",
+  "encryptionNone": "Nessuna"
 }
