@@ -10,7 +10,7 @@
 - macOS / Linux：没有免依赖的系统密钥库接入，因此以 `0600` 保存并在界面显示"未加密，仅受文件权限保护"——不把权限保护说成加密。
 - 文件是原子写入；损坏文件改名为 `vault.json.corrupt-<ms>` 保留；其他平台写入的 DPAPI 库在本机不可解密时整库置为只读，拒绝覆盖；便携格式（`protection: permissions`）在 Windows 上首次保存即升级为 DPAPI。
 
-**Windows 经典右键菜单。** 每个受支持扩展名的 `SystemFileAssociations` 下注册"解压到此处"和"解压到…"，带图标、`MultiSelectModel`（前者可多选）与所有权标记；`*` 与 `Directory` 下注册"添加到压缩包"，同样带图标与多选。扩展名从 11 个扩到 22 个（zipx/cab/lz/tlzma/zst/zstd/arj/lzh/tbz/txz 等）。另注册 `Applications\reazip.exe`（`FriendlyAppName`、`DefaultIcon`、`SupportedTypes`），让"打开方式"列表里能看到 REAzip。**Windows 11 的现代右键菜单未实现**：它需要 `IExplorerCommand` COM 服务器 + 包标识 + 代码签名，本轮不塞假入口，动词出现在"显示更多选项"里。
+**Windows 经典右键菜单。** 每个受支持扩展名的 `SystemFileAssociations` 下注册"解压到此处"和"解压到…"，带图标、`MultiSelectModel`（前者可多选）与所有权标记；`*` 与 `Directory` 下注册"添加到压缩包"，同样带图标与多选。扩展名从 11 个扩到 22 个（zipx/cab/lz/lzma/zst/zstd/arj/lzh/tbz/txz 等）。另注册 `Applications\reazip.exe`（`FriendlyAppName`、`DefaultIcon`、`SupportedTypes`），让"打开方式"列表里能看到 REAzip。**Windows 11 的现代右键菜单未实现**：它需要 `IExplorerCommand` COM 服务器 + 包标识 + 代码签名，本轮不塞假入口，动词出现在"显示更多选项"里。
 
 **三平台文件关联。**
 

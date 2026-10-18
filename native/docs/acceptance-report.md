@@ -1,10 +1,10 @@
 # 原生迁移阶段验收报告（2026-10-18，交接快照）
 
-**结论：已有可构建、可操作的原生候选；自动化门禁已通过，T10 仍因人工验收缺口未完全通过。** 上一检查点 `caa96528`（N01/N02 修复提交）六目标 CI 全绿；0.3.1-dev 在其上新增密码库、Windows 经典右键菜单与三平台关联声明，验证结果见 Release 说明与下方"0.3.1-dev 新增项"。
+**结论：已有可构建、可操作的原生候选；自动化门禁已通过，T10 仍因人工验收缺口未完全通过。** 上一检查点 `caa96528`（N01/N02 修复提交）六目标 CI 全绿；0.3.1-dev 在其上新增密码库、Windows 经典右键菜单与三平台关联声明，同一提交六目标 `Native candidate` 与 `Native foundation` 全部成功、各目标 **15/15 CTest 通过**、aggregate 校验通过，结果见下方"0.3.1-dev 新增项"。
 
 ## 0.3.1-dev 新增项
 
-三项功能已实现并有自动化覆盖；**六目标结果以本次提交触发的 CI 为准**，未出结果前本报告不写 PASS。
+三项功能已实现并有自动化覆盖；首轮 CI 暴露的两处缺陷已定位并修正，修正后六目标全绿。
 
 | 编号 | 项目 | 实现 | 覆盖 |
 |---|---|---|---|
@@ -13,6 +13,15 @@
 | V03 | 三平台文件关联 | Windows：ProgID + `Capabilities\FileAssociations` + `RegisteredApplications` + `OpenWithProgids`，注册后打开系统默认应用设置；macOS：`Info.plist` 增加 `CFBundleTypeExtensions`、`LSHandlerRank=Default`、`LSSupportsOpeningDocumentsInPlace` 与 9 个 UTI；Linux：`.desktop` 补 `TryExec`/`Actions`/15 个 MIME 类型，并调用 `update-desktop-database` 与 `xdg-mime default`。设置页"文件关联"显示真实状态（程序 ID、动词数量、默认应用项、Win11 说明 / xdg-mime 查询结果） | `native-platform`：Windows 注册表断言；Linux 断言 `%F`、`MimeType=application/zip;`、`Actions=ExtractHere;ExtractTo;`、`--extract-here %f` 与摘要；macOS 由打包后的 plist 结构保证（CI 打包步骤校验） |
 
 明确不做的部分：Windows 11 现代菜单需要 `IExplorerCommand` COM 服务器 + 包标识 + 代码签名，Finder Quick Action / Nautilus 扩展同理；本轮不伪造这些入口。macOS 的默认处理程序只能由用户在 Finder 确认，程序不越权写入。
+
+### 首轮 CI 暴露并修正的两处缺陷
+
+| 现象 | 根因 | 修正 |
+|---|---|---|
+| `native-vault` 在四个 Unix 目标上 `***Failed 0.00 sec`、CTest 输出为空，Windows 两目标通过 | 测试自身写反了断言：非 Windows 分支要求"文件里不得出现明文"，但本构建在该平台就是按文档存储明文 `permissions` 形式，必然命中 `return 10`；Windows 因 DPAPI 加密才不命中 | 非 Windows 分支改为断言文档化行为（`protection=permissions` + 明文存在 + 0600）；`Vault::save` 提交后再次强制 0600，规避宽松 umask；所有断言加 `FAIL(code, reason)` 宏，失败时打印定位信息 |
+| Linux 两目标在 `Build and isolate-test offline candidate packages` 失败 | appimagetool 校验桌面文件失败：`Categories=Utility;Archiver;` 中 `Archiver` 不在 freedesktop 附加分类注册表内（注册名为 `Archiving`） | 打包 `.desktop` 与 `registerApplication()` 运行时写入的 `.desktop` 统一改为 `Categories=Utility;Archiving;` |
+
+两处修正后同一提交六目标全绿，`native-vault` 在四个 Unix 目标上用时 0.01–0.02 秒并正常输出 PASS。
 
 ## 上一轮复验结果（caa96528 → candidate 39092715383）
 
