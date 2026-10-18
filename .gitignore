@@ -17,3 +17,6 @@ _files.json
 /native/build/
 !/native/tools/
 !/native/tools/**
+
+# Ad-hoc legacy screenshots belong in local build output, not the repository root.
+/shots-*.png

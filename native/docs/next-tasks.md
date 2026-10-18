@@ -1,6 +1,6 @@
 # 下一阶段任务与接手顺序（2026-10-18 更新）
 
-从 native-migration 继续，代码检查点 `caa96528`。T00–T09 已有实现且六目标全绿；T10 的自动化门禁已通过，人工验收项仍未运行。先读[当前报告](acceptance-report.md)、[限制](known-limitations.md)、[原任务书](../migration-plan/00-START-HERE.md)。旧标签 v0.2.0/v0.2.1 保持不动，main 未合并。
+从 native-migration 继续，代码检查点 `2b89dfc`。T00–T09 已有实现且六目标全绿；T10 的自动化门禁已通过，人工验收项仍未运行。先读[当前报告](acceptance-report.md)、[限制](known-limitations.md)、[原任务书](../migration-plan/00-START-HERE.md)。旧标签 v0.2.0/v0.2.1 保持不动；截至 2026-10-18，main 与 native-migration 均指向 `2b89dfc`。
 
 ## N01 / P0：磁盘满解压崩溃 —— **已完成并实测通过**
 
