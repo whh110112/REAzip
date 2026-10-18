@@ -13,6 +13,7 @@ scenes = [(theme, language, scene, a.scale)
 if a.full:
     scenes += [('light', language, 'settings', scale) for language in ['en', 'zh-CN', 'de', 'ar']
                for scale in ['1', '1.25', '1.5', '2']]
+scenes = list(dict.fromkeys(scenes))
 records = []
 for theme, language, scene, scale in scenes:
     name = f'{theme}-{language}-{scene}' + (f'-scale-{scale}' if scale != a.scale else '')
