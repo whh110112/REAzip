@@ -20,3 +20,6 @@ _files.json
 
 # Ad-hoc legacy screenshots belong in local build output, not the repository root.
 /shots-*.png
+
+__pycache__/
+*.py[cod]
