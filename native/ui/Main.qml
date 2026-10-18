@@ -64,7 +64,11 @@ ApplicationWindow {
         background: Rectangle { radius: 8; color: window.card; border.color: window.edge }
     }
     component Caption: SafeLabel { color: window.muted; font.pixelSize: 13 }
-    component SettingsLabel: Caption { Layout.fillWidth: true; wrapMode: Text.Wrap }
+    component SettingsLabel: Caption {
+        Layout.fillWidth: true; wrapMode: Text.Wrap
+        // Fallback scripts can be taller than the base font's line metrics.
+        Layout.minimumHeight: Math.ceil(contentHeight + topPadding + bottomPadding)
+    }
     component SettingsAction: Action { Layout.fillWidth: true; wrapText: true }
     component SettingsPage: ScrollView {
         id: page

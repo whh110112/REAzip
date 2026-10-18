@@ -49,7 +49,7 @@ class GuiFlow : public QObject {
       if(item->property("text").isValid()&&item->property("contentWidth").isValid()&&!item->property("echoMode").isValid()){
         // Labels and Pill captions have no intentional horizontal scrolling.
         if(item->property("contentWidth").toDouble()>item->width()+1)failures<<context+": text wider than control: "+item->property("text").toString();
-        if(item->property("contentHeight").toDouble()>item->height()+1)failures<<context+": text taller than control: "+item->property("text").toString();
+        if(item->property("contentHeight").toDouble()>item->height()+1)failures<<context+": text taller than control ("+QString::number(item->property("contentHeight").toDouble())+">"+QString::number(item->height())+"): "+item->property("text").toString();
       }
       for(auto child:item->childItems())inspect(child,container,context);
     };
