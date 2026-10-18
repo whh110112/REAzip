@@ -24,6 +24,8 @@
 - **内容可达性**：常规路径输入改为标签在上、输入在下。六个子页均独立纵向滚动，弹窗最大高度受窗口约束，操作按钮留在固定底部；滚动页为滚动条预留宽度。
 - **保存状态回显**：语言与 ZIP 编码原先停留在模型第一项。现在绑定后端真实设置；主题列表明确标出当前主题。
 - **暗色箭头**：Qt 6.8.3 Basic ComboBox 的 indicator 使用 `palette.dark`；补齐主题角色，避免暗色背景上的默认暗箭头。
+- **输入框字高**：Windows ARM64 原生测试稳定复现印地语密码页两处 placeholder 内容高 34px、内框只有 24px，六皮肤都出现。取消控件固定高度，改为背景提供 36px 最小高度，保留 Qt 对内容和 placeholder 的自动计算。
+- **跨平台字高**：macOS ARM64 回归在字体切换的中间帧观察到内容高度超过标签高度；这不能证明稳定后仍裁切。设置标签增加实际内容高度约束，测试等待字体回退与布局 polish 稳定后再判定。
 - **RTL**：阿拉伯语复选框的文字留白从左侧改到实际指示器所在的右侧，修正文字/勾选框重叠。
 - 中英文 README 列出全部 **18 种语言及代码**，保留各一张对应语言主截图。
 
@@ -33,9 +35,26 @@
 
 `native/tools/capture-native.py --full` 捕获实际编译应用：六皮肤的中英同场景，以及中英德阿的 100/125/150/200% 设置子页。图片与 stderr、源码 SHA、字体 SHA、清单一起留在 Actions 附件，不加入 main 的截图展示目录。
 
-本地 Qt 6.8.3 先运行真实 QML 的隔离布局探针，648 项检查无截断或横向溢出；探针数据为模拟后端，不能代替上述原生集成测试。人工抽查了夜墨关联页、青石阿拉伯语常规页与德语最小窗口，并据此修正了箭头和 RTL 问题。不能把“648 项自动几何检查”表述为“648 张截图全部人工验收”。
+本地 Qt 6.8.3 先运行真实 QML 的隔离布局探针，四档缩放（100/125/150/200%）各 648 项、合计 2,592 项检查无截断或横向溢出；探针数据为模拟后端，不能代替上述原生集成测试。离屏字体加载仍有 OpenType fallback 诊断；抽查的阿拉伯语、泰语、印地语截图有实际字形，但不能据此宣称所有字符与复杂排版均正确。人工抽查了夜墨关联页、青石阿拉伯语常规页与德语最小窗口，并据此修正了箭头和 RTL 问题。不能把“648 项自动几何检查”表述为“648 张截图全部人工验收”。
 
 颜色计算采用 sRGB 相对亮度：六主题正文对卡片背景最低 **11.00:1**，次要文字最低 **5.86:1**，强调色最低 **5.56:1**。这只核查这些颜色对，不代表完整 WCAG/屏幕阅读器验收。禁用状态、半透明混合、焦点、系统高对比模式仍需单独验证。
+
+## 本次原生验证结果
+
+[Native candidate 39131074544](https://github.com/whh110112/ZENzip/actions/runs/39131074544) 已全部通过。测试源码提交为 `ff593fa5156b60e3c71415364a1e7ccd148e1627`，`native/` 树为 `ff00de26aa7645abb20cc1cd535526388a11e589`；其后的补充只修改根 README 与本报告，原生代码树一致。
+
+| 目标 | CTest | 设置布局 |
+| --- | --- | --- |
+| Windows x64 | 15/15 | 648 项通过 |
+| Windows ARM64 | 15/15 | 648 项通过，含印地语 placeholder 回归 |
+| macOS x64 | 15/15 | 648 项通过 |
+| macOS ARM64 | 15/15 | 648 项通过，按稳定后的字体/布局尺寸检查 |
+| Linux x64 | 15/15 | 648 项通过 |
+| Linux ARM64 | 15/15 | 648 项通过 |
+
+实际编译应用的 192 张截图已下载并通过 ZIP 完整性核对；清单源码 SHA 与上述提交一致，192 份 stderr 均为空。人工补查六款皮肤的常规页、深色外观页、德语 150% 关联页、阿拉伯语 200% 常规页与英语语言选择页，未见本次修复项残留。
+
+六目标打包/隔离运行及汇总也通过。本次没有替换公开 0.4.0 发布资产，也不把本轮设置检查算作完整 Explorer/Finder/GIMP 交互验收。
 
 ## 后续优先级
 
@@ -44,7 +63,8 @@
 3. 同参数真实大包/十万文件性能基准；把 CPU 占用、磁盘吞吐与总耗时分开呈现。
 4. macOS Keychain/Linux Secret Service；当前权限保护密码库仍不是加密密码库。
 5. 18 语言母语审校与缺字检测，完整键盘/屏幕阅读器和系统缩放验收。字典键齐全不能保证译文与字形正确。
+6. 关联页的平台注册诊断仍含英语（如 `not registered`、`missing`），尽管导航、按钮和解释已本地化。后续应给诊断增加本地化呈现层，保留技术标识用于排错；不把 18 份字典等同于所有底层消息均已翻译。
 
 ## English summary
 
-The audit fixes settings navigation truncation, bounded scrollable pages, saved language/codepage selection display, dark-theme ComboBox indicators and an RTL checkbox collision. Both READMEs enumerate all eighteen locales. The native regression matrix covers 648 layouts; screenshots stay in CI artifacts. Temp-file duplication during drag-out, modern Windows menus, cross-application drag compatibility, full translation review and equal-parameter performance comparisons remain explicit follow-up work. Historical competitor bugs marked fixed are not presented as current failures.
+The audit fixes settings navigation truncation, bounded scrollable pages, saved language/codepage selection display, dark-theme ComboBox indicators, an RTL checkbox collision and Hindi input-placeholder clipping on Windows ARM64. Both READMEs enumerate all eighteen locales. The native regression matrix covers 648 layouts; screenshots stay in CI artifacts. Temp-file duplication during drag-out, modern Windows menus, cross-application drag compatibility, full translation review and equal-parameter performance comparisons remain explicit follow-up work. Historical competitor bugs marked fixed are not presented as current failures.

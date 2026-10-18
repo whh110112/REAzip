@@ -24,7 +24,7 @@ C++17, Qt 6.8.3 and 7-Zip 26.04. Runs offline without Electron or Node.js. Previ
 
 Simplified Chinese (`zh-CN`), Traditional Chinese (`zh-TW`), English (`en`), Japanese (`ja`), Korean (`ko`), French (`fr`), German (`de`), Spanish (`es`), Brazilian Portuguese (`pt-BR`), Russian (`ru`), Italian (`it`), Polish (`pl`), Turkish (`tr`), Vietnamese (`vi`), Thai (`th`), Indonesian (`id`), Arabic (`ar`, right-to-left) and Hindi (`hi`). Choose a language in **Settings → Language**; changes apply immediately and are saved locally.
 
-All 18 translation catalogs are checked for missing keys. This does not imply that every translation has been reviewed by a native speaker. See the [settings and usability audit](docs/usability-audit-2026-10.md) for layout checks and remaining work.
+All 18 translation catalogs are checked for missing keys. Fonts come from the operating system; minimal Linux installations may need fonts for the chosen script. Not every translation has been reviewed by a native speaker. See the [settings and usability audit](docs/usability-audit-2026-10.md) for layout checks and remaining work.
 
 ## Before installing
 
