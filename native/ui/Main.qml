@@ -32,6 +32,18 @@ ApplicationWindow {
     readonly property color edge: token("--border", "#D7D8CF")
     readonly property color accent: token("--accent", "#486451")
     color: paper; font.pixelSize: 13
+    palette.window: paper
+    palette.base: card
+    palette.alternateBase: surface
+    palette.text: ink
+    palette.windowText: ink
+    palette.button: card
+    palette.buttonText: ink
+    palette.highlight: accent
+    palette.accent: accent
+    palette.highlightedText: (accent.r * 0.2126 + accent.g * 0.7152 + accent.b * 0.0722) > 0.6 ? "#202622" : "#FFFFFF"
+    palette.mid: edge
+    palette.placeholderText: muted
     LayoutMirroring.enabled: api ? api.rtl : false
     LayoutMirroring.childrenInherit: true
     component SafeLabel: Label { textFormat: Text.PlainText }
