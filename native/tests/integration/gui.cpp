@@ -10,12 +10,72 @@
 #include <QFile>
 #include <QDir>
 #include <QElapsedTimer>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QFontDatabase>
 #include <functional>
 #include <iostream>
 class GuiFlow : public QObject {
   Q_OBJECT
  public:QString worker,library,archive,qml;QTemporaryDir work;
  private slots:
+  void settingsLayoutAndSavedSelections(){
+    const auto data=work.path()+"/settings-layout";
+    { AppController saved(worker,library,nullptr,data); saved.setPreference("language","de"); saved.setPreference("codepage","936"); saved.setPreference("skin","sleep"); }
+    AppController api(worker,library,nullptr,data);
+    QCOMPARE(api.languageCode(),QString("de")); QCOMPARE(api.property("filenameCodepage").toString(),QString("936")); QCOMPARE(api.themeId(),QString("sleep"));
+    QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
+    QVERIFY(!engine.rootObjects().isEmpty());auto root=engine.rootObjects().first();auto window=qobject_cast<QQuickWindow*>(root);QVERIFY(window);
+    window->resize(880,560);
+    auto scene=[&](QString name){QVERIFY(QMetaObject::invokeMethod(root,"openDesignScene",Q_ARG(QVariant,name)));QTest::qWait(20);};
+    scene("settings");
+    auto codepage=root->findChild<QObject*>("prefCodepage");auto language=root->findChild<QObject*>("prefLanguage");QVERIFY(codepage);QVERIFY(language);
+    QTRY_COMPARE(codepage->property("currentValue").toString(),QString("936"));
+    QTRY_COMPARE(language->property("currentValue").toString(),QString("de"));
+    // Programmatic updates must propagate too, without reopening the window.
+    api.setPreference("codepage","932");QTRY_COMPARE(codepage->property("currentValue").toString(),QString("932"));
+    const QStringList pages={"settings","vault","appearance","associations","language","about"};
+    QStringList failures;int checked=0;QSignalSpy warnings(&engine,&QQmlEngine::warnings);
+    std::function<void(QQuickItem*,QQuickItem*,QString)> inspect;
+    inspect=[&](QQuickItem* item,QQuickItem* container,QString context){
+      if(!item->isVisible())return;
+      if(item->property("truncated").toBool())failures<<context+": truncated "+item->property("text").toString();
+      // Check horizontal reachability of settings content, including below-fold rows.
+      if(item->objectName()=="settingsPageBody"){
+        for(auto child:item->childItems())if(child->isVisible()&&child->width()>0){
+          if(child->x() < -1 || child->x()+child->width()>item->width()+1)failures<<context+": row outside page width";
+        }
+      }
+      if(item->property("text").isValid()&&item->property("contentWidth").isValid()&&!item->property("echoMode").isValid()){
+        // Labels and Pill captions have no intentional horizontal scrolling.
+        if(item->property("contentWidth").toDouble()>item->width()+1)failures<<context+": text wider than control: "+item->property("text").toString();
+        if(item->property("contentHeight").toDouble()>item->height()+1)failures<<context+": text taller than control: "+item->property("text").toString();
+      }
+      for(auto child:item->childItems())inspect(child,container,context);
+    };
+    for(const auto& theme:api.themeList())for(const auto& locale:api.languages()){
+      const auto themeId=theme.toMap()["id"].toString(),code=locale.toMap()["code"].toString();
+      api.setPreference("skin",themeId);api.setPreference("language",code);
+      for(const auto& page:pages){
+        scene(page);auto dialog=root->findChild<QObject*>("settingsDialog");QVERIFY(dialog);
+        auto content=qvariant_cast<QQuickItem*>(dialog->property("contentItem"));QVERIFY(content);
+        inspect(content,content,themeId+'/'+code+'/'+page);++checked;
+        QCOMPARE(language->property("currentValue").toString(),code);
+        QVERIFY(dialog->property("height").toDouble()<=window->height()-39);
+        auto checkbox=root->findChild<QObject*>("prefRestoreTabs");QVERIFY(checkbox);
+        auto label=qvariant_cast<QQuickItem*>(checkbox->property("contentItem"));auto indicator=qvariant_cast<QQuickItem*>(checkbox->property("indicator"));QVERIFY(label);QVERIFY(indicator);
+        const auto padding=label->property(api.rtl()?"rightPadding":"leftPadding").toDouble();
+        QVERIFY2(padding>=indicator->width(),"Checkbox text overlaps its indicator in mirrored layout");
+      }
+    }
+    QCOMPARE(checked,648);
+    // Both control models must still agree after a real close/reopen.
+    auto dialog=root->findChild<QObject*>("settingsDialog");QVERIFY(QMetaObject::invokeMethod(dialog,"close"));scene("language");
+    QCOMPARE(language->property("currentValue").toString(),api.languageCode());
+    QVERIFY2(failures.isEmpty(),qPrintable(failures.mid(0,25).join('\n')));
+    QVERIFY2(warnings.isEmpty(),"QML diagnostics emitted while switching settings pages/languages/themes");
+    qInfo()<<"648 settings layouts: six themes x eighteen languages x six pages at 880x560; persisted selections restored";
+  }
   void passwordAndSelectedConflicts(){
     AppController api(worker,library,nullptr,work.path()+"/data");api.setPreference("language","en");
     QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
