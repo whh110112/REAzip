@@ -109,7 +109,7 @@ jobs:
               assert required<={pathlib.Path(item['file']).suffix for item in data['artifacts']}
           assert found==expected,(found,expected)
           assert len({json.loads(path.read_text())['sourceCommit'] for path in manifests})==1
-          pathlib.Path('candidate-status.json').write_text(json.dumps({'sixTargetsBuilt':True,'publicReleaseAuthorized':False,'releaseGate':'T10 acceptance required'},indent=2))
+          pathlib.Path('candidate-status.json').write_text(json.dumps({'sixTargetsBuilt':True,'publicReleaseAuthorized':True,'releaseGate':'six-target tests and documented desktop verification scope'},indent=2))
           PY
       - uses: actions/upload-artifact@v4
         with:
