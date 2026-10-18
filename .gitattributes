@@ -1,0 +1,7 @@
+# The catalogues below are rewritten by native/tools/prepare-translations.py during CI, and the
+# packaging step reports sourceDirty from `git diff --quiet HEAD -- native`. Pinning them to LF
+# keeps the rewritten bytes identical on Windows and Unix checkout, so a clean tree stays clean
+# instead of depending on each runner's core.autocrlf.
+native/i18n/*.json text eol=lf
+native/docs/translation-audit.json text eol=lf
+native/tools/prepare-translations.py text eol=lf

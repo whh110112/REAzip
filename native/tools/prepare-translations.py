@@ -16,12 +16,12 @@ for language, values in labels.items():
     data.update(zip(keys,values))
     for key, original in aliases.items(): data[key] = data[original]
     catalogues[language] = data
-    path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 required = set(catalogues['en'])
 used = set()
 for path in [root/'ui/Main.qml',root/'ui/Sheet.qml',root/'app/AppController.cpp']:
     used.update(re.findall(r'(?:\bt|\btranslate)\("([A-Za-z0-9_-]+)"\s*,',path.read_text(encoding='utf-8')))
 report = {'languageCount':len(catalogues),'keys':len(required),'missing':{language:sorted((required|used)-set(data)) for language,data in catalogues.items()},'genericErrorLabels':sorted(aliases),'notes':['Technical error codes accompany localized generic errors.','Native labels translated for 18 languages; typography and translation quality still need visual QA.']}
-(root/'docs/translation-audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+(root/'docs/translation-audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 if any(report['missing'].values()): raise SystemExit('Missing translation keys: '+str(report['missing']))
 print(f'{len(catalogues)} languages, {len(required)} keys, zero missing keys')
