@@ -1,5 +1,5 @@
 """Build-time only bootstrap. No dependency downloads in the installed app."""
-import argparse, hashlib, json, os, pathlib, platform, shutil, subprocess, tarfile, urllib.request
+import argparse, hashlib, json, os, pathlib, platform, shutil, subprocess, tarfile, time, urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCK = json.loads((ROOT / 'deps.lock.json').read_text())
@@ -11,8 +11,20 @@ def run(*args, cwd=None):
 def download(spec):
     dest = DEPS / spec['name']
     if not dest.exists() or hashlib.sha256(dest.read_bytes()).hexdigest() != spec['sha256']:
-        with urllib.request.urlopen(LOCK['sevenZip']['baseUrl'] + spec['name'], timeout=120) as src, dest.open('wb') as dst:
-            shutil.copyfileobj(src, dst)
+        temporary = dest.with_suffix(dest.suffix + '.download')
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(LOCK['sevenZip']['baseUrl'] + spec['name'], timeout=120) as src, temporary.open('wb') as dst:
+                    shutil.copyfileobj(src, dst)
+                if hashlib.sha256(temporary.read_bytes()).hexdigest() != spec['sha256']:
+                    raise RuntimeError('SHA256 mismatch: ' + dest.name)
+                temporary.replace(dest)
+                break
+            except Exception:
+                temporary.unlink(missing_ok=True)
+                if attempt == 2:
+                    raise
+                time.sleep(2 * (attempt + 1))
     if hashlib.sha256(dest.read_bytes()).hexdigest() != spec['sha256']:
         raise RuntimeError('SHA256 mismatch: ' + dest.name)
     return dest
