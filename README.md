@@ -1,12 +1,12 @@
-# REAzip
+# ZENzip
 
 [中文](README.zh-CN.md) | English
 
-A cross-platform archive manager with a native 7-Zip core and a tabbed, themeable Qt Quick interface. REAzip pairs the proven 7-Zip 26.04 engine with the everyday workflow Bandizip popularized — tabs, queues, smart extraction and per-entry conflict control — while keeping the whole feature surface honest: nothing in the UI is a fake button.
+A cross-platform archive manager with a native 7-Zip core and a tabbed, themeable Qt Quick interface. ZENzip pairs the proven 7-Zip 26.04 engine with the everyday workflow Bandizip popularized — tabs, queues, smart extraction and per-entry conflict control — while keeping the whole feature surface honest: nothing in the UI is a fake button.
 
 > **Status: 0.3.1-dev development build.** Six native targets build and pass 15/15 tests each on the same commit; the [acceptance report](native/docs/acceptance-report.md) states exactly what is verified and what is not. v0.2.1 is the previous Electron build.
 
-![REAzip English interface](native/design/native-reference/light-en-archive.png)
+![ZENzip English interface](native/design/native-reference/light-en-archive.png)
 
 <sub>English interface captured from 0.3.0-dev. This preview predates 0.3.1-dev; see the [acceptance report](native/docs/acceptance-report.md) for current verification and remaining checks.</sub>
 
@@ -23,9 +23,9 @@ A cross-platform archive manager with a native 7-Zip core and a tabbed, themeabl
 
 ## Feature comparison
 
-Comparison is limited to publicly documented capabilities and REAzip's own acceptance scope; “–” means not implemented in this version.
+Comparison is limited to publicly documented capabilities and ZENzip's own acceptance scope; “–” means not implemented in this version.
 
-| Capability | REAzip 0.3.1-dev | 7-Zip | NanaZip | Bandizip |
+| Capability | ZENzip 0.3.1-dev | 7-Zip | NanaZip | Bandizip |
 |---|---|---|---|---|
 | ZIP / 7Z / TAR / GZ create + extract | ✓ | ✓ | ✓ | ✓ |
 | RAR / RAR5 / ISO / WIM extract | ✓ | ✓ | ✓ | ✓ |
@@ -43,7 +43,7 @@ Comparison is limited to publicly documented capabilities and REAzip's own accep
 
 ## Downloads
 
-The development release [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) carries the six-target builds: Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + deb + tar.gz. Every package ships with its version, source SHA, architecture, per-binary SHA-256, signature status and license notices; `SHA256SUMS.txt` covers the release assets.
+The development release [`v0.3.1-dev`](https://github.com/whh110112/ZENzip/releases/tag/v0.3.1-dev) carries the six-target builds: Windows x64/ARM64 installer + portable ZIP, macOS x64/ARM64 DMG + ZIP, Linux x64/ARM64 AppImage + deb + tar.gz. Every package ships with its version, source SHA, architecture, per-binary SHA-256, signature status and license notices; `SHA256SUMS.txt` covers the release assets.
 
 Treat this as a **development build**: the automated six-target gate builds and tests every target, but the manual acceptance items listed in the [acceptance report](native/docs/acceptance-report.md) (side-by-side visual review, real desktop association and menus, drag-out, large-archive stress) have not been run yet.
 
@@ -60,7 +60,7 @@ python -m pip install aqtinstall==3.3.0 ninja==1.11.1.4 cmake==3.31.6
 python native/bootstrap/dependencies.py --arch x64
 python native/bootstrap/qt-sdk.py --arch x64 --output .native-build/Qt
 # add the generated Qt SDK to PATH / CMAKE_PREFIX_PATH, then:
-cmake -S native -B .native-build/release -DREAZIP_ENGINE_DIR=/absolute/path/to/native/.deps/engine/x64 -DREAZIP_HEAVY_TESTS=ON
+cmake -S native -B .native-build/release -DZENZIP_ENGINE_DIR=/absolute/path/to/native/.deps/engine/x64 -DZENZIP_HEAVY_TESTS=ON
 cmake --build .native-build/release --config Release --parallel 3
 ctest --test-dir .native-build/release -C Release --output-on-failure
 ```
@@ -73,4 +73,4 @@ Win11 modern context menus, Finder/Nautilus extensions, SFX creation, password r
 
 ## License
 
-REAzip's own code is MIT. Distributed packages also contain Qt (LGPL), bit7z (MPL) and 7-Zip (LGPL, unRAR restriction) — the bundles as a whole are **not** “just MIT”. Third-party notices and corresponding source links ship with every package; see [packaging NOTICE](native/packaging/NOTICE.md). Bandizip is a trademark of its respective owner; this project is not affiliated with it.
+ZENzip's own code is MIT. Distributed packages also contain Qt (LGPL), bit7z (MPL) and 7-Zip (LGPL, unRAR restriction) — the bundles as a whole are **not** “just MIT”. Third-party notices and corresponding source links ship with every package; see [packaging NOTICE](native/packaging/NOTICE.md). Bandizip is a trademark of its respective owner; this project is not affiliated with it.

@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-namespace reazip {
+namespace zenzip {
 #ifdef __MINGW32__
 // GCC 13's Windows std::filesystem mis-parses the native \\?\ namespace.
 // Use the same pinned filesystem adapter already bundled by bit7z.

@@ -1,5 +1,5 @@
 #pragma once
-#include <reazip/types.hpp>
+#include <zenzip/types.hpp>
 #include <random>
 #include <cerrno>
 #ifdef _WIN32
@@ -12,7 +12,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
-namespace reazip {
+namespace zenzip {
 inline bool privateDirectory(const fs::path& path) {
 #ifdef _WIN32
   HANDLE token{};if(!OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&token))throw Error(ErrorCode::PermissionDenied,"Cannot query private directory owner");DWORD size{};GetTokenInformation(token,TokenUser,nullptr,0,&size);std::vector<unsigned char> info(size);const bool ok=GetTokenInformation(token,TokenUser,info.data(),size,&size);CloseHandle(token);if(!ok)throw Error(ErrorCode::PermissionDenied,"Cannot query private directory owner");LPWSTR sid{};if(!ConvertSidToStringSidW(reinterpret_cast<TOKEN_USER*>(info.data())->User.Sid,&sid))throw Error(ErrorCode::PermissionDenied,"Cannot encode private directory owner");
@@ -40,7 +40,7 @@ class TemporaryDirectory {
     const auto physical=fs::canonical(parent);requirePrivateAncestors(physical);
     std::random_device random;
     for(int n=0;n<30;++n){
-      auto candidate=physical/(".reazip-txn-"+std::to_string(random())+"-"+std::to_string(random()));
+      auto candidate=physical/(".zenzip-txn-"+std::to_string(random())+"-"+std::to_string(random()));
       if(privateDirectory(candidate)){path=candidate;
 #ifdef _WIN32
         directoryHandle=CreateFileW(path.c_str(),FILE_LIST_DIRECTORY|FILE_READ_ATTRIBUTES,FILE_SHARE_READ|FILE_SHARE_WRITE,nullptr,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT,nullptr);if(directoryHandle==INVALID_HANDLE_VALUE)throw Error(ErrorCode::PermissionDenied,"Cannot lock private staging directory");

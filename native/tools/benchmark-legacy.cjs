@@ -4,7 +4,7 @@ const {app,BrowserWindow}=require('electron');
 const fs=require('fs'),os=require('os'),path=require('path');
 let firstReadyMs=-1;
 app.on('browser-window-created',(_,window)=>window.once('ready-to-show',()=>{if(firstReadyMs<0)firstReadyMs=Number(process.hrtime.bigint()-started)/1e6}));
-app.setPath('userData',fs.mkdtempSync(path.join(os.tmpdir(),'reazip-benchmark-')));
+app.setPath('userData',fs.mkdtempSync(path.join(os.tmpdir(),'zenzip-benchmark-')));
 const value=name=>{const i=process.argv.indexOf(name);return i<0?'':process.argv[i+1]};
 require('../../main.js');
 app.whenReady().then(async()=>{

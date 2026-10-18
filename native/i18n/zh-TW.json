@@ -162,7 +162,7 @@
   "assocSummary": "關聯狀態",
   "assocHint": "Windows 11 的現代右鍵選單需要簽章 COM 元件；本版本提供傳統右鍵選單（在「顯示更多選項」中）。",
   "registeredMac": "壓縮檔類型由應用程式包宣告。在 Finder「顯示簡介 → 打開方式 → 全部更改」中設為預設。",
-  "registeredLinux": "已安裝桌面項目，並已將支援的壓縮檔類型指向 REAzip。",
+  "registeredLinux": "已安裝桌面項目，並已將支援的壓縮檔類型指向 ZENzip。",
   "vaultWriteFailed": "無法儲存密碼",
   "archivePassword": "壓縮檔密碼"
 }

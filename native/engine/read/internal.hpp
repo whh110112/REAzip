@@ -1,11 +1,11 @@
 #pragma once
-#include <reazip/engine.hpp>
+#include <zenzip/engine.hpp>
 #include <bit7z/bit7zlibrary.hpp>
 #include <bit7z/bitarchivereader.hpp>
 #include <bit7z/bitarchiveitemoffset.hpp>
 #include <bit7z/biterror.hpp>
 #include "temporary.hpp"
-namespace reazip {
+namespace zenzip {
 inline fs::path nativePath(const fs::path& value){
 #ifdef _WIN32
   const auto original=value.native();if(original.compare(0,4,L"\\\\?\\")==0)return value;

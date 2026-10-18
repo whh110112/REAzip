@@ -1,4 +1,4 @@
-  // REAZIP_POSIX_CODEPAGE_V1: explicit legacy ZIP codepages use the OS iconv.
+  // ZENZIP_POSIX_CODEPAGE_V1: explicit legacy ZIP codepages use the OS iconv.
   // Upstream 26.04 forces UTF-8 on POSIX, even when a codepage was requested.
   if (codePage == 936 || codePage == 950 || codePage == 932)
   {

@@ -1,4 +1,4 @@
-#include <reazip/engine.hpp>
+#include <zenzip/engine.hpp>
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -19,7 +19,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
-using namespace reazip;
+using namespace zenzip;
 namespace {
 constexpr std::size_t maximumFrame=16*1024*1024;
 std::string text(const QJsonValue& v){if(!v.isString())throw Error(ErrorCode::UnsupportedOperation,"Expected a string field");return v.toString().toUtf8().toStdString();}
@@ -75,7 +75,7 @@ class Session {
 #ifdef _WIN32
         canonical=canonical.toLower();
 #endif
-        const auto folder=QStandardPaths::writableLocation(QStandardPaths::TempLocation)+"/reazip-native-locks";
+        const auto folder=QStandardPaths::writableLocation(QStandardPaths::TempLocation)+"/zenzip-native-locks";
         if(!QDir().mkpath(folder))throw Error(ErrorCode::PermissionDenied,"Could not create task lock directory");
         const auto hash=QCryptographicHash::hash(canonical.toUtf8(),QCryptographicHash::Sha256).toHex();
         archiveLock=std::make_unique<QLockFile>(folder+"/"+QString::fromLatin1(hash)+".lock");

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-namespace reazip {
+namespace zenzip {
 void checkCancelled(const Callbacks& cb) { if(cb.cancelled && cb.cancelled()) throw Error(ErrorCode::Cancelled,"Task cancelled"); }
 void attach(bit7z::BitAbstractArchiveHandler& handler,const Callbacks& cb) {
   auto total=std::make_shared<std::uint64_t>(0);

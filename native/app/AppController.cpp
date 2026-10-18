@@ -29,7 +29,7 @@ AppController::AppController(QString worker,QString engine,QObject* parent,QStri
 #else
     const auto base=QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
 #endif
-    for(const auto& name:{"reazip","REAzip"})if(QFileInfo::exists(base+'/'+name+"/settings.json")){legacy=base+'/'+name;break;}
+    for(const auto& name:{"reazip","REAzip","zenzip","ZENzip"})if(QFileInfo::exists(base+'/'+name+"/settings.json")){legacy=base+'/'+name;break;}
   }
   settings.load(legacy);vault.load();preferences=settings.values();themeService.load(settings.directory()+"/themes",json(":/data/themes/builtin.json").array());skins=themeService.all();
   english=json(":/data/i18n/en.json").object();translations=json(":/data/i18n/"+preferences["language"].toString()+".json").object();
@@ -107,7 +107,7 @@ void AppController::completed(QString id,QString op,QJsonObject payload){
   else if(op=="list"){if(auto t=find(context.tabId)){t->format=payload["format"].toString();t->revision=payload["revision"].toString();t->entries=payload["entries"].toArray();t->physical=payload["physicalSize"].toString().toULongLong();if(current==t->id)showTab();const auto action=launchActions.take(t->path);if(action=="extract_here")submit({{"operation","extract"},{"archive",t->path},{"destination",QFileInfo(t->path).absolutePath()},{"overwrite","ask"},{"codepage",codepage()}},{t->id,t->path});else if(action=="extract_to")emit extractRequested();}}
   else if(op=="create"){const auto outputs=payload["outputs"].toArray();if(!outputs.isEmpty())openUrls({QUrl::fromLocalFile(outputs.first().toString())});emit message(translate("compressDone",QString::fromUtf8("压缩完成并已校验")),false);}
   else if(op=="extract"){
-    const auto destination=payload["destination"].toString();if(context.drag){dragUrls.clear();for(const auto& name:QDir(destination).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot))if(!name.startsWith(".reazip-"))dragUrls.append(QUrl::fromLocalFile(QDir(destination).filePath(name)));}else if(context.temporary){const auto file=QDir(destination).filePath(context.openEntry);if(executable(file))emit executableRequested(file);else openExternal(file);}else if(context.openAfter)openExternal(destination);
+    const auto destination=payload["destination"].toString();if(context.drag){dragUrls.clear();for(const auto& name:QDir(destination).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot))if(!name.startsWith(".zenzip-"))dragUrls.append(QUrl::fromLocalFile(QDir(destination).filePath(name)));}else if(context.temporary){const auto file=QDir(destination).filePath(context.openEntry);if(executable(file))emit executableRequested(file);else openExternal(file);}else if(context.openAfter)openExternal(destination);
     emit message(translate("extractDone",QString::fromUtf8("解压完成")),false);
   }else if(op=="test")emit message(translate("testPassed",QString::fromUtf8("完整性测试通过")),false);
   else refresh(context.tabId);
@@ -122,7 +122,7 @@ void AppController::applyAssociations(){const auto error=platform::registerAppli
   if(!error.isEmpty()){emit message(error,true);emit changed();return;}
 #ifdef Q_OS_WIN
   QDesktopServices::openUrl(QUrl("ms-settings:defaultapps"));
-  emit message(translate("registeredChooseDefault","REAzip registered; choose default apps in system settings"),false);
+  emit message(translate("registeredChooseDefault","ZENzip registered; choose default apps in system settings"),false);
 #elif defined(Q_OS_MACOS)
   emit message(translate("registeredMac","Archive types are declared by the app bundle. Set the default in Finder: Get Info -> Open With -> Change All"),false);
 #else

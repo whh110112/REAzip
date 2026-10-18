@@ -10,9 +10,9 @@ const out = (name, value) => {
 };
 const skins = { window: {} };
 vm.runInNewContext(read('skins.js'), skins);
-out('themes/builtin.json', skins.window.REAzipSkins.BUILTIN_SKINS);
+out('themes/builtin.json', skins.window.ZENzipSkins.BUILTIN_SKINS);
 out('design/tokens.json', { window: {width:1120,height:740,minWidth:880,minHeight:560},
-  titlebar:36,tabs:36,toolbar:56,fontSize:13,themes:skins.window.REAzipSkins.BUILTIN_SKINS });
+  titlebar:36,tabs:36,toolbar:56,fontSize:13,themes:skins.window.ZENzipSkins.BUILTIN_SKINS });
 const loc = { window: {} };
 for (const name of ['locales-1.js', 'locales-2.js', 'locales-3.js']) vm.runInNewContext(read(name), loc);
 for (const [key, value] of Object.entries(loc.window.LOCALES)) out('i18n/' + key + '.json', value);

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * REAzip i18n
+ * ZENzip i18n
  * 语言包位于 locales-*.js，通过 window.LOCALES 注册。
  * 用法：data-i18n="key" / data-i18n-ph="key"，或 t('key')。
  */
@@ -46,4 +46,4 @@ function languageList() {
   return LANG_LABELS.filter(([code]) => LOCALES[code]);
 }
 
-window.REAzipI18n = { t, applyLanguage, languageList, has: (l) => !!LOCALES[l], get current() { return current; } };
+window.ZENzipI18n = { t, applyLanguage, languageList, has: (l) => !!LOCALES[l], get current() { return current; } };

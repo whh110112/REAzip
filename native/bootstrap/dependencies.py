@@ -45,7 +45,7 @@ def main():
     else:
         conversion = zsrc / 'CPP/Common/StringConvert.cpp'
         original = conversion.read_text(encoding='utf-8-sig')
-        if 'REAZIP_POSIX_CODEPAGE_V1' not in original:
+        if 'ZENZIP_POSIX_CODEPAGE_V1' not in original:
             patch = (ROOT / 'bootstrap/posix-codepage.inc').read_text(encoding='utf-8')
             needle = '  if (codePage == CP_UTF8 || g_ForceToUTF8)'
             if needle not in original:

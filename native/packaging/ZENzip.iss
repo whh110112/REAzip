@@ -3,16 +3,16 @@
 #endif
 [Setup]
 AppId=REAzip.Native.{#Arch}
-AppName=REAzip
+AppName=ZENzip
 AppVersion={#Version}
 AppPublisher=whh110112
-AppPublisherURL=https://github.com/whh110112/REAzip
+AppPublisherURL=https://github.com/whh110112/ZENzip
 DefaultDirName={localappdata}\Programs\REAzip-{#Arch}
-DefaultGroupName=REAzip
+DefaultGroupName=ZENzip
 PrivilegesRequired=lowest
-UninstallDisplayIcon={app}\reazip.exe
+UninstallDisplayIcon={app}\zenzip.exe
 OutputDir={#Output}
-OutputBaseFilename=REAzip-{#Version}-windows-{#Arch}-Setup
+OutputBaseFilename=ZENzip-{#Version}-windows-{#Arch}-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -25,12 +25,17 @@ ArchitecturesInstallIn64BitMode=x64compatible
 #endif
 [Files]
 Source: "{#Stage}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "portable.flag"
+[InstallDelete]
+Type: files; Name: "{app}\reazip.exe"
+Type: files; Name: "{app}\reazip-worker.exe"
+Type: files; Name: "{autoprograms}\REAzip\REAzip.lnk"
+
 [Icons]
-Name: "{group}\REAzip"; Filename: "{app}\reazip.exe"
-Name: "{group}\Uninstall REAzip"; Filename: "{uninstallexe}"
+Name: "{autoprograms}\ZENzip"; Filename: "{app}\zenzip.exe"
+Name: "{group}\Uninstall ZENzip"; Filename: "{uninstallexe}"
 [Tasks]
 Name: "register"; Description: "Register archive file types and the classic context menu (recommended)"
 [Run]
-Filename: "{app}\reazip.exe"; Parameters: "--register"; Tasks: register; Flags: runhidden waituntilterminated
+Filename: "{app}\zenzip.exe"; Parameters: "--register"; Tasks: register; Flags: runhidden waituntilterminated
 [UninstallRun]
-Filename: "{app}\reazip.exe"; Parameters: "--unregister"; Flags: runhidden waituntilterminated; RunOnceId: "REAzipOwnedRegistration"
+Filename: "{app}\zenzip.exe"; Parameters: "--unregister"; Flags: runhidden waituntilterminated; RunOnceId: "ZENzipOwnedRegistration"

@@ -16,4 +16,4 @@
 
 另测Qt软件渲染：空窗口约126.8MB、477ms；ISO约128.2MB、692ms。作为可选环境变量 QT_QUICK_BACKEND=software 的测量，当前生产默认仍由Qt选择硬件后端；没有通过删除功能或省略依赖压低包体积。
 
-原始12条/组记录及中位数见 performance/windows-x64-hardware.json、windows-x64-software.json。复现：配置本机Qt运行路径后，运行 native/tools/benchmark.py --native <reazip.exe> --output <directory> --samples 3。基线使用隔离Electron用户目录，不读取真实配置。
+原始12条/组记录及中位数见 performance/windows-x64-hardware.json、windows-x64-software.json。复现：配置本机Qt运行路径后，运行 native/tools/benchmark.py --native <zenzip.exe> --output <directory> --samples 3。基线使用隔离Electron用户目录，不读取真实配置。

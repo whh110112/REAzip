@@ -13,7 +13,7 @@
 #define NOMINMAX
 #include <windows.h>
 #endif
-namespace reazip {
+namespace zenzip {
 namespace {
 struct CommitGuard { const Callbacks& cb; explicit CommitGuard(const Callbacks& c):cb(c){if(cb.commitState)cb.commitState(true);} ~CommitGuard(){if(cb.commitState)cb.commitState(false);} };
 fs::path safeRelative(std::string text) {

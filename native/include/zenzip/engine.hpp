@@ -1,7 +1,7 @@
 #pragma once
 #include "types.hpp"
 #include <memory>
-namespace reazip {
+namespace zenzip {
 class Engine {
  public:
   explicit Engine(const fs::path& library);

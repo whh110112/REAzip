@@ -17,9 +17,9 @@
 int main(int argc, char** argv) {
   QElapsedTimer startup;startup.start();qint64 firstFrame=-1,archiveReady=-1;
   QGuiApplication app(argc, argv);
-  QGuiApplication::setOrganizationName("REAzip");
-  QGuiApplication::setApplicationName("REAzip");
-  QCoreApplication::setApplicationVersion(REAZIP_VERSION_FULL);
+  QGuiApplication::setOrganizationName("ZENzip");
+  QGuiApplication::setApplicationName("ZENzip");
+  QCoreApplication::setApplicationVersion(ZENZIP_VERSION_FULL);
   QQuickStyle::setStyle("Basic");
   const auto arguments=app.arguments();
   if(arguments.contains("--register"))return platform::registerApplication(app.applicationFilePath()).isEmpty()?0:2;
@@ -31,10 +31,10 @@ int main(int argc, char** argv) {
   platform::Instance instance(testing?smokeData.path()+"/instance":platform::dataDirectory());
   if(!testing){const auto state=instance.start(launch);if(state==1)return 0;if(state<0){startupFailure=instance.error();qCritical().noquote()<<startupFailure;}}
 #ifdef Q_OS_WIN
-  const auto worker=QCoreApplication::applicationDirPath()+"/reazip-worker.exe";
+  const auto worker=QCoreApplication::applicationDirPath()+"/zenzip-worker.exe";
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.dll";
 #else
-  const auto worker=QCoreApplication::applicationDirPath()+"/reazip-worker";
+  const auto worker=QCoreApplication::applicationDirPath()+"/zenzip-worker";
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.so";
 #endif
   AppController controller(worker,library,nullptr,testing||!startupFailure.isEmpty()?smokeData.path():QString());
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
   engine.rootContext()->setContextProperty("designPreview",app.arguments().contains("--design-preview"));
   engine.rootContext()->setContextProperty("startupFailure",startupFailure);
   QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
-  engine.loadFromModule("REAzip", "Main");
+  engine.loadFromModule("ZENzip", "Main");
   if(!engine.rootObjects().isEmpty())if(auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first()))QObject::connect(window,&QQuickWindow::frameSwapped,&app,[&]{if(firstFrame<0)firstFrame=startup.elapsed();});
   QObject::connect(&controller,&AppController::operationCompleted,&app,[&](QString operation,QJsonObject){if(operation=="list"&&archiveReady<0)archiveReady=startup.elapsed();});
   auto dispatch=[&](QJsonObject request){controller.handleLaunch(request);if(!engine.rootObjects().isEmpty())if(auto window=qobject_cast<QQuickWindow*>(engine.rootObjects().first())){window->show();window->raise();window->requestActivate();}};

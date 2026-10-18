@@ -1,6 +1,6 @@
 {
-  "name": "reazip",
-  "productName": "REAzip",
+  "name": "zenzip",
+  "productName": "ZENzip",
   "version": "0.2.1",
   "description": "Modern open-source archive manager (Bandizip-inspired)",
   "main": "main.js",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/whh110112/REAzip.git"
+    "url": "https://github.com/whh110112/ZENzip.git"
   },
   "scripts": {
     "start": "electron .",
@@ -17,8 +17,8 @@
     "dist:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.reazip.app",
-    "productName": "REAzip",
+    "appId": "com.zenzip.app",
+    "productName": "ZENzip",
     "copyright": "Copyright © 2026 whh110112",
     "directories": {
       "output": "dist",
@@ -47,7 +47,7 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "REAzip",
+      "shortcutName": "ZENzip",
       "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
     },
     "portable": {
@@ -75,7 +75,7 @@
     "publish": {
       "provider": "github",
       "owner": "whh110112",
-      "repo": "REAzip",
+      "repo": "ZENzip",
       "releaseType": "release"
     }
   },

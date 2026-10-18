@@ -1,8 +1,8 @@
 #pragma once
-#include <reazip/types.hpp>
+#include <zenzip/types.hpp>
 #include <memory>
 #include <ostream>
-namespace reazip {
+namespace zenzip {
 // Directory handles anchor every component; archive names never resolve through links.
 class SecureOutput {
  public:

@@ -6,9 +6,9 @@ const os = require('os');
 const lib = require('./lib/archive');
 
 (async () => {
-  const tmp = path.join(os.tmpdir(), 'reazip-smoke-' + Date.now());
+  const tmp = path.join(os.tmpdir(), 'zenzip-smoke-' + Date.now());
   fs.mkdirSync(path.join(tmp, 'src', 'sub'), { recursive: true });
-  fs.writeFileSync(path.join(tmp, 'src', 'a.txt'), 'hello reazip 你好\n'.repeat(50));
+  fs.writeFileSync(path.join(tmp, 'src', 'a.txt'), 'hello zenzip 你好\n'.repeat(50));
   fs.writeFileSync(path.join(tmp, 'src', 'sub', 'b.md'), '# markdown\n' + 'x'.repeat(2000));
 
   console.log('7za:', lib.bin());

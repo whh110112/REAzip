@@ -5,7 +5,7 @@ import QtQuick.Dialogs
 ApplicationWindow {
     id: window
     width: 1120; height: 740; minimumWidth: 880; minimumHeight: 560
-    visible: true; title: "REAzip"
+    visible: true; title: "ZENzip"
     flags: Qt.platform.os === "osx" ? Qt.Window : Qt.Window | Qt.FramelessWindowHint
     property var api: typeof backend !== "undefined" ? backend : null
     property bool preview: typeof designPreview !== "undefined" && designPreview
@@ -25,12 +25,12 @@ ApplicationWindow {
         if(scene==="create")createDialog.open();else if(scene==="extract")extractDialog.open();else if(scene==="settings")settingsDialog.open();else if(scene==="appearance"){settingsPages.currentIndex=2;settingsDialog.open()}else if(scene==="vault"){settingsPages.currentIndex=1;settingsDialog.open()}else if(scene==="password")passwordDialog.open();else if(scene==="conflict"){window.currentChallenge={path:"example.txt"};conflictDialog.open()}else if(scene==="progress")progressDialog.open()
     }
     readonly property color paper: token("--bg", "#FFFFFF")
-    readonly property color surface: token("--surface", "#F1EFE8")
+    readonly property color surface: token("--surface", "#F1F0EB")
     readonly property color card: token("--card", "#FFFFFF")
-    readonly property color ink: token("--text", "#2C2C2A")
-    readonly property color muted: token("--muted", "#5F5E5A")
-    readonly property color edge: token("--border", "#D3D1C7")
-    readonly property color accent: token("--accent", "#378ADD")
+    readonly property color ink: token("--text", "#292F2A")
+    readonly property color muted: token("--muted", "#59645C")
+    readonly property color edge: token("--border", "#D7D8CF")
+    readonly property color accent: token("--accent", "#486451")
     color: paper; font.pixelSize: 13
     LayoutMirroring.enabled: api ? api.rtl : false
     LayoutMirroring.childrenInherit: true
@@ -52,10 +52,10 @@ ApplicationWindow {
             Layout.fillWidth: true; implicitHeight: Qt.platform.os === "osx" ? 0 : 36; visible: height > 0; color: window.surface
             MouseArea { anchors.fill: parent; onPressed: window.startSystemMove(); onDoubleClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized() }
             Row { anchors.left: parent.left; anchors.leftMargin: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7
-                Rectangle { width: 14; height: 14; radius: 4; color: window.accent; Rectangle { x: 8; y: 8; width: 8; height: 8; radius: 2; border.color: window.accent; color: window.card } }
-                SafeLabel { text: "REAzip"; color: window.ink; font.pixelSize: 12 }
+                Canvas { id: zenMark; width: 18; height: 18; onPaint: { let c=getContext("2d"); c.reset(); c.strokeStyle=window.accent; c.lineWidth=2; c.lineCap="round"; c.beginPath(); c.arc(9,9,6,0.3,Math.PI*1.9); c.stroke() } Connections { target: window; function onAccentChanged() { zenMark.requestPaint() } } }
+                SafeLabel { text: "ZENzip"; color: window.ink; font.pixelSize: 12 }
             }
-            SafeLabel { anchors.centerIn: parent; text: window.hasArchive ? (window.api ? window.api.archiveName : "demo.zip · design preview") : "REAzip"; color: window.muted; font.pixelSize: 12 }
+            SafeLabel { anchors.centerIn: parent; text: window.hasArchive ? (window.api ? window.api.archiveName : "demo.zip · design preview") : "ZENzip"; color: window.muted; font.pixelSize: 12 }
             Row { anchors.right: parent.right; height: parent.height
                 ToolButton { width: 46; height: parent.height; text: "−"; onClicked: window.showMinimized(); Accessible.name: "Minimize" }
                 ToolButton { width: 46; height: parent.height; text: "□"; onClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized(); Accessible.name: "Maximize" }
@@ -283,7 +283,7 @@ ApplicationWindow {
                     Caption { text:window.t("assocHint","Windows 11 的现代右键菜单需要签名 COM 组件；本版本提供经典右键菜单（在「显示更多选项」中）。");wrapMode:Text.Wrap;Layout.fillWidth:true;font.pixelSize:12 }
                     Item { Layout.fillHeight:true } }
                 ColumnLayout { Caption { text:window.t("uiLanguage","界面语言") } ComboBox { model:window.api?window.api.languages:[];textRole:"name";onActivated:if(window.api)window.api.setPreference("language",model[currentIndex].code) } Caption { text:window.t("langHint","支持18种语言") } Item { Layout.fillHeight:true } }
-                ColumnLayout { SafeLabel { text:"REAzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/REAzip" } Item { Layout.fillHeight:true } }
+                ColumnLayout { SafeLabel { text:"ZENzip "+(window.api?window.api.version:"design preview");color:window.ink;font.pixelSize:20 } Caption { text:window.api?window.api.engineIdentity:"C++17 · Qt Quick · 7-Zip native library";wrapMode:Text.Wrap;Layout.fillWidth:true } Caption { text:"github.com/whh110112/ZENzip" } Item { Layout.fillHeight:true } }
             }
         }
         footer:RowLayout { Item { Layout.fillWidth:true } Action { objectName:"settingsDone";text:window.t("done","完成");primary:true;onClicked:settingsDialog.close() } }

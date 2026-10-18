@@ -1,12 +1,12 @@
-# REAzip
+# ZENzip
 
 中文 | [English](README.md)
 
-一款以完整 7-Zip 原生库为核心的跨平台压缩包管理器，提供多标签、六主题的 Qt Quick 界面。REAzip 把久经考验的 7-Zip 26.04 引擎和 Bandizip 普及的日常操作流——多标签、任务队列、智能解压、逐条目冲突处理——结合在一起，同时保持功能面诚实：界面上没有假按钮。
+一款以完整 7-Zip 原生库为核心的跨平台压缩包管理器，提供多标签、六主题的 Qt Quick 界面。ZENzip 把久经考验的 7-Zip 26.04 引擎和 Bandizip 普及的日常操作流——多标签、任务队列、智能解压、逐条目冲突处理——结合在一起，同时保持功能面诚实：界面上没有假按钮。
 
 > **状态：0.3.1-dev 开发版。** 六个原生目标在同一提交上构建并测试；哪些已验证、哪些未验证，见[验收报告](native/docs/acceptance-report.md)。v0.2.1 是旧 Electron 版。
 
-![REAzip 中文界面](native/design/native-reference/light-zh-CN-empty.png)
+![ZENzip 中文界面](native/design/native-reference/light-zh-CN-empty.png)
 
 <sub>截图为 0.3.0-dev 的简体中文界面，并非 0.3.1-dev 的完整功能展示。当前验证范围与待验项目见[验收报告](native/docs/acceptance-report.md)。</sub>
 
@@ -25,7 +25,7 @@
 
 对比仅限公开资料与本项目自身的验收范围；“–”表示本版本未实现。
 
-| 能力 | REAzip 0.3.1-dev | 7-Zip | NanaZip | Bandizip |
+| 能力 | ZENzip 0.3.1-dev | 7-Zip | NanaZip | Bandizip |
 |---|---|---|---|---|
 | ZIP / 7Z / TAR / GZ 创建与解压 | ✓ | ✓ | ✓ | ✓ |
 | RAR / RAR5 / ISO / WIM 解压 | ✓ | ✓ | ✓ | ✓ |
@@ -43,7 +43,7 @@
 
 ## 下载
 
-开发版 [`v0.3.1-dev`](https://github.com/whh110112/REAzip/releases/tag/v0.3.1-dev) 提供六目标安装包：Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + deb + tar.gz。每个包附带版本、源码 SHA、CPU 架构、逐文件 SHA-256、签名状态与许可声明，另有 `SHA256SUMS.txt` 覆盖全部附件。
+开发版 [`v0.3.1-dev`](https://github.com/whh110112/ZENzip/releases/tag/v0.3.1-dev) 提供六目标安装包：Windows x64/ARM64 安装 EXE + 便携 ZIP、macOS x64/ARM64 DMG + ZIP、Linux x64/ARM64 AppImage + deb + tar.gz。每个包附带版本、源码 SHA、CPU 架构、逐文件 SHA-256、签名状态与许可声明，另有 `SHA256SUMS.txt` 覆盖全部附件。
 
 请按**开发版**试用：自动化六目标门禁会在每个目标上构建并测试，但[验收报告](native/docs/acceptance-report.md)里的人工项（并排视觉比对、真实桌面关联与菜单、拖出、大包压力）尚未执行。
 
@@ -60,7 +60,7 @@ python -m pip install aqtinstall==3.3.0 ninja==1.11.1.4 cmake==3.31.6
 python native/bootstrap/dependencies.py --arch x64
 python native/bootstrap/qt-sdk.py --arch x64 --output .native-build/Qt
 # 将生成的 Qt SDK 加入 PATH / CMAKE_PREFIX_PATH 后：
-cmake -S native -B .native-build/release -DREAZIP_ENGINE_DIR=/absolute/path/to/native/.deps/engine/x64 -DREAZIP_HEAVY_TESTS=ON
+cmake -S native -B .native-build/release -DZENZIP_ENGINE_DIR=/absolute/path/to/native/.deps/engine/x64 -DZENZIP_HEAVY_TESTS=ON
 cmake --build .native-build/release --config Release --parallel 3
 ctest --test-dir .native-build/release -C Release --output-on-failure
 ```
@@ -73,4 +73,4 @@ Win11 现代右键菜单、Finder/Nautilus 扩展、SFX 创建、密码恢复、
 
 ## 许可
 
-REAzip 自有代码采用 MIT；发行包另含 Qt（LGPL）、bit7z（MPL）、7-Zip（LGPL/unRAR 限制），**整个发行包不能简写成“全部 MIT”**。第三方声明与对应源码随包提供，见[打包声明](native/packaging/NOTICE.md)。Bandizip 为其权利人商标，本项目与其无关联。
+ZENzip 自有代码采用 MIT；发行包另含 Qt（LGPL）、bit7z（MPL）、7-Zip（LGPL/unRAR 限制），**整个发行包不能简写成“全部 MIT”**。第三方声明与对应源码随包提供，见[打包声明](native/packaging/NOTICE.md)。Bandizip 为其权利人商标，本项目与其无关联。

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>CFBundleExecutable</key><string>reazip</string>
-<key>CFBundleIdentifier</key><string>com.reazip.app</string>
-<key>CFBundleName</key><string>REAzip</string>
-<key>CFBundleDisplayName</key><string>REAzip</string>
+<key>CFBundleExecutable</key><string>zenzip</string>
+<key>CFBundleIdentifier</key><string>com.zenzip.app</string>
+<key>CFBundleName</key><string>ZENzip</string>
+<key>CFBundleDisplayName</key><string>ZENzip</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
 <key>CFBundleVersion</key><string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>

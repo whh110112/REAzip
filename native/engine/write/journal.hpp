@@ -1,7 +1,7 @@
 #pragma once
-#include <reazip/types.hpp>
+#include <zenzip/types.hpp>
 #include <memory>
-namespace reazip {
+namespace zenzip {
 void syncFile(const fs::path&);
 void commitFile(const fs::path& source,const fs::path& destination,bool replace=true);
 void recoverTransactions(const fs::path& archive,const Callbacks&);

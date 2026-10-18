@@ -1,7 +1,7 @@
 name: Native foundation
 on:
   push:
-    branches: [native-migration]
+    branches: [main, native-migration, codex/zenzip-0.4.0]
     paths: ['native/**', '.github/workflows/native-foundation.yml']
   workflow_dispatch:
 permissions:
@@ -34,7 +34,7 @@ jobs:
           if [[ "$RUNNER_OS" == Windows ]]; then
             if [[ '${{ matrix.arch }}' == arm64 ]]; then args+=(-A ARM64); else args+=(-A x64); fi
           fi
-          cmake -S native -B .native-build/ci -DREAZIP_BUILD_GUI=OFF -DREAZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/${{ matrix.arch }}" "${args[@]}"
+          cmake -S native -B .native-build/ci -DZENZIP_BUILD_GUI=OFF -DZENZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/${{ matrix.arch }}" "${args[@]}"
       - run: cmake --build .native-build/ci --config Release --parallel 2
       - name: Execute archive operations on native runner
         run: ctest --test-dir .native-build/ci -C Release --output-on-failure

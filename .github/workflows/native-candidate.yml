@@ -1,7 +1,7 @@
 name: Native candidate
 on:
   push:
-    branches: [native-migration]
+    branches: [main, native-migration, codex/zenzip-0.4.0]
     paths: ['native/**', '.github/workflows/native-candidate.yml']
   workflow_dispatch:
 permissions:
@@ -61,17 +61,20 @@ jobs:
             args+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0)
           fi
           if [[ -n "${QT_HOST_PATH:-}" ]]; then args+=(-DQT_HOST_PATH="$QT_HOST_PATH"); fi
-          cmake -S native -B .native-build/candidate -DCMAKE_BUILD_TYPE=Release -DREAZIP_BUILD_GUI=ON -DREAZIP_HEAVY_TESTS=ON -DREAZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/${{ matrix.arch }}" "${args[@]}"
+          cmake -S native -B .native-build/candidate -DCMAKE_BUILD_TYPE=Release -DZENZIP_BUILD_GUI=ON -DZENZIP_HEAVY_TESTS=ON -DZENZIP_ENGINE_DIR="$GITHUB_WORKSPACE/native/.deps/engine/${{ matrix.arch }}" "${args[@]}"
       - run: cmake --build .native-build/candidate --config Release --parallel 3
       - run: python native/tools/prepare-translations.py
       - run: ctest --test-dir .native-build/candidate -C Release --output-on-failure
       - name: Native Qt window smoke
         shell: bash
         run: |
-          if [[ "$RUNNER_OS" == Windows ]]; then app=.native-build/candidate/bin/Release/reazip.exe;
-          elif [[ "$RUNNER_OS" == macOS ]]; then app=.native-build/candidate/bin/reazip.app/Contents/MacOS/reazip;
-          else app=.native-build/candidate/bin/reazip; fi
+          if [[ "$RUNNER_OS" == Windows ]]; then app=.native-build/candidate/bin/Release/zenzip.exe;
+          elif [[ "$RUNNER_OS" == macOS ]]; then app=.native-build/candidate/bin/zenzip.app/Contents/MacOS/zenzip;
+          else app=.native-build/candidate/bin/zenzip; fi
           "$app" --smoke native/tests/fixtures/sample.iso --screenshot .native-build/native-smoke.png
+      - name: Capture paired languages and theme-scale acceptance matrix
+        if: runner.os == 'Windows' && matrix.arch == 'x64'
+        run: python native/tools/capture-native.py .native-build/candidate/bin/Release/zenzip.exe .native-build/screenshots --full
       - name: Build and isolate-test offline candidate packages
         run: python native/packaging/package.py --build .native-build/candidate --arch ${{ matrix.arch }} --qt-prefix "${{ env.QT_PREFIX }}" --output .native-build/artifacts
         env:
@@ -84,6 +87,7 @@ jobs:
             .native-build/candidate/Testing/Temporary/LastTest.log
             .native-build/native-smoke.png
             .native-build/artifacts/*
+            .native-build/screenshots/*
           if-no-files-found: ignore
   aggregate:
     needs: build

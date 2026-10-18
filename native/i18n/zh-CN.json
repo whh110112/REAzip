@@ -162,7 +162,7 @@
   "assocSummary": "关联状态",
   "assocHint": "Windows 11 的现代右键菜单需要签名 COM 组件；本版本提供经典右键菜单（在「显示更多选项」中）。",
   "registeredMac": "压缩包类型由应用包声明。在 Finder「显示简介 → 打开方式 → 全部更改」中设为默认。",
-  "registeredLinux": "已安装桌面入口，并已把支持的压缩包类型指向 REAzip。",
+  "registeredLinux": "已安装桌面入口，并已把支持的压缩包类型指向 ZENzip。",
   "vaultWriteFailed": "无法保存密码",
   "archivePassword": "压缩包密码"
 }
