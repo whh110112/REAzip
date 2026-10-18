@@ -59,7 +59,17 @@ class GuiFlow : public QObject {
       for(const auto& page:pages){
         scene(page);auto dialog=root->findChild<QObject*>("settingsDialog");QVERIFY(dialog);
         auto content=qvariant_cast<QQuickItem*>(dialog->property("contentItem"));QVERIFY(content);
-        inspect(content,content,themeId+'/'+code+'/'+page);++checked;
+        // Font fallback and Layout polish can complete on separate frames,
+        // especially on macOS. Check settled geometry, not an intermediate frame.
+        const auto before=failures.size();QElapsedTimer settling;settling.start();
+        do {
+          failures=failures.mid(0,before);
+          std::function<void(QQuickItem*)> polish=[&](QQuickItem* item){for(auto child:item->childItems())polish(child);item->ensurePolished();};
+          polish(content);polish(content);
+          inspect(content,content,themeId+'/'+code+'/'+page);
+          if(failures.size()>before)QTest::qWait(10);
+        } while(failures.size()>before&&settling.elapsed()<1000);
+        ++checked;
         QCOMPARE(language->property("currentValue").toString(),code);
         QVERIFY(dialog->property("height").toDouble()<=window->height()-39);
         auto checkbox=root->findChild<QObject*>("prefRestoreTabs");QVERIFY(checkbox);
