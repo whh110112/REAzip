@@ -74,7 +74,7 @@
   "conflictTitle": "目标位置已有同名文件",
   "skipAll": "全部跳过",
   "renameAll": "自动重命名",
-  "overwriteAll": "覆盖全部",
+  "overwriteAll": "全部覆盖",
   "confirm": "确定",
   "needPassword": "需要密码",
   "enterPassword": "输入密码",

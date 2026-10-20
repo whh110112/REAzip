@@ -59,6 +59,11 @@ int main(int argc, char** argv) {
   const auto library=QCoreApplication::applicationDirPath()+"/engine/7z.so";
 #endif
   AppController controller(worker,library,nullptr,testing||!startupFailure.isEmpty()?smokeData.path():QString());
+  // Explicit acceptance mode for testing HTTPS from an isolated package.
+  // Ordinary startup and the regular offline smoke test never contact GitHub.
+  auto updates=qobject_cast<UpdateChecker*>(controller.updates());
+  const bool checkUpdateSmoke=arguments.contains("--smoke")&&arguments.contains("--check-updates");
+  if(checkUpdateSmoke)QTimer::singleShot(0,updates,&UpdateChecker::check);
   if(arguments.contains("--smoke"))QObject::connect(&controller,&AppController::message,&app,[&](QString text,bool error){if(error){qCritical().noquote()<<text;app.exit(6);}});
   for(const auto& option:{QString("--theme"),QString("--language")}){const auto index=arguments.indexOf(option);if(index>=0&&index+1<arguments.size())controller.setPreference(option=="--theme"?"skin":"language",arguments[index+1]);}
   QQmlApplicationEngine engine;
@@ -79,6 +84,7 @@ int main(int argc, char** argv) {
   QElapsedTimer smokeElapsed;smokeElapsed.start();QTimer smokeTimer;
   if(app.arguments().contains("--smoke")){smokeTimer.setInterval(100);QObject::connect(&smokeTimer,&QTimer::timeout,&app,[&]{
     if(smokeElapsed.elapsed()<700)return;
+    if(checkUpdateSmoke){if(updates->state()=="idle"||updates->state()=="checking")return;if(updates->state()=="error"){app.exit(8);return;}}
     if(arguments.contains("--performance")&&startup.elapsed()<qMax<qint64>(firstFrame,archiveReady)+2000)return;
     if(!arguments.contains("--design-preview")&&(controller.busy()||(!launchPaths.isEmpty()&&controller.archiveFormat().isEmpty()))){if(smokeElapsed.elapsed()<15000)return;app.exit(4);return;}
     smokeTimer.stop();if(engine.rootObjects().isEmpty()){app.exit(1);return;}

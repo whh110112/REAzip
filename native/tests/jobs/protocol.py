@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory() as folder:
     def extract(label,choice,remember,expected_count,terminal='completed'):
         destination=root/label;destination.mkdir()
         for name in names:(destination/name).write_text('keep',encoding='utf-8')
-        c=Client();c.send(type='submit',operation='extract',archive=str(sample),destination=str(destination),overwrite='ask')
+        c=Client();c.send(type='submit',operation='extract',archive=str(sample),destination=str(destination),entryIds=[],overwrite='ask')
         challenges=0
         while True:
             frame=c.get()
