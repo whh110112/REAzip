@@ -93,7 +93,7 @@ Listing Engine::list(const fs::path& input,const std::string& pw,const std::stri
       for (std::uint32_t i=0;i<count;++i) {
         auto part=p;auto suffix=std::to_string(std::uint64_t(i)+1);while(suffix.size()<3)suffix='0'+suffix;
         part.replace_extension('.'+suffix);const auto size=fs::file_size(part);
-        if (size>std::numeric_limits<std::uint64_t>::max()-bytes)throw Error(ErrorCode::CorruptArchive,"Archive volume sizes overflow");
+        if (size>(std::numeric_limits<std::uint64_t>::max)()-bytes)throw Error(ErrorCode::CorruptArchive,"Archive volume sizes overflow");
         bytes+=size;
       }
       result.physicalSize=bytes;result.physicalSizeComplete=true;

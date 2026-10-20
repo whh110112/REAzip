@@ -21,7 +21,7 @@ int main(int argc,char** argv){QCoreApplication app(argc,argv);QTemporaryDir wor
   if(!first.set("language","en"))return 5;Settings second(data);if(!second.load(legacy)||second.values()["language"]!="en")return 6;
   write(data+"/settings.json","{invalid");Settings damaged(data);if(!damaged.load()||QDir(data).entryList({"*.corrupt-*"},QDir::Files).size()!=1)return 7;
   write(data+"/settings.json",R"({"schemaVersion":99,"language":"ja"})");Settings future(data);if(future.load()||future.set("language","en")||!read(data+"/settings.json").contains("99"))return 8;
-  const QJsonArray builtins{QJsonObject{{"id","light"},{"vars",QJsonObject{{"--accent","#123456"},{"--text","#000000"}}}},QJsonObject{{"id","sleep"},{"vars",QJsonObject{{"--accent","#abcdef"},{"--text","#ffffff"}}}}};Themes themes;themes.load(data+"/themes",builtins);if(themes.all().size()!=3||themes.notices().size()!=2)return 9;
+  const QJsonArray builtins{QJsonObject{{"id","light"},{"vars",QJsonObject{{"--accent","#123456"},{"--text","#000000"}}}},QJsonObject{{"id","sleep"},{"vars",QJsonObject{{"--accent","#abcdef"},{"--text","#ffffff"}}}}};Themes themes;themes.load(data+"/themes",builtins);if(themes.all().size()!=3||themes.notices().size()!=2){std::cerr<<"Theme import notices: "<<themes.notices().join("; ").toStdString()<<'\n';return 9;}
   const auto imported=themes.all().last().toObject();if(imported.contains("css")||imported["vars"].toObject()["--accent"]!="#80010203"||!Themes::color("rgba(999,0,0,.5)").isEmpty()||Themes::color("rgb(100,120,140)")!="#ff64788c")return 10;
   const auto themeDir=data+"/themes";QDir().mkpath(themeDir+"/textures");
   QImage texture(8,8,QImage::Format_RGB32);texture.fill(Qt::gray);if(!texture.save(themeDir+"/textures/paper.png"))return 11;
