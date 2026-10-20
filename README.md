@@ -36,6 +36,8 @@ Windows uses the classic context menu, under “Show more options” on Windows 
 
 The [native workflow](.github/workflows/native-candidate.yml) pins dependencies and builds all six targets. See the [installation/build guide](native/docs/installation-guide.md). Full capture matrices belong in build artifacts; each README shows one real capture in its own language.
 
+The current source adds an adaptive circular identity. See [theme authoring and automatic logo behavior](native/docs/themes.md); these changes are not included in the existing 0.4.1 downloads.
+
 ## License
 
 ZENzip source is MIT. Qt, bit7z and 7-Zip have their own licenses; see [third-party notices](native/packaging/NOTICE.md).

@@ -17,6 +17,7 @@ class AppController : public QObject {
   Q_PROPERTY(bool hasArchive READ hasArchive NOTIFY changed)
   Q_PROPERTY(QString archiveName READ archiveName NOTIFY changed)
   Q_PROPERTY(QString archiveFormat READ archiveFormat NOTIFY changed)
+  Q_PROPERTY(double archiveRatio READ archiveRatio NOTIFY changed)
   Q_PROPERTY(QString breadcrumb READ breadcrumb NOTIFY changed)
   Q_PROPERTY(QVariantList details READ details NOTIFY changed)
   Q_PROPERTY(QString statusSummary READ statusSummary NOTIFY changed)
@@ -32,6 +33,7 @@ class AppController : public QObject {
   Q_PROPERTY(QString engineIdentity READ engineIdentity NOTIFY changed)
   Q_PROPERTY(QString version READ version CONSTANT)
   Q_PROPERTY(QVariantMap colors READ colors NOTIFY changed)
+  Q_PROPERTY(QVariantMap themeBackground READ themeBackground NOTIFY changed)
   Q_PROPERTY(QVariantList themeList READ themeList NOTIFY changed)
   Q_PROPERTY(QVariantList languages READ languages NOTIFY changed)
   Q_PROPERTY(bool rtl READ rtl NOTIFY changed)
@@ -49,12 +51,14 @@ class AppController : public QObject {
   ~AppController() override;
   QObject* entries(){return &model;} QVariantList tabs()const;QString activeTab()const{return current;}
   bool hasArchive()const{return tab()!=nullptr;}QString archiveName()const;QString archiveFormat()const;QString breadcrumb()const;
+  double archiveRatio()const;
   QVariantList details()const;QString statusSummary()const;QString status()const;
   bool canModify()const;bool hasSelection()const{return !model.selection().isEmpty();}QString selectedName()const{return model.selectedName();}
   QString defaultArchiveDir()const;QString defaultExtractDir()const;
   QString version()const;
   bool busy()const{return jobs.busy();}double progress()const{return jobs.progress();}QString jobState()const{return jobs.state();}QString engineIdentity()const{return identity;}
   QVariantMap colors()const;QVariantList themeList()const;QVariantList languages()const;
+  QVariantMap themeBackground()const;
   bool rtl()const;bool restoreTabs()const{return preferences["restoreTabs"].toBool(true);}int revision()const{return epoch;}
   QString languageCode()const{return preferences["language"].toString();}
   QString themeId()const{return preferences["skin"].toString();}
@@ -91,7 +95,7 @@ class AppController : public QObject {
   void createRequested(QVariantList paths);void extractRequested();
   void operationCompleted(QString operation,QJsonObject result);void operationFailed(QString code,QString text);
  private:
-  struct Tab {QString id,path,format,revision,folder;QJsonArray entries;quint64 physical{};};
+  struct Tab {QString id,path,format,revision,folder;QJsonArray entries;quint64 physical{};double ratio{-1};};
   struct Context {QString tabId,path,openEntry;bool openAfter{},temporary{},drag{};};
   JobController jobs;EntryModel model;QVector<Tab> documents;QHash<QString,Context> contexts;QString current,identity;
   Settings settings;Vault vault;Themes themeService;QJsonObject preferences,translations,english;QJsonArray skins;int epoch{};

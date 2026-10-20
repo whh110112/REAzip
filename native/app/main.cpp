@@ -23,9 +23,17 @@ int main(int argc, char** argv) {
   QGuiApplication::setOrganizationName("ZENzip");
   QGuiApplication::setApplicationName("ZENzip");
   QCoreApplication::setApplicationVersion(ZENZIP_VERSION_FULL);
-  QPixmap mark(256,256);mark.fill(Qt::transparent);
-  {QPainter painter(&mark);painter.setRenderHint(QPainter::Antialiasing);painter.setBrush(QColor("#FAF9F6"));painter.setPen(Qt::NoPen);painter.drawRoundedRect(mark.rect(),48,48);painter.setBrush(Qt::NoBrush);painter.setPen(QPen(QColor("#486451"),18,Qt::SolidLine,Qt::RoundCap));painter.drawArc(QRectF(46,46,164,164),-18*16,310*16);}
-  app.setWindowIcon(QIcon(mark));
+  // OS/taskbar icons keep the fixed A mark; archive metrics and skins only
+  // affect the in-window component, never registered file associations.
+  QIcon applicationIcon;
+  for (const auto size : {16,20,24,32,48,64,128,256}) {
+    QPixmap mark(size,size);mark.fill(Qt::transparent);
+    QPainter painter(&mark);painter.setRenderHint(QPainter::Antialiasing);painter.scale(size/256.0,size/256.0);
+    painter.setBrush(QColor("#FAF9F6"));painter.setPen(Qt::NoPen);painter.drawRoundedRect(QRectF(0,0,256,256),56,56);
+    painter.setBrush(Qt::NoBrush);painter.setPen(QPen(QColor("#486451"),size<=24?32:24,Qt::SolidLine,Qt::RoundCap));
+    painter.drawArc(QRectF(44,44,168,168),21*16,-312*16);painter.end();applicationIcon.addPixmap(mark);
+  }
+  app.setWindowIcon(applicationIcon);
   QQuickStyle::setStyle("Basic");
   const auto arguments=app.arguments();
   const auto fontIndex=arguments.indexOf("--font-file");

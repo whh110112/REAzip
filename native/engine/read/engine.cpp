@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <limits>
 namespace zenzip {
 void checkCancelled(const Callbacks& cb) { if(cb.cancelled && cb.cancelled()) throw Error(ErrorCode::Cancelled,"Task cancelled"); }
 void attach(bit7z::BitAbstractArchiveHandler& handler,const Callbacks& cb) {
@@ -81,6 +82,23 @@ Listing Engine::list(const fs::path& input,const std::string& pw,const std::stri
   recoverTransactions(p,cb);
   auto reader=openReader(impl->library,p,pw,cp,cb);
   Listing result;result.sourceRevision=revision(p);result.format=reader.nestedTar?"tgz":formatName(reader->detectedFormat());result.physicalSize=fs::file_size(p);std::uint64_t metadata=14695981039346656037ull;
+  if (!reader.nestedTar && reader->isMultiVolume()) {
+    result.physicalSizeComplete=false;
+    const auto properties=reader->archiveProperties();
+    const auto total=properties.find(bit7z::BitProperty::TotalPhySize);
+    if (total!=properties.end() && total->second.isUInt64() && total->second.getUInt64()>=result.physicalSize) {
+      result.physicalSize=total->second.getUInt64();result.physicalSizeComplete=true;
+    } else if (p.extension()==".001") {
+      std::uint64_t bytes=0;const auto count=reader->volumesCount();
+      for (std::uint32_t i=0;i<count;++i) {
+        auto part=p;auto suffix=std::to_string(std::uint64_t(i)+1);while(suffix.size()<3)suffix='0'+suffix;
+        part.replace_extension('.'+suffix);const auto size=fs::file_size(part);
+        if (size>std::numeric_limits<std::uint64_t>::max()-bytes)throw Error(ErrorCode::CorruptArchive,"Archive volume sizes overflow");
+        bytes+=size;
+      }
+      result.physicalSize=bytes;result.physicalSizeComplete=true;
+    }
+  }
   auto feed=[&](const std::string& text){for(unsigned char c:text){metadata^=c;metadata*=1099511628211ull;}metadata^=0xff;metadata*=1099511628211ull;};
   for(const auto& item:*reader) {
     checkCancelled(cb);Entry e;e.index=item.index();

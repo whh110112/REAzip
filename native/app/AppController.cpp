@@ -1,4 +1,5 @@
 #include "AppController.hpp"
+#include "../models/ArchiveMetrics.hpp"
 #include <QFileInfo>
 #include <QDir>
 #include <QFile>
@@ -51,6 +52,7 @@ AppController::Tab* AppController::find(QString id){for(auto& t:documents)if(t.i
 QVariantList AppController::tabs()const{QVariantList result;for(const auto& t:documents)result.append(QVariantMap{{"id",t.id},{"name",QFileInfo(t.path).fileName()}});return result;}
 QString AppController::archiveName()const{return tab()?QFileInfo(tab()->path).fileName():QString();}
 QString AppController::archiveFormat()const{return tab()?tab()->format:QString();}
+double AppController::archiveRatio()const{return tab()?tab()->ratio:-1;}
 QString AppController::version()const{return QCoreApplication::applicationVersion();}
 QString AppController::breadcrumb()const{return archiveName()+(model.folder().isEmpty()?QString():" / "+model.folder());}
 bool AppController::canModify()const{return tab()&&!busy()&&(tab()->format=="zip"||tab()->format=="7z"||tab()->format=="tar");}
@@ -66,6 +68,7 @@ QVariantList AppController::details()const{
 }
 QString AppController::translate(QString key,QString fallback)const{return translations[key].toString(english[key].toString(fallback));}
 QVariantMap AppController::colors()const{for(const auto& value:skins){auto item=value.toObject();if(item["id"]==preferences["skin"]){QVariantMap result;const auto vars=item["vars"].toObject();for(auto it=vars.begin();it!=vars.end();++it)if(QColor(it.value().toString()).isValid())result[it.key()]=it.value().toString();return result;}}return {};}
+QVariantMap AppController::themeBackground()const{for(const auto& value:skins){const auto item=value.toObject();if(item["id"]==preferences["skin"])return item["background"].toObject().toVariantMap();}return {};}
 QVariantList AppController::themeList()const{QVariantList result;for(const auto& v:skins){auto item=v.toObject();result.append(QVariantMap{{"id",item["id"].toString()},{"name",preferences["language"].toString().startsWith("zh")?item["name"].toString():item["nameEn"].toString(item["name"].toString())}});}return result;}
 QVariantList AppController::languages()const{QVariantList result;for(const auto& name:QDir(":/data/i18n").entryList({"*.json"},QDir::Files)){auto code=QFileInfo(name).completeBaseName();if(code=="LOCALES")continue;QLocale locale(code);result.append(QVariantMap{{"code",code},{"name",locale.nativeLanguageName()+" ("+code+")"}});}return result;}
 bool AppController::rtl()const{return QLocale(preferences["language"].toString()).textDirection()==Qt::RightToLeft;}
@@ -80,7 +83,7 @@ void AppController::showTab(){if(tab())model.load(tab()->entries,tab()->revision
 void AppController::closeTab(QString id){for(int i=0;i<documents.size();++i)if(documents[i].id==id){documents.removeAt(i);break;}if(current==id)current=documents.isEmpty()?QString():documents.last().id;showTab();}
 void AppController::activateTab(QString id){if(find(id)){current=id;showTab();}}
 QString AppController::submit(QJsonObject request,Context context){auto id=jobs.submit(request);contexts[id]=std::move(context);return id;}
-void AppController::refresh(QString id){if(auto t=find(id))submit({{"operation","list"},{"archive",t->path},{"codepage",codepage()}},{id,t->path});}
+void AppController::refresh(QString id){if(auto t=find(id)){t->ratio=-1;submit({{"operation","list"},{"archive",t->path},{"codepage",codepage()}},{id,t->path});}}
 void AppController::testArchive(){if(tab())submit({{"operation","test"},{"archive",tab()->path}},{current,tab()->path});}
 void AppController::addUrls(QVariantList urls){if(canModify())submit({{"operation","add"},{"archive",tab()->path},{"inputs",paths(urls)}},{current,tab()->path});}
 void AppController::deleteSelected(){if(canModify()&&hasSelection())submit({{"operation","delete"},{"archive",tab()->path},{"entryIds",QJsonArray::fromStringList(model.selection())}},{current,tab()->path});}
@@ -104,7 +107,7 @@ void AppController::activateEntry(QString id){if(model.enter(id)||!tab())return;
 void AppController::completed(QString id,QString op,QJsonObject payload){
   const auto context=contexts.take(id);
   if(op=="identity")identity=payload["identity"].toString();
-  else if(op=="list"){if(auto t=find(context.tabId)){t->format=payload["format"].toString();t->revision=payload["revision"].toString();t->entries=payload["entries"].toArray();t->physical=payload["physicalSize"].toString().toULongLong();if(current==t->id)showTab();const auto action=launchActions.take(t->path);if(action=="extract_here")submit({{"operation","extract"},{"archive",t->path},{"entryIds",QJsonArray{}},{"destination",QFileInfo(t->path).absolutePath()},{"overwrite","ask"},{"codepage",codepage()}},{t->id,t->path});else if(action=="extract_to")emit extractRequested();}}
+  else if(op=="list"){if(auto t=find(context.tabId)){t->format=payload["format"].toString();t->revision=payload["revision"].toString();t->entries=payload["entries"].toArray();t->physical=payload["physicalSize"].toString().toULongLong();t->ratio=archiveMetrics::ratio(t->entries,t->physical,payload["physicalSizeComplete"].toBool());if(current==t->id)showTab();const auto action=launchActions.take(t->path);if(action=="extract_here")submit({{"operation","extract"},{"archive",t->path},{"entryIds",QJsonArray{}},{"destination",QFileInfo(t->path).absolutePath()},{"overwrite","ask"},{"codepage",codepage()}},{t->id,t->path});else if(action=="extract_to")emit extractRequested();}}
   else if(op=="create"){const auto outputs=payload["outputs"].toArray();if(!outputs.isEmpty())openUrls({QUrl::fromLocalFile(outputs.first().toString())});emit message(translate("compressDone",QString::fromUtf8("压缩完成并已校验")),false);}
   else if(op=="extract"){
     const auto destination=payload["destination"].toString();if(context.drag){dragUrls.clear();for(const auto& name:QDir(destination).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot))if(!name.startsWith(".zenzip-"))dragUrls.append(QUrl::fromLocalFile(QDir(destination).filePath(name)));}else if(context.temporary){const auto file=QDir(destination).filePath(context.openEntry);if(executable(file))emit executableRequested(file);else openExternal(file);}else if(context.openAfter)openExternal(destination);

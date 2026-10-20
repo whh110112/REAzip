@@ -88,7 +88,7 @@ class Session {
           if(operation=="identity")result["identity"]=qs(engine.identity());
           else if(operation=="list"){
             const auto listing=engine.list(file(request["archive"]),password,request["codepage"].toString().toStdString(),cb);
-            result={{"format",qs(listing.format)},{"revision",qs(listing.revision)},{"physicalSize",QString::number(listing.physicalSize)}};
+            result={{"format",qs(listing.format)},{"revision",qs(listing.revision)},{"physicalSize",QString::number(listing.physicalSize)},{"physicalSizeComplete",listing.physicalSizeComplete}};
             QJsonArray chunk;qsizetype chunkBytes=0;
             for(const auto& e:listing.entries){QJsonObject entry{{"entryId",qs(e.id)},{"index",QString::number(e.index)},{"path",qs(e.path)},{"directory",e.directory},{"link",e.link},{"size",QString::number(e.size)},{"encrypted",e.encrypted},{"encryption",qs(e.encryption)}};if(e.packed)entry["packedSize"]=QString::number(*e.packed);if(e.modified)entry["modified"]=QDateTime::fromSecsSinceEpoch(*e.modified).toLocalTime().toString("yyyy-MM-dd HH:mm");const auto bytes=QJsonDocument(entry).toJson(QJsonDocument::Compact).size();if(bytes>8*1024*1024)throw Error(ErrorCode::UnsafeEntry,"Archive entry metadata exceeds protocol limit");if(!chunk.isEmpty()&&(chunk.size()>=512||chunkBytes+bytes>1024*1024)){send("entriesChunk",{{"entries",chunk}});chunk={};chunkBytes=0;}chunk.append(entry);chunkBytes+=bytes;}
             if(!chunk.isEmpty())send("entriesChunk",{{"entries",chunk}});

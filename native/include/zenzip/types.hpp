@@ -31,7 +31,7 @@ struct Entry {
   std::optional<std::uint64_t> packed;
   std::optional<std::int64_t> modified;
 };
-struct Listing { std::string revision, sourceRevision, format; std::uint64_t physicalSize{}; std::vector<Entry> entries; };
+struct Listing { std::string revision, sourceRevision, format; std::uint64_t physicalSize{}; std::vector<Entry> entries; bool physicalSizeComplete{true}; };
 struct Callbacks {
   std::function<bool()> cancelled;
   std::function<void(std::uint64_t,std::uint64_t)> progress;

@@ -6,6 +6,9 @@
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QImage>
+#include <QFileInfo>
+#include <QUrl>
 #include <iostream>
 int main(int argc,char** argv){QCoreApplication app(argc,argv);QTemporaryDir work;const auto legacy=work.path()+"/legacy",data=work.path()+"/native";QDir().mkpath(legacy+"/skins");
   auto write=[](QString path,QByteArray bytes){QFile f(path);if(!f.open(QIODevice::WriteOnly))return false;return f.write(bytes)==bytes.size();};
@@ -20,5 +23,19 @@ int main(int argc,char** argv){QCoreApplication app(argc,argv);QTemporaryDir wor
   write(data+"/settings.json",R"({"schemaVersion":99,"language":"ja"})");Settings future(data);if(future.load()||future.set("language","en")||!read(data+"/settings.json").contains("99"))return 8;
   const QJsonArray builtins{QJsonObject{{"id","light"},{"vars",QJsonObject{{"--accent","#123456"},{"--text","#000000"}}}},QJsonObject{{"id","sleep"},{"vars",QJsonObject{{"--accent","#abcdef"},{"--text","#ffffff"}}}}};Themes themes;themes.load(data+"/themes",builtins);if(themes.all().size()!=3||themes.notices().size()!=2)return 9;
   const auto imported=themes.all().last().toObject();if(imported.contains("css")||imported["vars"].toObject()["--accent"]!="#80010203"||!Themes::color("rgba(999,0,0,.5)").isEmpty()||Themes::color("rgb(100,120,140)")!="#ff64788c")return 10;
+  const auto themeDir=data+"/themes";QDir().mkpath(themeDir+"/textures");
+  QImage texture(8,8,QImage::Format_RGB32);texture.fill(Qt::gray);if(!texture.save(themeDir+"/textures/paper.png"))return 11;
+  texture.save(data+"/outside.png");
+  write(themeDir+"/pattern.json",R"json({"id":"pattern","base":"dark","vars":{"--accent":"#999999"},"background":{"pattern":"grid","opacity":0.12,"spacing":12,"texture":"textures/paper.png"}})json");
+  Themes patterned;patterned.load(themeDir,builtins);QJsonObject appearance;
+  for(const auto& item:patterned.all())if(item.toObject()["id"]=="pattern")appearance=item.toObject()["background"].toObject();
+  if(appearance["pattern"]!="grid"||appearance["opacity"].toDouble()!=0.12||appearance["spacing"].toInt()!=12||QUrl(appearance["texture"].toString()).toLocalFile()!=QFileInfo(themeDir+"/textures/paper.png").canonicalFilePath())return 12;
+  for(const auto& unsafe:{QString("../outside.png"),QString("https://example.invalid/image.png"),data+"/outside.png"}){
+    write(themeDir+"/unsafe.json",QJsonDocument(QJsonObject{{"id","unsafe"},{"vars",QJsonObject{}},{"background",QJsonObject{{"pattern","unknown"},{"spacing",0},{"opacity",9},{"texture",unsafe}}}}).toJson());
+    Themes guarded;guarded.load(themeDir,builtins);
+    for(const auto& item:guarded.all())if(item.toObject()["id"]=="unsafe"){
+      const auto bg=item.toObject()["background"].toObject();if(bg["pattern"]!="none"||bg["spacing"].toInt()!=16||bg["opacity"].toDouble()!=0.1||!bg["texture"].toString().isEmpty())return 13;
+    }
+  }
   std::cout<<"validated atomic settings, secret whitelist, migration idempotence, damaged/future schema, CSS/token conversion PASS\n";return 0;
 }

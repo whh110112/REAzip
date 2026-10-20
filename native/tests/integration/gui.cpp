@@ -13,12 +13,59 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QFontDatabase>
+#include <QQmlComponent>
+#include <QImage>
+#include <limits>
 #include <functional>
 #include <iostream>
 class GuiFlow : public QObject {
   Q_OBJECT
  public:QString worker,library,archive,qml;QTemporaryDir work;
  private slots:
+  void adaptiveLogoRendering(){
+    QQmlEngine engine;QSignalSpy warnings(&engine,&QQmlEngine::warnings);
+    QQuickWindow window;window.resize(256,256);
+    QQmlComponent component(&engine,QUrl::fromLocalFile(QFileInfo(qml).absoluteDir().filePath("ZenLogo.qml")));
+    QScopedPointer<QObject> object(component.create());QVERIFY2(object,qPrintable(component.errorString()));
+    auto logo=qobject_cast<QQuickItem*>(object.data());QVERIFY(logo);
+    logo->setParentItem(window.contentItem());logo->setSize(QSizeF(256,256));
+    logo->setProperty("surfaceColor",QColor(Qt::white));logo->setProperty("baseColor",QColor(Qt::white));
+    for(const auto* key:{"accentColor","strongColor","textColor"})logo->setProperty(key,QColor(Qt::black));
+    window.show();
+    auto darkPixels=[&]{const auto image=window.grabWindow();int n=0;for(int y=0;y<image.height();++y)for(int x=0;x<image.width();++x)if(qGray(image.pixel(x,y))<64)++n;return n;};
+    logo->setProperty("archiveRatio",1.0);
+    QTRY_VERIFY_WITH_TIMEOUT(double(darkPixels())/(window.grabWindow().width()*window.grabWindow().height())>0.17 && double(darkPixels())/(window.grabWindow().width()*window.grabWindow().height())<0.22,4000);
+    const auto full=darkPixels();
+    logo->setProperty("archiveRatio",0.6);
+    QTRY_VERIFY_WITH_TIMEOUT(qAbs(double(darkPixels())/full-0.6)<0.025,4000);
+    QCOMPARE(logo->property("openingFraction").toDouble(),0.4);
+    QDir().mkpath("logo-captures");QVERIFY(window.grabWindow().save("logo-captures/retained-60-open-40.png"));
+    logo->setProperty("archiveRatio",0.0);QTRY_COMPARE_WITH_TIMEOUT(darkPixels(),0,4000);
+    logo->setProperty("archiveRatio",1.2);QTRY_VERIFY_WITH_TIMEOUT(qAbs(double(darkPixels())/full-1)<0.025,4000);
+    for(const auto ratio:{-1.0,std::numeric_limits<double>::quiet_NaN()}){
+      logo->setProperty("archiveRatio",ratio);QVERIFY(!logo->property("measured").toBool());QVERIFY(qAbs(logo->property("openingFraction").toDouble()-48.0/360)<1e-12);
+    }
+    const auto data=work.path()+"/logo-themes";AppController api(worker,library,nullptr,data);
+    for(const auto& theme:api.themeList()){
+      const auto id=theme.toMap()["id"].toString();api.setPreference("skin",id);const auto colors=api.colors();
+      logo->setProperty("surfaceColor",QColor(colors["--bg"].toString()));logo->setProperty("baseColor",QColor(colors["--bg"].toString()));
+      logo->setProperty("accentColor",QColor(colors["--accent"].toString()));logo->setProperty("strongColor",QColor(colors["--accent-strong"].toString()));logo->setProperty("textColor",QColor(colors["--text"].toString()));
+      QCOMPARE(logo->property("foregroundColor").value<QColor>(),QColor(colors["--accent"].toString()));
+      logo->setProperty("artwork",QVariantMap{{"pattern","dots"},{"opacity",0.12},{"spacing",12}});
+      logo->setProperty("archiveRatio",0.6);QTest::qWait(40);QVERIFY(window.grabWindow().save("logo-captures/"+id+"-60.png"));
+    }
+    QDir().mkpath(data+"/themes/textures");QImage texture(8,8,QImage::Format_RGB32);texture.fill(Qt::gray);QVERIFY(texture.save(data+"/themes/textures/paper.png"));
+    {QFile theme(data+"/themes/textured.json");QVERIFY(theme.open(QIODevice::WriteOnly));theme.write(R"json({"id":"textured","base":"dark","vars":{"--accent":"#9ABDB9"},"background":{"pattern":"grid","texture":"textures/paper.png","opacity":0.12,"spacing":12}})json");}
+    api.rescanThemes();api.setPreference("skin","textured");QCOMPARE(api.themeBackground()["pattern"].toString(),QString("grid"));QVERIFY(!api.themeBackground()["texture"].toString().isEmpty());
+    logo->setProperty("artwork",api.themeBackground());QTest::qWait(100);QVERIFY(window.grabWindow().save("logo-captures/custom-texture.png"));
+    // Imported skins can have poor contrast and translucent foregrounds.
+    logo->setProperty("surfaceColor",QColor(Qt::white));logo->setProperty("baseColor",QColor(Qt::white));
+    for(const auto* key:{"accentColor","strongColor","textColor"})logo->setProperty(key,QColor("#01FFFFFF"));
+    QCOMPARE(logo->property("foregroundColor").value<QColor>(),QColor(Qt::black));
+    logo->setSize(QSizeF(20,20));QTRY_VERIFY(logo->property("small").toBool());
+    QCOMPARE(warnings.size(),0);
+    logo->setParentItem(nullptr);
+  }
   void archiveTabLayoutAndInteraction(){
     AppController api(worker,library,nullptr,work.path()+"/tab-layout");
     QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
@@ -55,6 +102,8 @@ class GuiFlow : public QObject {
       const auto secondId=api.activeTab();QVERIFY(secondId!=firstId);
       for(const auto& theme:api.themeList()){
         const auto themeId=theme.toMap()["id"].toString();api.setPreference("skin",themeId);QTest::qWait(30);
+        auto logo=find(window->contentItem(),"archiveLogo");QVERIFY(logo);QCOMPARE(logo->property("archiveRatio").toDouble(),api.archiveRatio());
+        QCOMPARE(logo->property("accentColor").value<QColor>(),QColor(api.colors()["--accent"].toString()));
         auto tabs=find(window->contentItem(),"archiveTabs");auto add=find(window->contentItem(),"archiveTabAdd");QVERIFY(tabs);QVERIFY(add);
         auto content=qvariant_cast<QQuickItem*>(tabs->property("contentItem"));QVERIFY(content);
         QList<QQuickItem*> delegates;for(auto item:content->childItems())if(item->objectName()=="archiveTab")delegates.append(item);
