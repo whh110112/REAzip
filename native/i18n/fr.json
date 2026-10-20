@@ -165,5 +165,12 @@
   "registeredLinux": "Entrée de bureau installée et définie comme gestionnaire par défaut des types d'archives pris en charge.",
   "vaultWriteFailed": "Impossible d'enregistrer le mot de passe",
   "archivePassword": "Mot de passe de l'archive",
-  "encryptionNone": "Aucun"
+  "encryptionNone": "Aucun",
+  "conflictApplyToAll": "Ne plus demander pour les conflits de cette tâche",
+  "checkUpdates": "Rechercher des mises à jour",
+  "updateChecking": "Recherche de mises à jour…",
+  "updateAvailable": "Nouvelle version disponible",
+  "updateCurrent": "Vous utilisez la dernière version stable",
+  "updateFailed": "Impossible de vérifier les mises à jour. Vérifiez la connexion et réessayez.",
+  "updateDownload": "Accéder au téléchargement"
 }

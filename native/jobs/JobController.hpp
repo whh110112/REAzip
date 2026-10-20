@@ -17,7 +17,7 @@ class JobController : public QObject {
   double progress()const{return percent;}
   QString state()const{return phase;}
   Q_INVOKABLE void cancel();
-  Q_INVOKABLE void respond(const QString& jobId,const QString& challengeId,const QString& value);
+  Q_INVOKABLE void respond(const QString& jobId,const QString& challengeId,const QString& value,bool applyToAll=false);
  signals:
   void changed();
   void challenge(QString jobId,QString challengeId,QString kind,QJsonObject details);

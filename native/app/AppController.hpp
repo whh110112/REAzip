@@ -7,6 +7,7 @@
 #include "../settings/Settings.hpp"
 #include "../themes/Themes.hpp"
 #include "../vault/Vault.hpp"
+#include "../updates/UpdateChecker.hpp"
 #include <memory>
 #include <vector>
 class AppController : public QObject {
@@ -46,6 +47,7 @@ class AppController : public QObject {
   Q_PROPERTY(QString associationStatus READ associationStatus NOTIFY changed)
   Q_PROPERTY(int revision READ revision NOTIFY changed)
   Q_PROPERTY(bool dragPrepared READ dragPrepared NOTIFY changed)
+  Q_PROPERTY(QObject* updates READ updates CONSTANT)
  public:
   AppController(QString worker,QString engine,QObject* parent=nullptr,QString dataDirectory={});
   ~AppController() override;
@@ -56,6 +58,7 @@ class AppController : public QObject {
   bool canModify()const;bool hasSelection()const{return !model.selection().isEmpty();}QString selectedName()const{return model.selectedName();}
   QString defaultArchiveDir()const;QString defaultExtractDir()const;
   QString version()const;
+  QObject* updates(){return &updateChecker;}
   bool busy()const{return jobs.busy();}double progress()const{return jobs.progress();}QString jobState()const{return jobs.state();}QString engineIdentity()const{return identity;}
   QVariantMap colors()const;QVariantList themeList()const;QVariantList languages()const;
   QVariantMap themeBackground()const;
@@ -75,7 +78,7 @@ class AppController : public QObject {
   Q_INVOKABLE void activateEntry(QString id);
   Q_INVOKABLE void addUrls(QVariantList urls);
   Q_INVOKABLE void createArchive(QVariantMap options);Q_INVOKABLE void extractArchive(QVariantMap options);
-  Q_INVOKABLE void answerChallenge(QString job,QString id,QString value){jobs.respond(job,id,value);}
+  Q_INVOKABLE void answerChallenge(QString job,QString id,QString value,bool applyToAll=false){jobs.respond(job,id,value,applyToAll);}
   Q_INVOKABLE void cancelTask(){jobs.cancel();}
   Q_INVOKABLE void deleteSelected();Q_INVOKABLE void renameSelected(QString name);
   Q_INVOKABLE void setPreference(QString key,QVariant value);
@@ -102,6 +105,7 @@ class AppController : public QObject {
   mutable QString associationText;mutable bool associationDirty{true};
   QList<QUrl> dragUrls;QHash<QString,QString> launchActions;
   std::vector<std::unique_ptr<QTemporaryDir>> temporary;
+  UpdateChecker updateChecker;
   const Tab* tab()const;Tab* find(QString id);void showTab();
   QString submit(QJsonObject request,Context context);void refresh(QString id);
   void completed(QString id,QString operation,QJsonObject payload);void failed(QString id,QString code,QString text);

@@ -165,5 +165,12 @@
   "registeredLinux": "Wpis pulpitu zainstalowany i ustawiony jako domyślna obsługa obsługiwanych typów.",
   "vaultWriteFailed": "Nie można zapisać hasła",
   "archivePassword": "Hasło archiwum",
-  "encryptionNone": "Brak"
+  "encryptionNone": "Brak",
+  "conflictApplyToAll": "Nie pytaj ponownie o konflikty nazw w tym zadaniu",
+  "checkUpdates": "Sprawdź aktualizacje",
+  "updateChecking": "Sprawdzanie aktualizacji…",
+  "updateAvailable": "Dostępna jest nowa wersja",
+  "updateCurrent": "Używasz najnowszej stabilnej wersji",
+  "updateFailed": "Nie udało się sprawdzić aktualizacji. Sprawdź połączenie i spróbuj ponownie.",
+  "updateDownload": "Przejdź do pobierania"
 }

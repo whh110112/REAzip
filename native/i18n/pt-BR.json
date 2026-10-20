@@ -165,5 +165,12 @@
   "registeredLinux": "Entrada de desktop instalada e definida como manipulador padrão dos tipos suportados.",
   "vaultWriteFailed": "Não foi possível salvar a senha",
   "archivePassword": "Senha do arquivo",
-  "encryptionNone": "Nenhuma"
+  "encryptionNone": "Nenhuma",
+  "conflictApplyToAll": "Não perguntar novamente sobre conflitos nesta tarefa",
+  "checkUpdates": "Verificar atualizações",
+  "updateChecking": "Verificando atualizações…",
+  "updateAvailable": "Nova versão disponível",
+  "updateCurrent": "Você está usando a versão estável mais recente",
+  "updateFailed": "Não foi possível verificar atualizações. Confira a conexão e tente novamente.",
+  "updateDownload": "Ir para o download"
 }

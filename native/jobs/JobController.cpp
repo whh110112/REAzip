@@ -44,10 +44,12 @@ void JobController::read(){
     }
   }
 }
-void JobController::respond(const QString& jobId,const QString& id,const QString& value){
+void JobController::respond(const QString& jobId,const QString& id,const QString& value,bool applyToAll){
   if(!active||terminal||jobId!=activeId||id!=challengeId)return;
   QJsonObject response{{"type","respondChallenge"},{"challengeId",id}};
-  response[challengeKind=="passwordRequired"?"password":"choice"]=value;write(response);challengeId.clear();phase="Running";emit changed();
+  response[challengeKind=="passwordRequired"?"password":"choice"]=value;
+  if(challengeKind=="overwriteRequired")response["applyToAll"]=applyToAll;
+  write(response);challengeId.clear();phase="Running";emit changed();
 }
 void JobController::cancel(){if(!active||terminal)return;write({{"type","cancel"}});phase="Cancelling";emit changed();const auto id=activeId;QTimer::singleShot(5000,this,[this,id]{if(active&&activeId==id&&!terminal)cancellationTimeout();});}
 void JobController::cancellationTimeout(){if(!active||terminal)return;if(committing){const auto id=activeId;QTimer::singleShot(1000,this,[this,id]{if(active&&activeId==id)cancellationTimeout();});return;}active->kill();fail("Cancelled","Task process was stopped after cancellation timeout");}

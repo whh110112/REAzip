@@ -165,5 +165,12 @@
   "registeredLinux": "تم تثبيت إدخال سطح المكتب وتعيينه المعالج الافتراضي للأنواع المدعومة.",
   "vaultWriteFailed": "تعذّر حفظ كلمة المرور",
   "archivePassword": "كلمة مرور الأرشيف",
-  "encryptionNone": "لا يوجد"
+  "encryptionNone": "لا يوجد",
+  "conflictApplyToAll": "عدم السؤال مجددًا عن تعارض الأسماء في هذه المهمة",
+  "checkUpdates": "التحقق من التحديثات",
+  "updateChecking": "جارٍ التحقق من التحديثات…",
+  "updateAvailable": "يتوفر إصدار جديد",
+  "updateCurrent": "تستخدم أحدث إصدار مستقر",
+  "updateFailed": "تعذر التحقق من التحديثات. تحقق من الاتصال وحاول مجددًا.",
+  "updateDownload": "الانتقال إلى التنزيل"
 }

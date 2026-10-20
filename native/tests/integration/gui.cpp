@@ -23,6 +23,7 @@ class GuiFlow : public QObject {
  public:QString worker,library,archive,qml;QTemporaryDir work;
  private slots:
   void adaptiveLogoRendering();
+  void bulkConflictLayoutAndFlow();
   void archiveTabLayoutAndInteraction(){
     AppController api(worker,library,nullptr,work.path()+"/tab-layout");
     QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
@@ -200,6 +201,57 @@ class GuiFlow : public QObject {
     QTRY_VERIFY_WITH_TIMEOUT(challenged,12000);QElapsedTimer timer;timer.start();api.reset();QVERIFY(timer.elapsed()<5000);
   }
 };
+void GuiFlow::bulkConflictLayoutAndFlow(){
+    const auto base=work.path()+"/bulk";QVERIFY(QDir().mkpath(base+"/input"));QVERIFY(QDir().mkpath(base+"/output"));
+    QVariantList inputs;
+    for(const auto& name:{"a.txt","b.txt","c.txt"}){
+      QFile input(base+"/input/"+name);QVERIFY(input.open(QIODevice::WriteOnly));input.write("new");input.close();inputs.append(QUrl::fromLocalFile(input.fileName()));
+      QFile output(base+"/output/"+name);QVERIFY(output.open(QIODevice::WriteOnly));output.write("keep");
+    }
+    AppController api(worker,library,nullptr,base+"/data");
+    QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
+    QVERIFY(!engine.rootObjects().isEmpty());auto root=engine.rootObjects().first();auto window=qobject_cast<QQuickWindow*>(root);QVERIFY(window);window->resize(880,560);
+    std::function<QQuickItem*(QQuickItem*,QString)> find;
+    find=[&](QQuickItem* item,QString name)->QQuickItem*{if(item->objectName()==name)return item;for(auto child:item->childItems())if(auto found=find(child,name))return found;return nullptr;};
+    auto item=[&](QString name)->QQuickItem*{if(auto object=qobject_cast<QQuickItem*>(root->findChild<QObject*>(name)))return object;return find(window->contentItem(),name);};
+    auto dialog=root->findChild<QObject*>("conflictDialog");QVERIFY(dialog);
+    auto click=[&](QString name){auto control=item(name);if(!control||!control->isVisible())return false;QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,control->mapToScene(control->boundingRect().center()).toPoint());return true;};
+    QSignalSpy warnings(&engine,&QQmlEngine::warnings);
+    for(const auto& theme:api.themeList())for(const auto& locale:api.languages()){
+      api.setPreference("skin",theme.toMap()["id"]);api.setPreference("language",locale.toMap()["code"]);
+      QVERIFY(QMetaObject::invokeMethod(root,"openDesignScene",Q_ARG(QVariant,QString("conflict"))));
+      QTRY_VERIFY(dialog->property("opened").toBool());QTest::qWait(20);
+      for(const auto* name:{"conflict-cancel","conflict-skip","conflict-rename","conflict-overwrite","conflict-overwriteAll","conflictApplyToAll"}){
+        auto control=item(name);QVERIFY(control);control->ensurePolished();
+        auto label=qvariant_cast<QQuickItem*>(control->property("contentItem"));QVERIFY(label);
+        QTRY_VERIFY(label->height()+1>=label->property("contentHeight").toDouble());
+        QTRY_VERIFY(label->width()+1>=label->property("contentWidth").toDouble());
+        const auto rect=control->mapRectToScene(control->boundingRect());QVERIFY(rect.left()>=0);QVERIFY(rect.right()<=window->width()+1);QVERIFY(rect.bottom()<=window->height());
+      }
+      QVERIFY(QMetaObject::invokeMethod(dialog,"close"));
+    }
+    api.setPreference("language","en");api.setPreference("skin","light");
+    QTRY_VERIFY_WITH_TIMEOUT(!api.busy(),12000);
+    api.createArchive({{"name","bulk"},{"destination",base},{"format","zip"},{"level",0},{"inputs",inputs}});
+    QTRY_VERIFY_WITH_TIMEOUT(!api.busy()&&api.archiveFormat()=="zip",12000);
+    QSignalSpy challenges(&api,&AppController::challenge);
+    auto extract=[&]{api.extractArchive({{"destination",base+"/output"},{"smart",false},{"overwrite","ask"}});};
+    auto verifyFiles=[&](QByteArray expected){for(const auto* name:{"a.txt","b.txt","c.txt"}){QFile file(base+"/output/"+name);if(!file.open(QIODevice::ReadOnly)||file.readAll()!=expected)return false;}return true;};
+    extract();QTRY_VERIFY_WITH_TIMEOUT(dialog->property("opened").toBool(),12000);
+    QVERIFY(!item("conflictApplyToAll")->property("checked").toBool());QVERIFY(click("conflict-overwriteAll"));
+    QTRY_VERIFY_WITH_TIMEOUT(!api.busy(),12000);QCOMPARE(challenges.size(),1);QVERIFY(verifyFiles("new"));
+    for(const auto* name:{"a.txt","b.txt","c.txt"}){QFile file(base+"/output/"+name);QVERIFY(file.open(QIODevice::WriteOnly|QIODevice::Truncate));file.write("keep");}
+    extract();QTRY_VERIFY_WITH_TIMEOUT(dialog->property("opened").toBool(),12000);
+    QVERIFY(!item("conflictApplyToAll")->property("checked").toBool());QVERIFY(click("conflictApplyToAll"));QVERIFY(click("conflict-skip"));
+    QTRY_VERIFY_WITH_TIMEOUT(!api.busy(),12000);QCOMPARE(challenges.size(),2);QVERIFY(verifyFiles("keep"));
+    extract();QTRY_VERIFY_WITH_TIMEOUT(dialog->property("opened").toBool(),12000);
+    QVERIFY(!item("conflictApplyToAll")->property("checked").toBool());QVERIFY(click("conflict-cancel"));QTRY_VERIFY_WITH_TIMEOUT(!api.busy(),12000);QCOMPARE(challenges.size(),3);QVERIFY(verifyFiles("keep"));
+    QVERIFY(QMetaObject::invokeMethod(root,"openDesignScene",Q_ARG(QVariant,QString("about"))));
+    QTRY_VERIFY(item("checkUpdates")&&item("checkUpdates")->isVisible()&&item("checkUpdates")->isEnabled());
+    QCOMPARE(api.updates()->property("state").toString(),QString("idle"));
+    QVERIFY2(warnings.isEmpty(),"QML diagnostics during bulk conflict and about checks");
+    qInfo()<<"108 conflict layouts and real three-file overwrite-all/remember-skip/task reset PASS";
+}
 void GuiFlow::adaptiveLogoRendering(){
     QQmlEngine engine;QSignalSpy warnings(&engine,&QQmlEngine::warnings);
     QQuickWindow window;window.resize(256,256);

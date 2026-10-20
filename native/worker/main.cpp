@@ -63,7 +63,19 @@ class Session {
       std::mutex progressMutex;auto lastProgress=std::chrono::steady_clock::now()-std::chrono::seconds(1);
       cb.progress=[&](auto current,auto total){std::lock_guard<std::mutex> lock(progressMutex);const auto now=std::chrono::steady_clock::now();if(now-lastProgress<std::chrono::milliseconds(50)&&!(total>0&&current==total))return;lastProgress=now;send("progress",{{"current",QString::number(current)},{"total",QString::number(total)}});};
       cb.commitState=[&](bool value){send("progress",{{"phase",value?"committing":"running"}});};
-      cb.overwrite=[&](const fs::path& p){auto a=ask("overwriteRequired",{{"path",qs(p.u8string())}});if(a["choice"].toString()=="cancel"){cancel();throw Error(ErrorCode::Cancelled,"Task cancelled");}return policy(a["choice"].toString());};
+      // Remember the decision only inside this worker task, including password retries.
+      Overwrite remainingConflicts=Overwrite::Ask;
+      cb.overwrite=[&](const fs::path& p){
+        if(stop)throw Error(ErrorCode::Cancelled,"Task cancelled");
+        if(remainingConflicts!=Overwrite::Ask)return remainingConflicts;
+        const auto a=ask("overwriteRequired",{{"path",qs(p.u8string())}});
+        const auto choice=a["choice"].toString();
+        if(choice=="cancel"){cancel();throw Error(ErrorCode::Cancelled,"Task cancelled");}
+        const auto selected=policy(choice);
+        if(selected==Overwrite::Ask)throw Error(ErrorCode::UnsupportedOperation,"Invalid conflict choice");
+        if(a["applyToAll"].toBool())remainingConflicts=selected;
+        return selected;
+      };
       cb.trash=[](const fs::path& p){return QFile::moveToTrash(qs(p.u8string()));};
       cb.outputFileBeforeCommit=[&](const fs::path& p){QString error;if(!platform::propagateOrigin(request["archive"].toString(),qs(p.u8string()),&error))throw Error(ErrorCode::IoError,error.toStdString());};
       const auto operation=text(request["operation"]);std::string password=request["password"].toString().toUtf8().toStdString();

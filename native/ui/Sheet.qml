@@ -13,9 +13,9 @@ Dialog {
     closePolicy: Popup.CloseOnEscape
     background: Rectangle { color: sheet.paper; border.color: sheet.edge; radius: 14 }
     header: Item {
-        implicitHeight: 52
-        Label { anchors.left: parent.left; anchors.leftMargin: 22; anchors.verticalCenter: parent.verticalCenter; text: sheet.title; color: sheet.ink; font.pixelSize: 16; font.bold: true }
-        ToolButton { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; text: "×"; onClicked: sheet.reject(); Accessible.name: "Close" }
+        implicitHeight: Math.max(52, sheetTitle.implicitHeight + 24)
+        Label { id:sheetTitle;anchors.left: parent.left; anchors.leftMargin: 22;anchors.right:sheetClose.left;anchors.rightMargin:8; anchors.verticalCenter: parent.verticalCenter; text: sheet.title;wrapMode:Text.Wrap; color: sheet.ink; font.pixelSize: 16; font.bold: true }
+        ToolButton { id:sheetClose;anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; text: "×"; onClicked: sheet.reject(); Accessible.name: "Close" }
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: sheet.edge }
     }
     Overlay.modal: Rectangle { color: "#6130302C" }

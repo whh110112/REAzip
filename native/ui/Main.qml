@@ -15,6 +15,7 @@ ApplicationWindow {
     readonly property var themeArtwork: api ? api.themeBackground : ({})
     property var inputs: []
     property var currentChallenge: ({})
+    readonly property var updater: api ? api.updates : null
     property string folderTarget: "extract"
     property string toastText: ""
     property string errorText: ""
@@ -318,8 +319,34 @@ ApplicationWindow {
         onAccepted:if(window.api)window.api.openExternal(window.executablePath)
     }
     Sheet { id:conflictDialog;objectName:"conflictDialog";title:window.t("conflictTitle","目标位置已有同名文件");paper:window.card;ink:window.ink;edge:window.edge
-        Caption { width:parent.width;text:window.currentChallenge.path||"";wrapMode:Text.WrapAnywhere }
-        footer:FooterBar { Action { text:window.t("cancel","取消");onClicked:conflictDialog.reject() } Repeater { model:[{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"},{label:window.t("overwrite","覆盖"),value:"overwrite"}];delegate:Action { required property var modelData;objectName:"conflict-"+modelData.value;text:modelData.label;onClicked:{if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,modelData.value);conflictDialog.close()} } } }
+        function answer(choice,all) {
+            if(window.api)window.api.answerChallenge(window.currentChallenge.jobId,window.currentChallenge.challengeId,choice,all)
+            conflictDialog.close()
+        }
+        onOpened:conflictRemember.checked=false
+        ColumnLayout { width:parent.width;spacing:14
+            Caption { Layout.fillWidth:true;text:window.currentChallenge.path||"";wrapMode:Text.WrapAnywhere }
+            CheckBox {
+                id:conflictRemember;objectName:"conflictApplyToAll";Layout.fillWidth:true
+                text:window.t("conflictApplyToAll","本次任务后续同名文件不再询问")
+                contentItem: Text {
+                    text:conflictRemember.text;font:conflictRemember.font;color:window.ink;wrapMode:Text.Wrap
+                    leftPadding:conflictRemember.mirrored?0:conflictRemember.indicator.width+conflictRemember.spacing
+                    rightPadding:conflictRemember.mirrored?conflictRemember.indicator.width+conflictRemember.spacing:0
+                    verticalAlignment:Text.AlignVCenter
+                }
+            }
+        }
+        footer:Pane {
+            leftPadding:22;rightPadding:22;topPadding:10;bottomPadding:14;background:Item {}
+            contentItem:GridLayout { columns:3;uniformCellWidths:true;columnSpacing:8;rowSpacing:8
+                Action { objectName:"conflict-cancel";Layout.fillWidth:true;wrapText:true;text:window.t("cancel","取消");onClicked:conflictDialog.reject() }
+                Repeater { model:[{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"},{label:window.t("overwrite","覆盖"),value:"overwrite"}]
+                    delegate:Action { required property var modelData;objectName:"conflict-"+modelData.value;Layout.fillWidth:true;wrapText:true;text:modelData.label;onClicked:conflictDialog.answer(modelData.value,conflictRemember.checked) }
+                }
+                Action { objectName:"conflict-overwriteAll";Layout.fillWidth:true;Layout.columnSpan:2;wrapText:true;text:window.t("overwriteAll","全部覆盖");primary:true;onClicked:conflictDialog.answer("overwrite",true) }
+            }
+        }
         onRejected:if(window.api)window.api.cancelTask()
     }
     Sheet { id:progressDialog;title:window.t("loading","处理中");paper:window.card;ink:window.ink;edge:window.edge;closePolicy:Popup.NoAutoClose
@@ -446,6 +473,24 @@ ApplicationWindow {
                     SettingsLabel { text: "ZENzip " + (window.api ? window.api.version : "design preview"); color: window.ink; font.pixelSize: 20 }
                     SettingsLabel { text: window.api ? window.api.engineIdentity : "C++17 · Qt Quick · 7-Zip native library" }
                     SettingsLabel { text: "github.com/whh110112/ZENzip"; wrapMode: Text.WrapAnywhere }
+                    SettingsAction {
+                        objectName:"checkUpdates";text:window.updater&&window.updater.state==="checking"?window.t("updateChecking","正在检查更新…"):window.t("checkUpdates","检查更新")
+                        enabled:!!window.updater&&window.updater.state!=="checking"
+                        onClicked:window.updater.check()
+                    }
+                    SettingsLabel {
+                        objectName:"updateStatus"
+                        text:{
+                            if(!window.updater)return ""
+                            switch(window.updater.state){
+                            case "available":return window.t("updateAvailable","发现新版本")+" "+window.updater.latestVersion
+                            case "current":return window.t("updateCurrent","当前已是最新正式版")
+                            case "error":return window.t("updateFailed","检查更新失败，请检查网络后重试")
+                            default:return ""
+                            }
+                        }
+                    }
+                    SettingsAction { objectName:"downloadUpdate";visible:!!window.updater&&window.updater.state==="available";text:window.t("updateDownload","前往下载");onClicked:window.updater.openDownloadPage() }
                 }
             }
         }

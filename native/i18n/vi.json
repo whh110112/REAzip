@@ -165,5 +165,12 @@
   "registeredLinux": "Đã cài mục desktop và đặt làm trình xử lý mặc định cho các loại tệp hỗ trợ.",
   "vaultWriteFailed": "Không lưu được mật khẩu",
   "archivePassword": "Mật khẩu tệp nén",
-  "encryptionNone": "Không"
+  "encryptionNone": "Không",
+  "conflictApplyToAll": "Không hỏi lại về tệp trùng tên trong tác vụ này",
+  "checkUpdates": "Kiểm tra cập nhật",
+  "updateChecking": "Đang kiểm tra cập nhật…",
+  "updateAvailable": "Có phiên bản mới",
+  "updateCurrent": "Bạn đang dùng bản ổn định mới nhất",
+  "updateFailed": "Không thể kiểm tra cập nhật. Hãy kiểm tra kết nối và thử lại.",
+  "updateDownload": "Đến trang tải xuống"
 }

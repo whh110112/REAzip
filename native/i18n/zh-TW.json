@@ -165,5 +165,12 @@
   "registeredLinux": "已安裝桌面項目，並已將支援的壓縮檔類型指向 ZENzip。",
   "vaultWriteFailed": "無法儲存密碼",
   "archivePassword": "壓縮檔密碼",
-  "encryptionNone": "無"
+  "encryptionNone": "無",
+  "conflictApplyToAll": "本次工作後續同名檔案不再詢問",
+  "checkUpdates": "檢查更新",
+  "updateChecking": "正在檢查更新…",
+  "updateAvailable": "有新版本可用",
+  "updateCurrent": "目前已是最新正式版",
+  "updateFailed": "檢查更新失敗，請檢查網路後重試",
+  "updateDownload": "前往下載"
 }
