@@ -1,8 +1,8 @@
 {
-  "version": "0.4.2",
-  "sourceCommit": "df1b709e9118ecf5d0eceef427bb621895c09d22",
-  "nativeCandidateRun": "https://github.com/whh110112/ZENzip/actions/runs/39368855071",
-  "artifactId": 12240702658,
+  "version": "0.4.3",
+  "sourceCommit": "4a9bd23281ceae45123293fd3b08bcc8e5b3466d",
+  "nativeCandidateRun": "https://github.com/whh110112/ZENzip/actions/runs/39381041985",
+  "artifactId": 12245364648,
   "captureFontSha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
   "captures": [
     {
