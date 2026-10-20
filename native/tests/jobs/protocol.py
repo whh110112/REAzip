@@ -58,3 +58,40 @@ try:c.p.stdin.write('x'*(16*1024*1024+1)+'\n');c.p.stdin.flush()
 except BrokenPipeError:pass
 assert c.get()['code']=='ProtocolError';c.close()
 print('worker: fragmented frames, stale job/challenge, EOF, oversized frame, unique terminal PASS')
+
+# Exercise real archive extraction with several collisions, rather than just
+# checking the checkbox or mocking the worker's overwrite callback.
+import tempfile,zipfile,pathlib
+with tempfile.TemporaryDirectory() as folder:
+    root=pathlib.Path(folder)
+    sample=root/'conflicts.zip'
+    names=['first.txt','second.txt','third.txt']
+    with zipfile.ZipFile(sample,'w') as z:
+        for name in names:z.writestr(name,'new-'+name)
+    def extract(label,choice,remember,expected_count,terminal='completed'):
+        destination=root/label;destination.mkdir()
+        for name in names:(destination/name).write_text('keep',encoding='utf-8')
+        c=Client();c.send(type='submit',operation='extract',archive=str(sample),destination=str(destination),overwrite='ask')
+        challenges=0
+        while True:
+            frame=c.get()
+            if frame['type']=='overwriteRequired':
+                challenges+=1
+                c.send(type='respondChallenge',challengeId=frame['challengeId'],choice=choice,applyToAll=remember)
+            if frame['type'] in ['completed','failed','cancelled']:
+                assert frame['type']==terminal,frame
+                break
+        c.close();assert challenges==expected_count,(label,challenges)
+        for name in names:
+            assert (destination/name).read_text() == ('new-'+name if choice=='overwrite' else 'keep')
+        if choice=='rename':
+            assert len(list(destination.glob('*.txt')))==6
+            assert sorted(p.read_text() for p in destination.glob('*.txt') if p.name not in names)==sorted('new-'+n for n in names)
+        return destination
+    extract('all-overwrite','overwrite',True,1)
+    extract('all-skip','skip',True,1)
+    extract('all-rename','rename',True,1)
+    extract('next-task-asks-again','skip',False,3)
+    extract('cancel-does-not-remember','cancel',True,1,'cancelled')
+    extract('invalid-choice-fails-closed','invalid',True,1,'failed')
+print('worker: task-scoped overwrite/skip/rename all, fresh-task reset, cancel and invalid choice PASS')

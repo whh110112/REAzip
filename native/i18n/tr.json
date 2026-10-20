@@ -165,5 +165,12 @@
   "registeredLinux": "Masaüstü girişi kuruldu ve desteklenen arşiv türleri için varsayılan işleyici seçildi.",
   "vaultWriteFailed": "Parola kaydedilemedi",
   "archivePassword": "Arşiv parolası",
-  "encryptionNone": "Yok"
+  "encryptionNone": "Yok",
+  "conflictApplyToAll": "Bu görevdeki ad çakışmalarında tekrar sorma",
+  "checkUpdates": "Güncellemeleri denetle",
+  "updateChecking": "Güncellemeler denetleniyor…",
+  "updateAvailable": "Yeni sürüm mevcut",
+  "updateCurrent": "En son kararlı sürümü kullanıyorsunuz",
+  "updateFailed": "Güncellemeler denetlenemedi. Bağlantıyı kontrol edip tekrar deneyin.",
+  "updateDownload": "İndirme sayfasına git"
 }

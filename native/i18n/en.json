@@ -165,5 +165,12 @@
   "registeredLinux": "Desktop entry installed and selected as the default handler for supported archive types",
   "vaultWriteFailed": "Cannot save the password",
   "archivePassword": "Archive password",
-  "encryptionNone": "None"
+  "encryptionNone": "None",
+  "conflictApplyToAll": "Do not ask again for conflicts in this task",
+  "checkUpdates": "Check for updates",
+  "updateChecking": "Checking for updates…",
+  "updateAvailable": "New version available",
+  "updateCurrent": "You have the latest stable version",
+  "updateFailed": "Could not check for updates. Check your connection and retry.",
+  "updateDownload": "Go to download"
 }

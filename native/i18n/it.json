@@ -165,5 +165,12 @@
   "registeredLinux": "Voce desktop installata e impostata come gestore predefinito dei tipi supportati.",
   "vaultWriteFailed": "Impossibile salvare la password",
   "archivePassword": "Password dell'archivio",
-  "encryptionNone": "Nessuna"
+  "encryptionNone": "Nessuna",
+  "conflictApplyToAll": "Non chiedere più per i conflitti in questa operazione",
+  "checkUpdates": "Controlla aggiornamenti",
+  "updateChecking": "Ricerca aggiornamenti…",
+  "updateAvailable": "Nuova versione disponibile",
+  "updateCurrent": "È installata la versione stabile più recente",
+  "updateFailed": "Impossibile cercare aggiornamenti. Controlla la connessione e riprova.",
+  "updateDownload": "Vai al download"
 }

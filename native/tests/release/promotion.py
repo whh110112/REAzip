@@ -96,6 +96,17 @@ class PromotionValidation(unittest.TestCase):
         with patch.object(publisher, 'gh', return_value=[]):
             self.assertIsNone(publisher.find_release('example/project', 'v99.1.2'))
 
+    def test_new_draft_uses_creation_response_without_list_lookup(self):
+        notes = self.root / 'notes.md'
+        notes.write_text('Stable release\n\nVerified packages.', encoding='utf-8')
+        draft = dict(id=7, tag_name='v99.1.2', draft=True)
+        with patch.object(publisher, 'gh', return_value=draft) as api:
+            self.assertEqual(publisher.create_draft('example/project', 'v99.1.2', '99.1.2', notes), draft)
+            self.assertEqual(api.call_count, 1)
+            self.assertEqual(api.call_args.args[:4], ('api', '--method', 'POST', 'repos/example/project/releases'))
+            self.assertIn('draft=true', api.call_args.args)
+            self.assertIn('prerelease=false', api.call_args.args)
+
 
 if __name__ == '__main__':
     unittest.main()

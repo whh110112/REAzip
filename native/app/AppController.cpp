@@ -20,7 +20,7 @@ namespace {
 QJsonDocument json(QString path){QFile file(path);if(!file.open(QIODevice::ReadOnly))return {};return QJsonDocument::fromJson(file.readAll());}
 bool executable(QString name){static const QStringList extensions={"exe","com","bat","cmd","ps1","sh","bash","zsh","app","desktop","msi","scr","vbs","js","jse","wsf","hta","py","pl","rb","jar","lnk","url"};return extensions.contains(QFileInfo(name).suffix().toLower())||QFileInfo(name).isExecutable();}
 }
-AppController::AppController(QString worker,QString engine,QObject* parent,QString directory):QObject(parent),jobs(worker,engine,this),model(this),settings(directory.isEmpty()?platform::dataDirectory():directory),vault(settings.directory()+"/vault"){
+AppController::AppController(QString worker,QString engine,QObject* parent,QString directory):QObject(parent),jobs(worker,engine,this),model(this),settings(directory.isEmpty()?platform::dataDirectory():directory),vault(settings.directory()+"/vault"),updateChecker(QCoreApplication::applicationVersion(),this){
   QString legacy;
   if(directory.isEmpty()){
 #ifdef Q_OS_WIN

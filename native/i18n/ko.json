@@ -165,5 +165,12 @@
   "registeredLinux": "데스크톱 항목을 설치하고 지원되는 압축 형식의 기본 처리기로 지정했습니다.",
   "vaultWriteFailed": "비밀번호를 저장할 수 없습니다",
   "archivePassword": "압축 파일 비밀번호",
-  "encryptionNone": "없음"
+  "encryptionNone": "없음",
+  "conflictApplyToAll": "이 작업의 이름 충돌에 대해 다시 묻지 않기",
+  "checkUpdates": "업데이트 확인",
+  "updateChecking": "업데이트 확인 중…",
+  "updateAvailable": "새 버전이 있습니다",
+  "updateCurrent": "최신 정식 버전입니다",
+  "updateFailed": "업데이트를 확인할 수 없습니다. 연결을 확인하고 다시 시도하세요.",
+  "updateDownload": "다운로드 페이지 열기"
 }

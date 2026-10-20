@@ -165,5 +165,12 @@
   "registeredLinux": "Desktop-Eintrag installiert und als Standard für unterstützte Archivtypen gesetzt.",
   "vaultWriteFailed": "Passwort kann nicht gespeichert werden",
   "archivePassword": "Archivpasswort",
-  "encryptionNone": "Keine"
+  "encryptionNone": "Keine",
+  "conflictApplyToAll": "Bei Namenskonflikten in diesem Auftrag nicht mehr fragen",
+  "checkUpdates": "Nach Updates suchen",
+  "updateChecking": "Updates werden gesucht…",
+  "updateAvailable": "Neue Version verfügbar",
+  "updateCurrent": "Sie verwenden die neueste stabile Version",
+  "updateFailed": "Updates konnten nicht geprüft werden. Verbindung prüfen und erneut versuchen.",
+  "updateDownload": "Zum Download"
 }

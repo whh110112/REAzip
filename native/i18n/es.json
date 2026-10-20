@@ -165,5 +165,12 @@
   "registeredLinux": "Entrada de escritorio instalada y seleccionada como controlador predeterminado de los tipos compatibles.",
   "vaultWriteFailed": "No se puede guardar la contraseña",
   "archivePassword": "Contraseña del archivo",
-  "encryptionNone": "Ninguno"
+  "encryptionNone": "Ninguno",
+  "conflictApplyToAll": "No volver a preguntar por conflictos en esta tarea",
+  "checkUpdates": "Buscar actualizaciones",
+  "updateChecking": "Buscando actualizaciones…",
+  "updateAvailable": "Nueva versión disponible",
+  "updateCurrent": "Ya tiene la última versión estable",
+  "updateFailed": "No se pudieron buscar actualizaciones. Revise la conexión e inténtelo de nuevo.",
+  "updateDownload": "Ir a la descarga"
 }

@@ -165,5 +165,12 @@
   "registeredLinux": "デスクトップエントリをインストールし、対応するアーカイブ形式の既定のアプリに設定しました。",
   "vaultWriteFailed": "パスワードを保存できません",
   "archivePassword": "アーカイブのパスワード",
-  "encryptionNone": "なし"
+  "encryptionNone": "なし",
+  "conflictApplyToAll": "この処理では同名ファイルについて再確認しない",
+  "checkUpdates": "更新を確認",
+  "updateChecking": "更新を確認中…",
+  "updateAvailable": "新しいバージョンがあります",
+  "updateCurrent": "最新の正式版を使用しています",
+  "updateFailed": "更新を確認できません。接続を確認して再試行してください。",
+  "updateDownload": "ダウンロードページへ"
 }

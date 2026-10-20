@@ -9,7 +9,7 @@ out = pathlib.Path(a.output).resolve(); out.mkdir(parents=True, exist_ok=True)
 scenes = [(theme, language, scene, a.scale)
           for theme in (['light', 'sleep', 'mac', 'mac-dark', 'glass', 'material'] if a.full else ['light'])
           for language in ['en', 'zh-CN']
-          for scene in (['archive', 'settings', 'appearance', 'create', 'extract', 'vault', 'associations', 'language', 'about'] if a.full else ['archive'])]
+          for scene in (['archive', 'settings', 'appearance', 'create', 'extract', 'conflict', 'vault', 'associations', 'language', 'about'] if a.full else ['archive'])]
 if a.full:
     scenes += [('light', language, scene, scale) for language in ['en', 'zh-CN', 'de', 'ar']
                for scene in ['settings', 'vault', 'appearance', 'associations', 'language', 'about']
