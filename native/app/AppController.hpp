@@ -28,6 +28,8 @@ class AppController : public QObject {
   Q_PROPERTY(QString selectedName READ selectedName NOTIFY changed)
   Q_PROPERTY(QString defaultArchiveDir READ defaultArchiveDir NOTIFY changed)
   Q_PROPERTY(QString defaultExtractDir READ defaultExtractDir NOTIFY changed)
+  Q_PROPERTY(QString extractDirMode READ extractDirMode NOTIFY changed)
+  Q_PROPERTY(QString customExtractDir READ customExtractDir NOTIFY changed)
   Q_PROPERTY(bool busy READ busy NOTIFY jobChanged)
   Q_PROPERTY(double progress READ progress NOTIFY jobChanged)
   Q_PROPERTY(QString jobState READ jobState NOTIFY jobChanged)
@@ -57,6 +59,8 @@ class AppController : public QObject {
   QVariantList details()const;QString statusSummary()const;QString status()const;
   bool canModify()const;bool hasSelection()const{return !model.selection().isEmpty();}QString selectedName()const{return model.selectedName();}
   QString defaultArchiveDir()const;QString defaultExtractDir()const;
+  QString extractDirMode()const{return preferences["extractDirMode"].toString("archive");}
+  QString customExtractDir()const{return preferences["extractDir"].toString();}
   QString version()const;
   QObject* updates(){return &updateChecker;}
   bool busy()const{return jobs.busy();}double progress()const{return jobs.progress();}QString jobState()const{return jobs.state();}QString engineIdentity()const{return identity;}

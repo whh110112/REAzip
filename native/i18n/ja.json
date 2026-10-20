@@ -172,5 +172,7 @@
   "updateAvailable": "新しいバージョンがあります",
   "updateCurrent": "最新の正式版を使用しています",
   "updateFailed": "更新を確認できません。接続を確認して再試行してください。",
-  "updateDownload": "ダウンロードページへ"
+  "updateDownload": "ダウンロードページへ",
+  "extractBesideArchive": "現在のフォルダー（書庫の場所）",
+  "extractCustomFolder": "指定フォルダー"
 }

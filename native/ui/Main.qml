@@ -268,7 +268,7 @@ ApplicationWindow {
     FileDialog { id:openDialog;title:window.t("openArchive","打开压缩包");fileMode:FileDialog.OpenFiles;onAccepted:if(window.api)window.api.openUrls(selectedFiles) }
     FileDialog { id:sourcesDialog;fileMode:FileDialog.OpenFiles;onAccepted:window.inputs=selectedFiles }
     FileDialog { id:addDialog;fileMode:FileDialog.OpenFiles;onAccepted:if(window.api)window.api.addUrls(selectedFiles) }
-    FolderDialog { id:folders;onAccepted:{let path=window.api?window.api.localPath(selectedFolder):selectedFolder;if(window.folderTarget==="source")window.inputs=[selectedFolder];else if(window.folderTarget==="create")createDest.text=path;else extractDest.text=path} }
+    FolderDialog { id:folders;onAccepted:{let path=window.api?window.api.localPath(selectedFolder):selectedFolder;if(window.folderTarget==="source")window.inputs=[selectedFolder];else if(window.folderTarget==="create")createDest.text=path;else if(window.folderTarget==="defaultExtract"){if(window.api){window.api.setPreference("extractDir",path);customExtractFolder.text=window.api.customExtractDir}}else extractDest.text=path} }
     Sheet { id:createDialog;title:window.t("newArchive","新建压缩");paper:window.card;ink:window.ink;edge:window.edge
         ColumnLayout { width:parent.width;spacing:10
             Caption { text:window.t("fileName","文件名") }
@@ -291,10 +291,11 @@ ApplicationWindow {
         footer:FooterBar { Item { Layout.fillWidth:true } Action { text:window.t("cancel","取消");onClicked:createDialog.reject() } Action { text:window.t("startCompress","开始压缩");primary:true;enabled:!!window.api&&window.inputs.length>0;onClicked:{if(saveCreatePassword.checked&&createPassword.text.length>0)window.api.savePassword(createName.text,createPassword.text);window.api.createArchive({name:createName.text,destination:createDest.text,inputs:window.inputs,format:format.currentText,level:level.currentValue,password:createPassword.enabled?createPassword.text:"",encryptHeaders:headers.enabled&&headers.checked,deleteSources:deleteSources.checked,volumeSize:volume.enabled?volume.text:""});createPassword.clear();saveCreatePassword.checked=false;createDialog.close()} } }
     }
     Sheet { id:extractDialog;objectName:"extractDialog";title:window.t("extractTo","解压到");paper:window.card;ink:window.ink;edge:window.edge
+        onOpened:extractDest.text=window.api?window.api.defaultExtractDir:""
         ColumnLayout { width:parent.width;spacing:12
             AppLogo { objectName:"extractLogo";Layout.preferredWidth:56;Layout.preferredHeight:56;Layout.alignment:Qt.AlignHCenter;surfaceColor:window.card }
             Caption { text:window.t("saveTo","目标目录") }
-            RowLayout { Field { id:extractDest;objectName:"extractDestination";text:window.api?window.api.defaultExtractDir:"";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="extract";folders.open()} } }
+            RowLayout { Field { id:extractDest;objectName:"extractDestination";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="extract";folders.open()} } }
             CheckBox { id:smart;objectName:"smartExtract";text:window.t("smartExtract","智能选择同名目录");checked:true;palette.text:window.ink }
             ComboBox { id:overwrite;textRole:"label";valueRole:"value";model:[{label:window.t("ask","询问"),value:"ask"},{label:window.t("overwrite","覆盖"),value:"overwrite"},{label:window.t("skip","跳过"),value:"skip"},{label:window.t("rename","重命名"),value:"rename"}] }
             CheckBox { id:openAfter;objectName:"openAfter";text:window.t("openAfter","完成后打开目录");checked:true;palette.text:window.ink }
@@ -387,7 +388,16 @@ ApplicationWindow {
                 id: settingsPages; objectName: "settingsPages"; Layout.fillWidth: true; Layout.fillHeight: true
                 SettingsPage {
                     SettingsLabel { text: window.t("defaultExtractDir", "默认解压位置"); color: window.ink }
-                    Field { objectName: "prefExtractDir"; Layout.fillWidth: true; text: window.api ? window.api.defaultExtractDir : ""; onEditingFinished: if(window.api) window.api.setPreference("extractDir", text) }
+                    ComboBox {
+                        id:extractDirMode;objectName:"prefExtractMode";Layout.fillWidth:true;textRole:"label";valueRole:"value"
+                        model:[{label:window.t("extractBesideArchive","当前目录（压缩包所在文件夹）"),value:"archive"},{label:window.t("extractCustomFolder","指定目录"),value:"custom"}]
+                        currentIndex:window.api&&window.api.extractDirMode==="custom"?1:0
+                        onActivated:if(window.api)window.api.setPreference("extractDirMode",currentValue)
+                    }
+                    RowLayout { Layout.fillWidth:true;visible:extractDirMode.currentValue==="custom"
+                        Field { id:customExtractFolder;objectName:"prefExtractDir";Layout.fillWidth:true;text:window.api?window.api.customExtractDir:"";onEditingFinished:if(window.api)window.api.setPreference("extractDir",text) }
+                        Action { objectName:"browseExtractDir";text:"…";Accessible.name:window.t("extractCustomFolder","指定目录");onClicked:{window.folderTarget="defaultExtract";folders.open()} }
+                    }
                     SettingsLabel { text: window.t("defaultArchiveDir", "默认压缩位置"); color: window.ink }
                     Field { objectName: "prefArchiveDir"; Layout.fillWidth: true; text: window.api ? window.api.defaultArchiveDir : ""; onEditingFinished: if(window.api) window.api.setPreference("archiveDir", text) }
                     CheckBox {

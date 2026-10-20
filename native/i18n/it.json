@@ -172,5 +172,7 @@
   "updateAvailable": "Nuova versione disponibile",
   "updateCurrent": "È installata la versione stabile più recente",
   "updateFailed": "Impossibile cercare aggiornamenti. Controlla la connessione e riprova.",
-  "updateDownload": "Vai al download"
+  "updateDownload": "Vai al download",
+  "extractBesideArchive": "Cartella dell’archivio",
+  "extractCustomFolder": "Cartella personalizzata"
 }

@@ -172,5 +172,7 @@
   "updateAvailable": "Доступна новая версия",
   "updateCurrent": "Установлена последняя стабильная версия",
   "updateFailed": "Не удалось проверить обновления. Проверьте подключение и повторите попытку.",
-  "updateDownload": "Перейти к загрузке"
+  "updateDownload": "Перейти к загрузке",
+  "extractBesideArchive": "Папка архива",
+  "extractCustomFolder": "Указанная папка"
 }

@@ -172,5 +172,7 @@
   "updateAvailable": "发现新版本",
   "updateCurrent": "当前已是最新正式版",
   "updateFailed": "检查更新失败，请检查网络后重试",
-  "updateDownload": "前往下载"
+  "updateDownload": "前往下载",
+  "extractBesideArchive": "当前目录（压缩包所在文件夹）",
+  "extractCustomFolder": "指定目录"
 }

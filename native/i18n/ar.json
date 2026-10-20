@@ -172,5 +172,7 @@
   "updateAvailable": "يتوفر إصدار جديد",
   "updateCurrent": "تستخدم أحدث إصدار مستقر",
   "updateFailed": "تعذر التحقق من التحديثات. تحقق من الاتصال وحاول مجددًا.",
-  "updateDownload": "الانتقال إلى التنزيل"
+  "updateDownload": "الانتقال إلى التنزيل",
+  "extractBesideArchive": "المجلد الذي يحتوي على الأرشيف",
+  "extractCustomFolder": "مجلد مخصص"
 }

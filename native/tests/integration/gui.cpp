@@ -24,6 +24,7 @@ class GuiFlow : public QObject {
  private slots:
   void adaptiveLogoRendering();
   void bulkConflictLayoutAndFlow();
+  void extractDirectoryDefaults();
   void archiveTabLayoutAndInteraction(){
     AppController api(worker,library,nullptr,work.path()+"/tab-layout");
     QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
@@ -100,14 +101,16 @@ class GuiFlow : public QObject {
   }
   void settingsLayoutAndSavedSelections(){
     const auto data=work.path()+"/settings-layout";
-    { AppController saved(worker,library,nullptr,data); saved.setPreference("language","de"); saved.setPreference("codepage","936"); saved.setPreference("skin","sleep"); }
+    { AppController saved(worker,library,nullptr,data); saved.setPreference("language","de"); saved.setPreference("codepage","936"); saved.setPreference("skin","sleep");saved.setPreference("extractDirMode","custom"); }
     AppController api(worker,library,nullptr,data);
     QCOMPARE(api.languageCode(),QString("de")); QCOMPARE(api.property("filenameCodepage").toString(),QString("936")); QCOMPARE(api.themeId(),QString("sleep"));
+    QCOMPARE(api.extractDirMode(),QString("custom"));
     QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
     QVERIFY(!engine.rootObjects().isEmpty());auto root=engine.rootObjects().first();auto window=qobject_cast<QQuickWindow*>(root);QVERIFY(window);
     window->resize(880,560);
     auto scene=[&](QString name){QVERIFY(QMetaObject::invokeMethod(root,"openDesignScene",Q_ARG(QVariant,name)));QTest::qWait(20);};
     scene("settings");
+    auto extractMode=root->findChild<QObject*>("prefExtractMode");QVERIFY(extractMode);QTRY_COMPARE(extractMode->property("currentValue").toString(),QString("custom"));
     auto codepage=root->findChild<QObject*>("prefCodepage");auto language=root->findChild<QObject*>("prefLanguage");QVERIFY(codepage);QVERIFY(language);
     QTRY_COMPARE(codepage->property("currentValue").toString(),QString("936"));
     QTRY_COMPARE(language->property("currentValue").toString(),QString("de"));
@@ -201,6 +204,34 @@ class GuiFlow : public QObject {
     QTRY_VERIFY_WITH_TIMEOUT(challenged,12000);QElapsedTimer timer;timer.start();api.reset();QVERIFY(timer.elapsed()<5000);
   }
 };
+void GuiFlow::extractDirectoryDefaults(){
+    const auto base=work.path()+"/extract-defaults";
+    for(const auto& folder:{"one","two","custom"})QVERIFY(QDir().mkpath(base+'/'+folder));
+    const auto fixture=QFileInfo(qml).absoluteDir().filePath("../tests/fixtures/sample.iso");
+    const auto first=base+"/one/first.iso",second=base+"/two/second.iso",custom=base+"/custom";
+    QVERIFY(QFile::copy(fixture,first));QVERIFY(QFile::copy(fixture,second));
+    const auto data=base+"/data";
+    {
+      AppController api(worker,library,nullptr,data);QCOMPARE(api.extractDirMode(),QString("archive"));
+      QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("backend",&api);engine.rootContext()->setContextProperty("designPreview",false);engine.load(QUrl::fromLocalFile(qml));
+      QVERIFY(!engine.rootObjects().isEmpty());auto root=engine.rootObjects().first();
+      auto dialog=root->findChild<QObject*>("extractDialog"),field=root->findChild<QObject*>("extractDestination");QVERIFY(dialog);QVERIFY(field);
+      auto open=[&]{return QMetaObject::invokeMethod(root,"openDesignScene",Q_ARG(QVariant,QString("extract")));};
+      auto close=[&]{return QMetaObject::invokeMethod(dialog,"close");};
+      api.openUrls({QUrl::fromLocalFile(first)});QTRY_VERIFY_WITH_TIMEOUT(!api.busy()&&api.hasArchive(),12000);const auto firstId=api.activeTab();
+      QCOMPARE(api.defaultExtractDir(),base+"/one");QVERIFY(open());QTRY_VERIFY(dialog->property("opened").toBool());QCOMPARE(field->property("text").toString(),base+"/one");
+      field->setProperty("text",custom);QVERIFY(close());
+      api.openUrls({QUrl::fromLocalFile(second)});QTRY_VERIFY_WITH_TIMEOUT(!api.busy()&&api.activeTab()!=firstId,12000);
+      QVERIFY(open());QTRY_VERIFY(dialog->property("opened").toBool());QCOMPARE(field->property("text").toString(),base+"/two");QVERIFY(close());
+      api.activateTab(firstId);QVERIFY(open());QTRY_VERIFY(dialog->property("opened").toBool());QCOMPARE(field->property("text").toString(),base+"/one");QVERIFY(close());
+      api.setPreference("extractDir",custom);api.setPreference("extractDirMode","custom");
+      QCOMPARE(api.defaultExtractDir(),custom);QVERIFY(open());QTRY_VERIFY(dialog->property("opened").toBool());QCOMPARE(field->property("text").toString(),custom);QVERIFY(close());
+      api.setPreference("restoreTabs",false);
+    }
+    AppController restored(worker,library,nullptr,data);QCOMPARE(restored.extractDirMode(),QString("custom"));QCOMPARE(restored.defaultExtractDir(),custom);
+    restored.setPreference("extractDirMode","archive");restored.openUrls({QUrl::fromLocalFile(second)});
+    QTRY_VERIFY_WITH_TIMEOUT(!restored.busy()&&restored.hasArchive(),12000);QCOMPARE(restored.defaultExtractDir(),base+"/two");QCOMPARE(restored.customExtractDir(),custom);
+}
 void GuiFlow::bulkConflictLayoutAndFlow(){
     const auto base=work.path()+"/bulk";QVERIFY(QDir().mkpath(base+"/input"));QVERIFY(QDir().mkpath(base+"/output"));
     QVariantList inputs;

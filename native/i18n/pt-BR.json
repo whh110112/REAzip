@@ -172,5 +172,7 @@
   "updateAvailable": "Nova versão disponível",
   "updateCurrent": "Você está usando a versão estável mais recente",
   "updateFailed": "Não foi possível verificar atualizações. Confira a conexão e tente novamente.",
-  "updateDownload": "Ir para o download"
+  "updateDownload": "Ir para o download",
+  "extractBesideArchive": "Pasta do arquivo compactado",
+  "extractCustomFolder": "Pasta personalizada"
 }

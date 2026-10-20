@@ -172,5 +172,7 @@
   "updateAvailable": "มีเวอร์ชันใหม่",
   "updateCurrent": "คุณใช้เวอร์ชันเสถียรล่าสุดแล้ว",
   "updateFailed": "ตรวจสอบการอัปเดตไม่สำเร็จ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
-  "updateDownload": "ไปยังหน้าดาวน์โหลด"
+  "updateDownload": "ไปยังหน้าดาวน์โหลด",
+  "extractBesideArchive": "โฟลเดอร์ที่มีไฟล์บีบอัด",
+  "extractCustomFolder": "โฟลเดอร์ที่กำหนด"
 }
