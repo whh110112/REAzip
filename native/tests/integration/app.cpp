@@ -10,6 +10,7 @@ int main(int argc,char** argv){
   QTemporaryDir work;AppController controller(app.arguments()[1],app.arguments()[2],nullptr,work.path()+"/data");int stage=0,passwordAttempts=0,overwrites=0;QString oldId;bool failed=false;
   auto require=[&](bool value,const char* message){if(!value){std::cerr<<message<<'\n';failed=true;app.exit(1);}return value;};
   auto model=qobject_cast<EntryModel*>(controller.entries());
+  if(!require(controller.archiveRatio()==-1,"empty window must retain default logo"))return 1;
   const auto name=QString::fromUtf8("中文 😀.txt"),target=QDir(work.path()).filePath(name);
   auto read=[&](QString path){QFile f(path);f.open(QIODevice::ReadOnly);return f.readAll();};
   auto write=[&](QString path,QByteArray bytes){QFile f(path);if(f.open(QIODevice::WriteOnly))f.write(bytes);};
@@ -25,7 +26,13 @@ int main(int argc,char** argv){
     if(stage==5&&code=="Cancelled"){stage=6;idle([&]{write(QDir(work.path()).filePath("source.txt"),"source");controller.createArchive({{"name","app.zip"},{"destination",work.path()},{"inputs",QVariantList{QUrl::fromLocalFile(QDir(work.path()).filePath("source.txt"))}},{"format","zip"},{"level",5}});});}
     else {std::cerr<<"stage "<<stage<<" "<<code.toStdString()<<" "<<message.toStdString()<<'\n';app.exit(1);}
   });
-  QObject::connect(&controller,&AppController::operationCompleted,&app,[&](QString op,QJsonObject){
+  QObject::connect(&controller,&AppController::operationCompleted,&app,[&](QString op,QJsonObject payload){
+    if(op=="list"){
+      long double original=0;for(const auto& value:payload["entries"].toArray()){const auto e=value.toObject();if(!e["directory"].toBool())original+=e["size"].toString().toULongLong();}
+      const auto expected=static_cast<double>(payload["physicalSize"].toString().toULongLong()/original);
+      if(!require(payload["physicalSizeComplete"].toBool()&&qAbs(controller.archiveRatio()-expected)<1e-12,"real worker listing ratio mismatch"))return;
+      controller.setFilter("no-such-entry");if(!require(qAbs(controller.archiveRatio()-expected)<1e-12,"filter changed archive ratio"))return;controller.setFilter("");
+    }
     if(stage==0&&op=="identity"){stage=1;idle([&]{controller.openUrls({QUrl::fromLocalFile(app.arguments()[3])});});}
     else if(stage==1&&op=="list"){
       if(!require(model->rowCount()==1&&passwordAttempts==2,"password retry/list failed"))return;

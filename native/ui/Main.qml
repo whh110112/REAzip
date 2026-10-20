@@ -11,6 +11,8 @@ ApplicationWindow {
     property bool preview: typeof designPreview !== "undefined" && designPreview
     property var colors: api ? api.colors : ({})
     property bool hasArchive: api ? api.hasArchive : preview
+    readonly property real logoRatio: api ? api.archiveRatio : -1
+    readonly property var themeArtwork: api ? api.themeBackground : ({})
     property var inputs: []
     property var currentChallenge: ({})
     property string folderTarget: "extract"
@@ -52,6 +54,16 @@ ApplicationWindow {
     LayoutMirroring.enabled: api ? api.rtl : false
     LayoutMirroring.childrenInherit: true
     component SafeLabel: Label { textFormat: Text.PlainText }
+    component AppLogo: ZenLogo {
+        archiveRatio: window.logoRatio
+        accentColor: window.accent
+        strongColor: window.token("--accent-strong",window.accent)
+        textColor: window.ink
+        surfaceColor: window.paper
+        baseColor: window.paper
+        patternColor: window.muted
+        artwork: window.themeArtwork
+    }
     component Action: Pill { accent: window.accent; ink: window.muted; paper: window.card; edge: window.edge }
     component TabIconButton: ToolButton {
         id: tabButton
@@ -120,7 +132,7 @@ ApplicationWindow {
             Layout.fillWidth: true; implicitHeight: Qt.platform.os === "osx" ? 0 : 36; visible: height > 0; color: window.surface
             MouseArea { anchors.fill: parent; onPressed: window.startSystemMove(); onDoubleClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized() }
             Row { anchors.left: parent.left; anchors.leftMargin: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7
-                Canvas { id: zenMark; width: 18; height: 18; onPaint: { let c=getContext("2d"); c.reset(); c.strokeStyle=window.accent; c.lineWidth=2; c.lineCap="round"; c.beginPath(); c.arc(9,9,6,0.3,Math.PI*1.9); c.stroke() } Connections { target: window; function onAccentChanged() { zenMark.requestPaint() } } }
+                AppLogo { objectName:"titleLogo"; width:20; height:20; surfaceColor:window.surface }
                 SafeLabel { text: "ZENzip"; color: window.ink; font.pixelSize: 12 }
             }
             SafeLabel { anchors.centerIn: parent; text: window.hasArchive ? (window.api ? window.api.archiveName : "demo.zip · design preview") : "ZENzip"; color: window.muted; font.pixelSize: 12 }
@@ -195,6 +207,7 @@ ApplicationWindow {
         }
         RowLayout { Layout.fillWidth:true;Layout.fillHeight:true;Layout.leftMargin:14;Layout.rightMargin:14;Layout.bottomMargin:14;spacing:14
             Rectangle { Layout.fillWidth:true;Layout.minimumWidth:400;Layout.fillHeight:true;color:window.paper;border.color:window.edge;radius:10;clip:true
+                ThemeBackdrop { anchors.fill:parent;anchors.margins:1;radius:9;color:window.paper;artwork:window.themeArtwork;patternColor:window.muted }
                 ColumnLayout { anchors.fill:parent;spacing:0;visible:window.hasArchive
                     Rectangle { Layout.fillWidth:true;implicitHeight:32;color:window.surface
                         Row { anchors.fill:parent;anchors.leftMargin:14
@@ -226,14 +239,15 @@ ApplicationWindow {
                     }
                 }
                 ColumnLayout { anchors.centerIn:parent;spacing:16;visible:!window.hasArchive
-                    SafeLabel { text:"⇣";font.pixelSize:48;color:window.accent;Layout.alignment:Qt.AlignHCenter }
+                    AppLogo { objectName:"welcomeLogo";Layout.preferredWidth:88;Layout.preferredHeight:88;Layout.alignment:Qt.AlignHCenter }
                     SafeLabel { text:window.t("dropTitle","拖入压缩包，或点击打开");font.pixelSize:19;color:window.ink;Layout.alignment:Qt.AlignHCenter }
                     SafeLabel { text:"ZIP · 7Z · RAR · ISO · TAR · GZ · WIM";color:window.muted;Layout.alignment:Qt.AlignHCenter }
                     Action { text:window.t("openArchive","打开压缩包");primary:true;Layout.alignment:Qt.AlignHCenter;onClicked:openDialog.open() }
                 }
                 DropArea { anchors.fill:parent;onDropped:function(drop){if(window.api&&drop.hasUrls)window.api.openUrls(drop.urls)} }
             }
-            ColumnLayout { Layout.preferredWidth:186;Layout.minimumWidth:186;Layout.maximumWidth:186;Layout.fillHeight:true;spacing:12;visible:window.hasArchive
+            ColumnLayout { Layout.preferredWidth:186;Layout.minimumWidth:186;Layout.maximumWidth:186;Layout.fillHeight:true;spacing:8;visible:window.hasArchive
+                AppLogo { objectName:"archiveLogo";Layout.preferredWidth:56;Layout.preferredHeight:56;Layout.alignment:Qt.AlignHCenter;Layout.topMargin:2 }
                 Caption { text:window.api?window.api.archiveFormat.toUpperCase():"ZIP";Layout.topMargin:16 }
                 Repeater { model:window.api?window.api.details:[{label:"大小",value:"1.9 KB"},{label:"压缩后",value:"1.2 KB"},{label:"文件",value:"5"},{label:"文件夹",value:"2"},{label:"加密",value:"none"}]
                     delegate:RowLayout { required property var modelData;Layout.fillWidth:true;Caption { text:modelData.label;Layout.fillWidth:true } SafeLabel { text:modelData.value;color:window.ink } }
@@ -277,6 +291,7 @@ ApplicationWindow {
     }
     Sheet { id:extractDialog;objectName:"extractDialog";title:window.t("extractTo","解压到");paper:window.card;ink:window.ink;edge:window.edge
         ColumnLayout { width:parent.width;spacing:12
+            AppLogo { objectName:"extractLogo";Layout.preferredWidth:56;Layout.preferredHeight:56;Layout.alignment:Qt.AlignHCenter;surfaceColor:window.card }
             Caption { text:window.t("saveTo","目标目录") }
             RowLayout { Field { id:extractDest;objectName:"extractDestination";text:window.api?window.api.defaultExtractDir:"";Layout.fillWidth:true } Action { text:"…";onClicked:{window.folderTarget="extract";folders.open()} } }
             CheckBox { id:smart;objectName:"smartExtract";text:window.t("smartExtract","智能选择同名目录");checked:true;palette.text:window.ink }
@@ -427,6 +442,7 @@ ApplicationWindow {
                     SettingsLabel { text: window.t("langHint", "支持18种语言") }
                 }
                 SettingsPage {
+                    AppLogo { objectName:"aboutLogo";Layout.preferredWidth:56;Layout.preferredHeight:56;surfaceColor:window.card }
                     SettingsLabel { text: "ZENzip " + (window.api ? window.api.version : "design preview"); color: window.ink; font.pixelSize: 20 }
                     SettingsLabel { text: window.api ? window.api.engineIdentity : "C++17 · Qt Quick · 7-Zip native library" }
                     SettingsLabel { text: "github.com/whh110112/ZENzip"; wrapMode: Text.WrapAnywhere }

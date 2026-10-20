@@ -94,11 +94,15 @@ def main():
     notes = output / 'RELEASE-NOTES.md'
     notes.write_text(f'''# ZENzip {version}
 
-正式维护版 / Stable maintenance release
+正式版本 / Stable release
 
-- 修正设置页的长译文裁切、已保存选项回显、暗色下拉箭头及 RTL 布局。
-- 修正标签字体与关闭/新增图标居中，适应不同文字的字高；支持 18 种界面语言和六套皮肤。
-- 当前界面、文档及新发行文件统一使用 ZENzip；保持已有设置、密码库和安装升级兼容。
+- 采用 A「留白圆」标志；窗口内的配色、底色和底纹自动读取当前皮肤，包括符合新约定的自定义皮肤，无需单独设置 logo。
+- 打开压缩包后自动按「压缩包体积 ÷ 原始文件总体积」绘制圆环：保留比例 60% 对应开口 40%。没有完整数据时使用默认开口；系统和文件关联图标保持固定比例。
+- 支持六套皮肤、18 种界面语言；保留已有设置、密码库和安装升级兼容。固实压缩与分卷比例纳入验证，Linux AppImage 运行时固定到官方版本并校验摘要。
+
+- The A open-circle identity automatically follows the active theme's colors and background artwork, including custom themes.
+- Opening an archive sets the filled annulus to its retained-size ratio: 60% retained means a 40% opening. Missing metadata uses the default mark; OS and file-association icons remain fixed.
+- Six palettes and 18 interface languages, with solid/split-archive coverage and version-pinned Linux AppImage runtimes.
 
 Windows, macOS and Linux packages are available for x64 and ARM64. All six targets passed 15/15 CTest, 648 settings layouts and 108 archive-tab layouts per target, plus package validation. Download the matching package and verify it with `SHA256SUMS.txt`.
 

@@ -36,6 +36,8 @@ Windows 使用经典右键菜单，在 Windows 11 中位于“显示更多选项
 
 [原生构建流程](.github/workflows/native-candidate.yml)固定依赖版本，覆盖六个平台目标。构建说明见[指南](native/docs/installation-guide.md)。完整截图矩阵保存在构建附件中，README 各自只展示一张对应语言的真实截图。
 
+当前源码新增了自动适配的圆环标志，详见[皮肤格式与 logo 行为](native/docs/themes.zh-CN.md)；现有 0.4.1 下载包尚不包含这项更新。
+
 ## 许可
 
 ZENzip 自有源码采用 MIT 许可。Qt、bit7z、7-Zip 各有其许可，详见[第三方声明](native/packaging/NOTICE.md)。
