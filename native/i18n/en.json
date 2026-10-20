@@ -172,5 +172,7 @@
   "updateAvailable": "New version available",
   "updateCurrent": "You have the latest stable version",
   "updateFailed": "Could not check for updates. Check your connection and retry.",
-  "updateDownload": "Go to download"
+  "updateDownload": "Go to download",
+  "extractBesideArchive": "Current folder (archive location)",
+  "extractCustomFolder": "Custom folder"
 }

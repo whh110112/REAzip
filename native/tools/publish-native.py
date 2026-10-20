@@ -106,6 +106,9 @@ def main():
 
 正式版本 / Stable release
 
+- 默认解压到压缩包所在文件夹；「设置 → 常规」可选择当前目录或指定默认目录。每次打开解压弹窗均按当前压缩包和设置重新填入位置。
+- Extraction defaults to the archive's containing folder. Settings → General can select the archive folder or a fixed custom folder; reopening Extract to refreshes the destination for the active archive.
+
 - 同名文件冲突窗口支持「全部覆盖」，或勾选「本次任务后续同名文件不再询问」后选择跳过、重命名、覆盖；新任务会重新询问。
 - 「设置 → 关于」新增手动检查更新，显示最新正式版并提供下载页面入口；不自动安装。
 - Conflict dialogs offer Overwrite all and task-scoped remembered skip/rename/overwrite decisions. New tasks ask again.

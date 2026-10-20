@@ -16,12 +16,14 @@ bool write(QString path,QJsonObject value){QSaveFile file(path);if(!file.open(QI
 Settings::Settings(QString directory):root(std::move(directory)){}
 QJsonObject Settings::validated(const QJsonObject& input){
   const auto downloads=QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-  QJsonObject result{{"schemaVersion",1},{"skin","light"},{"language","zh-CN"},{"restoreTabs",true},{"codepage",""},{"extractDir",downloads},{"archiveDir",downloads},{"openTabs",QJsonArray{}}};
+  QJsonObject result{{"schemaVersion",1},{"skin","light"},{"language","zh-CN"},{"restoreTabs",true},{"codepage",""},{"extractDirMode","archive"},{"extractDir",downloads},{"archiveDir",downloads},{"openTabs",QJsonArray{}}};
   if(input["skin"].isString()&&QRegularExpression("^[A-Za-z0-9_-]{1,64}$").match(input["skin"].toString()).hasMatch())result["skin"]=input["skin"];
   const QStringList languages={"zh-CN","zh-TW","en","ja","ko","fr","de","es","pt-BR","ru","it","pl","tr","vi","th","id","ar","hi"};if(languages.contains(input["language"].toString()))result["language"]=input["language"];
   if(input["restoreTabs"].isBool())result["restoreTabs"]=input["restoreTabs"];
   if(input["codepage"].isString()&&QStringList{"","936","950","932","65001"}.contains(input["codepage"].toString()))result["codepage"]=input["codepage"];
   for(const auto& key:{"extractDir","archiveDir"})if(input[key].isString()&&QFileInfo(input[key].toString()).isAbsolute()&&!input[key].toString().contains(QChar::Null))result[key]=input[key];
+  if(QStringList{"archive","custom"}.contains(input["extractDirMode"].toString()))result["extractDirMode"]=input["extractDirMode"];
+  else if(!input.contains("extractDirMode")&&result["extractDir"].toString()!=downloads)result["extractDirMode"]="custom";
   QJsonArray tabs;QSet<QString> seen;for(const auto& value:input["openTabs"].toArray()){const auto path=value.toString();if(value.isString()&&QFileInfo(path).isAbsolute()&&!path.contains(QChar::Null)&&!seen.contains(path)&&tabs.size()<128){seen.insert(path);tabs.append(path);}}result["openTabs"]=tabs;
   if(input["migratedLegacy"].isBool())result["migratedLegacy"]=input["migratedLegacy"];
   return result;

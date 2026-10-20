@@ -172,5 +172,7 @@
   "updateAvailable": "Versi baru tersedia",
   "updateCurrent": "Anda menggunakan versi stabil terbaru",
   "updateFailed": "Tidak dapat memeriksa pembaruan. Periksa koneksi dan coba lagi.",
-  "updateDownload": "Buka halaman unduhan"
+  "updateDownload": "Buka halaman unduhan",
+  "extractBesideArchive": "Folder tempat arsip berada",
+  "extractCustomFolder": "Folder khusus"
 }

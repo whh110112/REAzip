@@ -172,5 +172,7 @@
   "updateAvailable": "नया संस्करण उपलब्ध है",
   "updateCurrent": "आप नवीनतम स्थिर संस्करण का उपयोग कर रहे हैं",
   "updateFailed": "अपडेट की जाँच नहीं हो सकी। कनेक्शन जाँचें और फिर कोशिश करें।",
-  "updateDownload": "डाउनलोड पृष्ठ खोलें"
+  "updateDownload": "डाउनलोड पृष्ठ खोलें",
+  "extractBesideArchive": "संग्रह वाली मौजूदा फ़ोल्डर",
+  "extractCustomFolder": "चुना हुआ फ़ोल्डर"
 }

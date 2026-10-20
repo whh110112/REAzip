@@ -57,7 +57,11 @@ QString AppController::version()const{return QCoreApplication::applicationVersio
 QString AppController::breadcrumb()const{return archiveName()+(model.folder().isEmpty()?QString():" / "+model.folder());}
 bool AppController::canModify()const{return tab()&&!busy()&&(tab()->format=="zip"||tab()->format=="7z"||tab()->format=="tar");}
 QString AppController::defaultArchiveDir()const{const auto path=preferences["archiveDir"].toString();return QFileInfo(path).isDir()?path:QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);}
-QString AppController::defaultExtractDir()const{const auto path=preferences["extractDir"].toString();return QFileInfo(path).isDir()?path:defaultArchiveDir();}
+QString AppController::defaultExtractDir()const{
+  if(extractDirMode()=="custom"&&QFileInfo(customExtractDir()).isDir())return customExtractDir();
+  if(tab())return QFileInfo(tab()->path).absolutePath();
+  return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+}
 QString AppController::status()const{return busy()?translate("state"+jobs.state(),jobs.state()):translate("ready",QString::fromUtf8("就绪"));}
 QString AppController::statusSummary()const{if(!tab()||tab()->format.isEmpty())return {};return QString::number(tab()->entries.size())+" "+translate("files",QString::fromUtf8("条目"))+" · "+EntryModel::bytes(tab()->physical);}
 QVariantList AppController::details()const{

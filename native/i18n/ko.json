@@ -172,5 +172,7 @@
   "updateAvailable": "새 버전이 있습니다",
   "updateCurrent": "최신 정식 버전입니다",
   "updateFailed": "업데이트를 확인할 수 없습니다. 연결을 확인하고 다시 시도하세요.",
-  "updateDownload": "다운로드 페이지 열기"
+  "updateDownload": "다운로드 페이지 열기",
+  "extractBesideArchive": "현재 폴더 (압축 파일 위치)",
+  "extractCustomFolder": "지정 폴더"
 }

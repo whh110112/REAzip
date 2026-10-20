@@ -172,5 +172,7 @@
   "updateAvailable": "有新版本可用",
   "updateCurrent": "目前已是最新正式版",
   "updateFailed": "檢查更新失敗，請檢查網路後重試",
-  "updateDownload": "前往下載"
+  "updateDownload": "前往下載",
+  "extractBesideArchive": "目前目錄（壓縮檔所在資料夾）",
+  "extractCustomFolder": "指定目錄"
 }

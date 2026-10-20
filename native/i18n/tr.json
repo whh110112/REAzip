@@ -172,5 +172,7 @@
   "updateAvailable": "Yeni sürüm mevcut",
   "updateCurrent": "En son kararlı sürümü kullanıyorsunuz",
   "updateFailed": "Güncellemeler denetlenemedi. Bağlantıyı kontrol edip tekrar deneyin.",
-  "updateDownload": "İndirme sayfasına git"
+  "updateDownload": "İndirme sayfasına git",
+  "extractBesideArchive": "Arşivin bulunduğu klasör",
+  "extractCustomFolder": "Özel klasör"
 }
