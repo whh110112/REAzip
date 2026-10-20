@@ -1,8 +1,8 @@
 {
-  "version": "0.4.1",
-  "sourceCommit": "e9d7c405f44f95c62838db2e21b3f4f27fbf58c9",
-  "nativeCandidateRun": "https://github.com/whh110112/ZENzip/actions/runs/39143335032",
-  "artifactId": 12142453770,
+  "version": "0.4.2",
+  "sourceCommit": "df1b709e9118ecf5d0eceef427bb621895c09d22",
+  "nativeCandidateRun": "https://github.com/whh110112/ZENzip/actions/runs/39368855071",
+  "artifactId": 12240702658,
   "captureFontSha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
   "captures": [
     {
@@ -11,7 +11,7 @@
       "scene": "archive",
       "scale": "1",
       "file": "en.png",
-      "sha256": "e787e37a7c788335595e878bf92ff61e90db46b151135fdb9affc55a3ad28b73",
+      "sha256": "24469dfbfea26f3523f019ae26710944297f7e2bb508b0eb2a5242343aba9622",
       "sourceFile": "light-en-archive.png"
     },
     {
@@ -20,7 +20,7 @@
       "scene": "archive",
       "scale": "1",
       "file": "zh-CN.png",
-      "sha256": "ca456a960780bd5900d1aa794adbd40119b0293af6db7993618510c9434fb7b8",
+      "sha256": "0d38d10fccd0a1d2e14d2eaf9fedd73f9802d6c1f7da84f9f82656301eb086dc",
       "sourceFile": "light-zh-CN-archive.png"
     }
   ]

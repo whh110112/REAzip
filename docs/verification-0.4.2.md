@@ -6,6 +6,15 @@ This release adopts the A open-circle identity from PR #10. Window logos automat
 
 Publication requires a successful Native candidate run on main for exactly the checked-out source commit and version 0.4.2. All six OS/architecture manifests must identify that same clean source. Every package's size and SHA256 must match its manifest, and every uploaded asset's digest and size must match before the release becomes public. The release page records the final candidate run and source commit.
 
+## Published build evidence
+
+- Source: `df1b709e9118ecf5d0eceef427bb621895c09d22`.
+- [Main Native candidate 39368855071](https://github.com/whh110112/ZENzip/actions/runs/39368855071): all six targets, 15 CTest suites per target, offline packages and aggregate verification passed.
+- [ZENzip 0.4.2](https://github.com/whh110112/ZENzip/releases/tag/v0.4.2) was promoted from those exact manifests and packages.
+- [Stable publication 39369920328](https://github.com/whh110112/ZENzip/actions/runs/39369920328) succeeded on attempt 2. Attempt 1 stopped because the newly created draft was not immediately visible through the release-list API; no incomplete release was made public. The resumed job verified all 21 uploaded assets before publication. An independent post-publication check matched the six manifests, 14 packages, checksum list and source tag.
+- The two README images are byte-for-byte copies of the matching English/Chinese captures in Windows artifact `12240702658`. Their SHA256 values and capture-font digest are recorded in `docs/screenshots/manifest.json`.
+- This documentation follow-up does not change the application sources or the published binaries.
+
 ## Test and packaging scope
 
 - Windows, macOS and Linux on x64 and ARM64: 15 CTest suites per target, isolated application/worker startup, package architecture and dependency checks.
@@ -20,3 +29,5 @@ Publication requires a successful Native candidate run on main for exactly the c
 The final release page links the exact main candidate used for published binaries. Native captures remain CI artifacts; README previews are updated from the published build's paired capture manifest. Earlier failed development runs remain historical records and are not eligible for publication.
 
 Visual sampling supplements automated layout and rendering checks. It does not certify every glyph or translation. Windows packages are unsigned; macOS packages are ad-hoc signed and not notarized. Modern Windows 11 menus, comprehensive cross-application drag-out improvements and physical-machine desktop coverage remain outside this release. macOS/Linux vault files use permissions and are not encrypted.
+
+Custom background loading checks the available Qt image codecs before accepting artwork. PNG/JPEG are included in the packages; WebP requires an available Qt codec and is safely ignored when unsupported.
