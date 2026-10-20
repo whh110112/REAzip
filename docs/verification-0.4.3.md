@@ -2,6 +2,16 @@
 
 This release adds task-scoped bulk conflict decisions and a manual stable-release update check in Settings → About.
 
+## Published build evidence
+
+- Source: `4a9bd23281ceae45123293fd3b08bcc8e5b3466d`.
+- [Main candidate 39381041985](https://github.com/whh110112/ZENzip/actions/runs/39381041985): all six targets and aggregate passed, including all 16 CTest suites per target and isolated offline packages.
+- [Stable publication 39382098006](https://github.com/whh110112/ZENzip/actions/runs/39382098006): [ZENzip 0.4.3](https://github.com/whh110112/ZENzip/releases/tag/v0.4.3), with 21 assets verified against package manifests and SHA256SUMS.
+- README previews are the matched English/Chinese captures from Windows artifact `12245364648`; their hashes are recorded in `docs/screenshots/manifest.json`.
+- The exact main Windows x64 portable package completed a live HTTPS check in an isolated environment with developer PATH and Qt overrides removed (`--smoke --check-updates`): exit 0, no diagnostics. The resulting About status was visually checked.
+- Main acceptance passed on its first attempt. The preceding development candidate `39378984212` required one unchanged-source macOS Intel retry after a selected-file GUI timing timeout; its final six-target and aggregate results passed. Earlier failed attempts remain visible in GitHub Actions.
+- The follow-up changes documentation only; native sources remain identical to the published tag.
+
 ## Acceptance scope
 
 - Real worker extraction of a three-file ZIP with existing destination files: overwrite all, skip all, rename all, fresh-task reset, cancellation and invalid-choice rejection.
