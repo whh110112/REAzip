@@ -246,8 +246,8 @@ ApplicationWindow {
                 }
                 DropArea { anchors.fill:parent;onDropped:function(drop){if(window.api&&drop.hasUrls)window.api.openUrls(drop.urls)} }
             }
-            ColumnLayout { Layout.preferredWidth:186;Layout.minimumWidth:186;Layout.maximumWidth:186;Layout.fillHeight:true;spacing:12;visible:window.hasArchive
-                AppLogo { objectName:"archiveLogo";Layout.preferredWidth:80;Layout.preferredHeight:80;Layout.alignment:Qt.AlignHCenter;Layout.topMargin:12 }
+            ColumnLayout { Layout.preferredWidth:186;Layout.minimumWidth:186;Layout.maximumWidth:186;Layout.fillHeight:true;spacing:8;visible:window.hasArchive
+                AppLogo { objectName:"archiveLogo";Layout.preferredWidth:56;Layout.preferredHeight:56;Layout.alignment:Qt.AlignHCenter;Layout.topMargin:2 }
                 Caption { text:window.api?window.api.archiveFormat.toUpperCase():"ZIP";Layout.topMargin:16 }
                 Repeater { model:window.api?window.api.details:[{label:"大小",value:"1.9 KB"},{label:"压缩后",value:"1.2 KB"},{label:"文件",value:"5"},{label:"文件夹",value:"2"},{label:"加密",value:"none"}]
                     delegate:RowLayout { required property var modelData;Layout.fillWidth:true;Caption { text:modelData.label;Layout.fillWidth:true } SafeLabel { text:modelData.value;color:window.ink } }

@@ -14,7 +14,7 @@ Rectangle {
         source: backdrop.artwork.texture || ""
         fillMode: Image.Tile
         opacity: backdrop.patternOpacity
-        cache: false
+        cache: true
         visible: source.toString().length > 0
         smooth: true
     }
